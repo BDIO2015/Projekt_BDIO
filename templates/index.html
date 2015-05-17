@@ -1,8 +1,62 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<title>{{ title }}</title>
+    <title>{% block title %}{{title}}{% endblock %}</title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+	<script>
+	// set active menu button
+		jQuery(document).ready(function(){
+			var l = window.location;
+			jQuery("ul.menu li").each(function(){
+				var str = l.toString();
+				
+				if(l == l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
+				{
+					jQuery(this).addClass("active");
+				}
+				else
+				{
+					if(str.substr(0,str.length-1) == l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
+						jQuery(this).addClass("active");
+				}
+			});
+		});
+	</script>
 </head>
+
 <body>
-{{ question }}
+    <div class="container">
+		<div class="jumbotron">
+			<h1>NAGŁÓWEK</h1>
+			<p>index.html</p> 
+		</div>
+	</div>
+    <div id="sidebar">
+        {% block sidebar %}
+        <ul class="nav nav-pills menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/manage">Manage</a></li>
+        </ul>
+        {% endblock %}
+    </div>
+
+    <div id="content">
+		<!-- TREŚĆ STRONY -->
+		{% block content %}
+
+		
+		
+		{% endblock %}
+		<!-- KONIEC TREŚCI STRONY -->
+	</div>
 </body>
 </html>

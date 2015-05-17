@@ -1,9 +1,9 @@
-<html>
-<head>
-<meta charset="UTF-8"> 
-<title>Zarządzaj::{{ title }}</title>
-</head>
-<body>
-{{ content }}
-</body>
-</html>
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{{question}}
+	<br/>
+	{{content}}
+{% endblock %}

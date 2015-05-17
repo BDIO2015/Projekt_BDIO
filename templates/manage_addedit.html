@@ -1,10 +1,10 @@
-<html>
-<head>
-<meta charset="UTF-8"> 
-<title>Zarządzaj::{{ title }}</title>
-</head>
-<body>
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+
 {{ content }}
+{% block content %}
 {% if type == "add" %}
 	<form action="/manage/discount/add/" method="POST">
 	{% csrf_token %}
@@ -30,5 +30,4 @@
 	</table>
 	</form>
 {% endif %}
-</body>
-</html>
+{% endblock %}
