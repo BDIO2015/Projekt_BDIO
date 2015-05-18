@@ -3,6 +3,12 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<a href="/manage/discount/">Powrót</a><br /><br />
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
 	<a href="/manage/discount/add/">Dodaj nową zniżkę</a><br /><br />
 	{% if count > 0 %}
 		<table border="1" style="text-align: center;">

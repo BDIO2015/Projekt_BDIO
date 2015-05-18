@@ -6,6 +6,11 @@
 {% block content %}
 <a href="/manage/discount/">Powrót</a><br /><br />
 {{ content }}
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
 {% if type == "add" or type == "edit" %}
 	<form action="/manage/discount/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST">
 	{% csrf_token %}

@@ -92,28 +92,30 @@ def discount_delete(request, del_id):
 	try:
 		did = int(del_id)
 	except ValueError:
-		contents = {'title':'Zniżki', 'content':'Podano niepoprawny numer'}
-		return render(request, 'manage_discountdelete.html', contents)
+		contents = {'title':'Zniżki','messageType':'danger', 'message':'Podano niepoprawny numer'}
+		return render(request, 'manage_discount.html', contents)
 	mainContent = ''
-	contents = {'title':'Zniżki', 'content':mainContent}
+	contents = {'title':'Zniżki','messageType':'danger', 'message':'Podano niepoprawny numer'}
 	toDel = Discount.objects.filter(id=did)
 	if(toDel.count() == 1):
 		toDel[0].delete()
-		contents = {'title':'Zniżki', 'content':'Poprawnie usunięto wybraną zniżkę'}
+		contents = {'title':'Zniżki','messageType':'success', 'message':'Poprawnie usunięto wybraną zniżkę'}
 	elif(toDel.count() > 1):
-		contents = {'title':'Zniżki', 'content':'Nieznany błąd'}
+		contents = {'title':'Zniżki','messageType':'danger', 'message':'Nieznany błąd'}
 	else:
-		contents = {'title':'Zniżki', 'content':'Podano niepoprawny numer'}
-	return render(request, 'manage_discountdelete.html', contents)
+		contents = {'title':'Zniżki','messageType':'danger', 'message':'Podano niepoprawny numer'}
+	return render(request, 'manage_discount.html', contents)
+
 def discount_edit(request, edit_id):
 	try:
 		eid = int(edit_id)
 	except ValueError:
-		contents = {'title':'Zniżki', 'type':'error', 'content':'Podano niepoprawny numer'}
-		return render(request, 'manage_discountaddedit.html', contents)
+		contents = {'title':'Zniżki', 'type':'danger', 'content':'Podano niepoprawny numer'}
+		return render(request, 'manage_discount.html', contents)
 	mainContent = ''
 	contents = {'title':'Zniżki', 'type':'edit', 'content':mainContent}
 	toEdit = Discount.objects.filter(id=eid)
+	status = False
 	if(toEdit.count() == 1):
 		isSent = request.POST.get('sent', False);
 		if(isSent):
@@ -211,6 +213,7 @@ def discount_edit(request, edit_id):
 				dbSave.type = typeFormat
 				dbSave.value = disc
 				dbSave.save()
+				status = True
 				formatType = typeFormat
 		formatType = toEdit[0].type
 		days = formatType[1:4]
@@ -233,18 +236,22 @@ def discount_edit(request, edit_id):
 		disc = formatType[13:16]
 		disc = int(disc)
 		contents = {'title':'Zniżki', 'type':'edit', 'content':mainContent, 'id':eid, 'day0':isDay[0], 'day1':isDay[1], 'day2':isDay[2], 'day3':isDay[3], 'day4':isDay[4], 'day5':isDay[5], 'day6':isDay[6], 'sHour':sHour, 'sMinutes':sMinutes, 'eHour':eHour, 'eMinutes':eMinutes, 'typeFor':typeFor, 'disc':disc, 'active':active}
+		if(status):
+			contents['messageType'] = 'success'
+			contents['message'] = 'Zapisano poprawnie'
 	elif(toEdit.count() > 1):
-		contents = {'title':'Zniżki', 'type':'error', 'content':'Nieznany błąd'}
-		return render(request, 'manage_discountaddedit.html', contents)
+		contents = {'title':'Zniżki', 'messageType':'danger', 'content':'Nieznany błąd'}
+		return render(request, 'manage_discount.html', contents)
 	else:
-		contents = {'title':'Zniżki', 'type':'error', 'content':'Podano niepoprawny numer'}
-		return render(request, 'manage_discountaddedit.html', contents)
+		contents = {'title':'Zniżki', 'messageType':'danger', 'content':'Podano niepoprawny numer'}
+		return render(request, 'manage_discount.html', contents)
 	return render(request, 'manage_discountaddedit.html', contents)
 
 def discount_add(request):
 	#TODO dodac sprawdzenie czy zalogowany i ma uprawnienia
 	isSent = request.POST.get('sent', False);
 	mainContent = '';
+	contents = {'title':'Zniżki', 'type':'add'}
 	if(isSent):
 		typeFormat = '1';
 		isDay=[0,0,0,0,0,0,0]
@@ -333,8 +340,8 @@ def discount_add(request):
 			typeFormat += str(disc)
 			newDisc = Discount(type=typeFormat, value=disc)
 			newDisc.save()
-			mainContent = 'Inserted'
+			contents = {'title':'Zniżki', 'messageType':'success', 'message':'Dodano nową zniżkę'}
+			return render(request, 'manage_discount.html', contents)
 		else:
-			mainContent = 'Nie wybrano żadnego dnia'
-	contents = {'title':'Zniżki', 'type':'add', 'content':mainContent}
+			contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Nie wybrano żadnego dnia', 'type':'add'}
 	return render(request, 'manage_discountaddedit.html', contents)
