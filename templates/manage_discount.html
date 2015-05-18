@@ -1,0 +1,17 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	<a href="/manage/discount/add/">Dodaj nową zniżkę</a><br /><br />
+	{% if count > 0 %}
+		<table border="1" style="text-align: center;">
+		<tr><th>Aktywna</th><th>Dni</th><th>Godziny</th><th>Dla</th><th>Zniżka</th><th>Zarządzaj</th></tr>
+		{% for row in content %}
+			<tr><td>{% if row.active == "Tak" %}<b>{{row.active}}</b>{% else %}{{row.active}}{% endif %}</td><td>{{row.days}}</td><td>{{row.hours}}</td><td>{{row.for}}</td><td>{{row.disc}}</td><td><a href="/manage/discount/edit/{{row.id}}/" />Edytuj</a><br /><a href="/manage/discount/delete/{{row.id}}/" />Usuń</a></td></tr>
+		{% endfor %}
+		</table>
+	{% else %}
+		{{content}}
+	{% endif %}
+{% endblock %}

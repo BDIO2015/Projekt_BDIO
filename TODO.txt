@@ -1,2 +1,2 @@
 views:
- - discount_add - dodac sprawdzenie czy zalogowany i czy ma uprawnienia
+ - discount - dodac sprawdzenie czy zalogowany i czy ma uprawnienia we wszystkich widokach

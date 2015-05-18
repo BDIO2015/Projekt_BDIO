@@ -4,9 +4,10 @@
 
 
 {% block content %}
+<a href="/manage/discount/">Powrót</a><br /><br />
 {{ content }}
 {% if type == "add" or type == "edit" %}
-	<form action="/manage/discount/edit/{{id}}/" method="POST">
+	<form action="/manage/discount/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST">
 	{% csrf_token %}
 	<table border=0>
 	{% if type == "edit" %}<tr><td>Aktywna: </td><td><input type="checkbox" name="active" value="1" {% if active == 1 %}checked{% endif %}/></td></tr>{% endif %}

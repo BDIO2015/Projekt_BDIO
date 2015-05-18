@@ -15,13 +15,96 @@ def manage(request):
 	
 def discount(request):
 	discounts = Discount.objects.all()
+	contents = {'title':'Zniżki', 'content':''}
 	if(discounts.count() > 0):
-		mainContent = 'test'
+		toDisp = []
+		for curRow in discounts:
+			formatType = curRow.type
+			active = formatType[0]
+			active = int(active)
+			if(active == 1):
+				active = 'Tak'
+			else:
+				active = 'Nie'
+			days = formatType[1:4]
+			days = int(days)
+			isDay=[0,0,0,0,0,0,0]
+			isDay[0] = days&0x1
+			isDay[1] = (days>>1)&0x1
+			isDay[2] = (days>>2)&0x1
+			isDay[3] = (days>>3)&0x1
+			isDay[4] = (days>>4)&0x1
+			isDay[5] = (days>>5)&0x1
+			isDay[6] = (days>>6)&0x1
+			dayString = ''
+			if(isDay[0] != 0):
+				if(dayString != ''):
+					dayString += ', '
+				dayString += 'Poniedziałek'
+			if(isDay[1] != 0):
+				if(dayString != ''):
+					dayString += ', '
+				dayString += 'Wtorek'
+			if(isDay[2] != 0):
+				if(dayString != ''):
+					dayString += ', '
+				dayString += 'Środa'
+			if(isDay[3] != 0):
+				if(dayString != ''):
+					dayString += ', '
+				dayString += 'Czwartek'
+			if(isDay[4] != 0):
+				if(dayString != ''):
+					dayString += ', '
+				dayString += 'Piątek'
+			if(isDay[5] != 0):
+				if(dayString != ''):
+					dayString += ', '
+				dayString += 'Sobota'
+			if(isDay[6] != 0):
+				if(dayString != ''):
+					dayString += ', '
+				dayString += 'Niedziela'
+			sHour = formatType[4:6]
+			sMinutes = formatType[6:8]
+			eHour = formatType[8:10]
+			eMinutes = formatType[10:12]
+			typeFor = formatType[12]
+			disc = formatType[13:16]
+			disc = int(disc)
+			hourString = sHour + ':' + sMinutes + ' - ' + eHour + ':' + eMinutes
+			forString = ''
+			if(typeFor == "0"):
+				forString = "Zarejestrowany"
+			elif(typeFor == "1"):
+				forString = "Niezarejestrowany"
+			else:
+				forString = "Wszyscy"
+			discString = str(disc) + '%'
+			row = {'active':active, 'days':dayString, 'hours':hourString, 'for':forString, 'disc':discString, 'id':curRow.id}
+			toDisp.append(row)
+		contents = {'title':'Zniżki','count':discounts.count(), 'content':toDisp}
 	else:
-		mainContent = 'Brak zdefiniowanych zniżek'
-	contents = {'title':'Zniżki', 'content':mainContent}
-	return render(request, 'manage.html', contents)
+		contents = {'title':'Zniżki', 'content':'Brak zdefiniowanych zniżek'}
+	return render(request, 'manage_discount.html', contents)
 
+def discount_delete(request, del_id):
+	try:
+		did = int(del_id)
+	except ValueError:
+		contents = {'title':'Zniżki', 'content':'Podano niepoprawny numer'}
+		return render(request, 'manage_discountdelete.html', contents)
+	mainContent = ''
+	contents = {'title':'Zniżki', 'content':mainContent}
+	toDel = Discount.objects.filter(id=did)
+	if(toDel.count() == 1):
+		toDel[0].delete()
+		contents = {'title':'Zniżki', 'content':'Poprawnie usunięto wybraną zniżkę'}
+	elif(toDel.count() > 1):
+		contents = {'title':'Zniżki', 'content':'Nieznany błąd'}
+	else:
+		contents = {'title':'Zniżki', 'content':'Podano niepoprawny numer'}
+	return render(request, 'manage_discountdelete.html', contents)
 def discount_edit(request, edit_id):
 	try:
 		eid = int(edit_id)
