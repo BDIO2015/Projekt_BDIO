@@ -4,7 +4,7 @@
 
 
 {% block content %}
-<a href="/manage/discount/">Powrót</a><br /><br />
+<a href="/manage/discount/" class="btn btn-primary">Powrót</a><br /><br />
 {{ content }}
 	{% if messageType == "danger" or messageType == "success" %}
 	<div class="alert alert-{{messageType}}">
@@ -14,9 +14,9 @@
 {% if type == "add" or type == "edit" %}
 	<form action="/manage/discount/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST">
 	{% csrf_token %}
-	<table border=0>
-	{% if type == "edit" %}<tr><td>Aktywna: </td><td><input type="checkbox" name="active" value="1" {% if active == 1 %}checked{% endif %}/></td></tr>{% endif %}
-	<tr><td>Dni: </td><td>
+	<div class="input-group">
+	<div>{% if type == "edit" %}Aktywna: <input type="checkbox" name="active" value="1" {% if active == 1 %}checked{% endif %}/>{% endif %}</div>
+	<div><p>Dni: </p>
 		<input type="checkbox" name="day0" value="1" {% if day0 == 1 %}checked{% endif %}>Poniedziałek<br />
 		<input type="checkbox" name="day1" value="1" {% if day1 == 1 %}checked{% endif %}>Wtorek<br />
 		<input type="checkbox" name="day2" value="1" {% if day2 == 1 %}checked{% endif %}>Środa<br />
@@ -24,17 +24,17 @@
 		<input type="checkbox" name="day4" value="1" {% if day4 == 1 %}checked{% endif %}>Piątek<br />
 		<input type="checkbox" name="day5" value="1" {% if day5 == 1 %}checked{% endif %}>Sobota<br />
 		<input type="checkbox" name="day6" value="1" {% if day6 == 1 %}checked{% endif %}>Niedziela<br />
-	</td></tr>
-	<tr><td>Od:</td><td>Godzina: <input type="text" name="shour" value="{% if type == "edit" %}{{sHour}}{% else %}8{% endif %}" /> Minut: <input type="text" name="sminutes" value="{% if type == "edit" %}{{sMinutes}}{% else %}00{% endif %}"/></td></tr>
-	<tr><td>Do:</td><td>Godzina: <input type="text" name="ehour" value="{% if type == "edit" %}{{eHour}}{% else %}12{% endif %}" /> Minut: <input type="text" name="eminutes" value="{% if type == "edit" %}{{eMinutes}}{% else %}00{% endif %}"/></td></tr>
-	<tr><td>Dla: </td><td><select name="type">
+	<div>Od:Godzina: <input type="time" autocomplete="on" name="shour" value="{% if type == "edit" %}{{sHour}}:{{sMinutes}}:00{% else %}08:00:00{% endif %}" /> 
+	Do:Godzina: <input type="time" name="ehour" value="{% if type == "edit" %}{{eHour}}:{{eMinutes}}:00{% else %}12:00:00{% endif %}" /> </div>
+	<div>Dla: <select name="type">
 		<option value="0" {% if typeFor == "0" %}selected{% endif %}>Zarejestrowani</option>
 		<option value="1" {% if typeFor == "1" %}selected{% endif %}>Niezarejestrowani</option>
 		<option value="2" {% if typeFor == "2" %}selected{% endif %}>Wszyscy</option>
-	</select></td></tr>
-	<tr><td>% zniżki: </td><td><input type="text" name="disc" value="{% if type == "edit" %}{{disc}}{% else %}0{% endif %}" /></td></tr>
-	<tr><td colspan="2"><input type="hidden" name="sent" value="1" /><input type="submit" value="Zapisz" /></td></tr>
-	</table>
+	</select>
+	</div>
+	<div>% zniżki: <input type="text" name="disc" value="{% if type == "edit" %}{{disc}}{% else %}0{% endif %}" />
+	<input type="hidden" name="sent" value="1" /></div><div><input type="submit" value="Zapisz" /></div>
+	</div>
 	</form>
 {% endif %}
 {% endblock %}
