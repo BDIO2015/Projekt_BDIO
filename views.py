@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 from django.shortcuts import render
-
+import re
 # Create your views here.
 from django.http import HttpResponse
 from .models import *
@@ -355,6 +355,53 @@ def discount_add(request):
 			contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Nie wybrano żadnego dnia', 'type':'add'}
 	return render(request, 'manage_discountaddedit.html', contents)
 	
+def user_register(request):
+	mainContent = '';
+	contents = {'title':'Rejestracja', 'name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
+	if(request.POST.get('sent')):
+		reg_username = request.POST.get('username')
+		reg_name = request.POST.get('name')
+		reg_password = request.POST.get('password')
+		reg_postal_code = request.POST.get('postal_code')
+		reg_phone_number = request.POST.get('phone_number')
+		reg_address = request.POST.get('address')
+		reg_city = request.POST.get('city')
+		reg_second_name = request.POST.get('second_name')
+		if(not(request.POST.get('agg0')) or not(request.POST.get('agg1'))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Zgody muszą być zaznaczone!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_register.html',contents)
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_name))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_register.html',contents)
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_second_name))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username) }
+			return render(request,'user_register.html',contents)
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_register.html',contents)
+		if not(re.match('[0-9][0-9]-[0-9][0-9][0-9]',str(reg_postal_code))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_register.html',contents)
+		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'username':str(reg_username)}
+			return render(request,'user_register.html',contents)
+		if not((len(str(reg_password)) > 5) or (len(str(reg_password))) < 64):
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				return render(request,'user_register.html',contents)
+		users = User.objects.all()
+		for user in users:
+			if(user.username == str(reg_username)):
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika zajęta!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':''}	
+				return render(request,'user_register.html',contents)	
+		good=1
+		if good:
+			##DOPOKI NIE MA TYPE I SCHEDULE, TRZEBA ZEZWOLIC CHWILOWO NA NULL!, PRZYJMUJEMY ZE UZYTKOWNICY ZE ZWYKLEGO REGISTER DOSTAJA SCHEDULE 0 CZYLI BRAK BO TO KLIENCI, TYP 0, ZMIANA TYPU MOZLIWA PRZEZ PANEL ADMINA KTORY KTOS ZROBI##
+			newUser = User(name=reg_name, second_name=reg_second_name, username=reg_username, password=reg_password, postal_code=reg_postal_code, phone_number=reg_phone_number, city=reg_city, address=reg_address)
+			newUser.save()
+			contents = {'messageType':'success', 'message':'Użytkownik zarejestrowany','name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
+			return render(request,'user_register.html',contents)
+	return render(request, 'user_register.html', contents)
+
 def product_category(request):
 	product_categories = Product_Category.objects.all()
 	contents = {'title':'Kategorie Produktów', 'content':''}
