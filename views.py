@@ -280,21 +280,25 @@ def discount_add(request):
 				typeFormat += '0'
 			typeFormat += str(dayNum)
 			sHour = request.POST.get('shour', False);
+			sMinutes = sHour[3:5]
+			sHour = sHour[:2]
 			try:
 				sHour = int(sHour)
 			except ValueError:
 				sHour = 8
-			sMinutes = request.POST.get('sminutes', False);
+			#sMinutes = request.POST.get('sminutes', False);
 			try:
 				sMinutes = int(sMinutes)
 			except ValueError:
 				sMinutes = 0
 			eHour = request.POST.get('ehour', False);
+			eMinutes = eHour[3:5]
+			eHour = eHour[:2]
 			try:
 				eHour = int(eHour)
 			except ValueError:
 				eHour = 12
-			eMinutes = request.POST.get('eminutes', False);
+			#eMinutes = request.POST.get('eminutes', False);
 			try:
 				eMinutes = int(eMinutes)
 			except ValueError:
