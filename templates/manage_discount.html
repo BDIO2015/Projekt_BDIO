@@ -4,17 +4,17 @@
 
 {% block content %}
 	{% if messageType == "danger" or messageType == "success" %}
-	<a href="/manage/discount/">Powrót</a><br /><br />
+	<a href="/manage/discount/" class="btn btn-primary">Powrót</a><br /><br />
 	<div class="alert alert-{{messageType}}">
 	  {{message}}
 	</div>
 	{% endif %}
-	<a href="/manage/discount/add/">Dodaj nową zniżkę</a><br /><br />
+	<a href="/manage/discount/add/" class="btn btn-primary">Dodaj nową zniżkę</a><br /><br />
 	{% if count > 0 %}
-		<table border="1" style="text-align: center;">
+		<table class="table table-hovered table-responsive">
 		<tr><th>Aktywna</th><th>Dni</th><th>Godziny</th><th>Dla</th><th>Zniżka</th><th>Zarządzaj</th></tr>
 		{% for row in content %}
-			<tr><td>{% if row.active == "Tak" %}<b>{{row.active}}</b>{% else %}{{row.active}}{% endif %}</td><td>{{row.days}}</td><td>{{row.hours}}</td><td>{{row.for}}</td><td>{{row.disc}}</td><td><a href="/manage/discount/edit/{{row.id}}/" />Edytuj</a><br /><a href="/manage/discount/delete/{{row.id}}/" />Usuń</a></td></tr>
+			<tr><td>{% if row.active == "Tak" %}<b>{{row.active}}</b>{% else %}{{row.active}}{% endif %}</td><td>{{row.days}}</td><td>{{row.hours}}</td><td>{{row.for}}</td><td>{{row.disc}}</td><td><a href="/manage/discount/edit/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/discount/delete/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
 		{% endfor %}
 		</table>
 	{% else %}

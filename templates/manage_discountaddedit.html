@@ -4,36 +4,50 @@
 
 
 {% block content %}
+{% if messageType == "danger" or messageType == "success" %}
+<div class="alert alert-{{messageType}}">
+  {{message}}
+</div>
+{% endif %}
 <a href="/manage/discount/" class="btn btn-primary">Powrót</a><br /><br />
 {{ content }}
-	{% if messageType == "danger" or messageType == "success" %}
-	<div class="alert alert-{{messageType}}">
-	  {{message}}
-	</div>
-	{% endif %}
+
 {% if type == "add" or type == "edit" %}
-	<form action="/manage/discount/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST">
+	<form action="/manage/discount/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST" class="form-horizontal">
 	{% csrf_token %}
-	<div class="input-group">
-	<div>{% if type == "edit" %}Aktywna: <input type="checkbox" name="active" value="1" {% if active == 1 %}checked{% endif %}/>{% endif %}</div>
-	<div><p>Dni: </p>
-		<input type="checkbox" name="day0" value="1" {% if day0 == 1 %}checked{% endif %}>Poniedziałek<br />
-		<input type="checkbox" name="day1" value="1" {% if day1 == 1 %}checked{% endif %}>Wtorek<br />
-		<input type="checkbox" name="day2" value="1" {% if day2 == 1 %}checked{% endif %}>Środa<br />
-		<input type="checkbox" name="day3" value="1" {% if day3 == 1 %}checked{% endif %}>Czwartek<br />
-		<input type="checkbox" name="day4" value="1" {% if day4 == 1 %}checked{% endif %}>Piątek<br />
-		<input type="checkbox" name="day5" value="1" {% if day5 == 1 %}checked{% endif %}>Sobota<br />
-		<input type="checkbox" name="day6" value="1" {% if day6 == 1 %}checked{% endif %}>Niedziela<br />
-	<div>Od:Godzina: <input type="time" autocomplete="on" name="shour" value="{% if type == "edit" %}{{sHour}}:{{sMinutes}}:00{% else %}08:00:00{% endif %}" /> 
-	Do:Godzina: <input type="time" name="ehour" value="{% if type == "edit" %}{{eHour}}:{{eMinutes}}:00{% else %}12:00:00{% endif %}" /> </div>
-	<div>Dla: <select name="type">
+	<div class="col-xs-6 row">
+	<div class="checkbox input-group" class="bottom6">
+	{% if type == "edit" %}<label>
+	<input type="checkbox" name="active" value="1" {% if active == 1 %}checked{% endif %}/>Aktywna</label>{% endif %}
+	</div>
+	<div class="input-group "><label>Dni: </label>
+		<div class="checkbox"><label><input  type="checkbox" name="day0" value="1" {% if day0 == 1 %}checked{% endif %}>Poniedziałek</label></div>
+		<div class="checkbox"><label><input  type="checkbox" name="day1" value="1" {% if day1 == 1 %}checked{% endif %}>Wtorek</label></div>
+		<div class="checkbox"><label><input  type="checkbox" name="day2" value="1" {% if day2 == 1 %}checked{% endif %}>Środa</label></div>
+		<div class="checkbox"><label><input  type="checkbox" name="day3" value="1" {% if day3 == 1 %}checked{% endif %}>Czwartek</label></div>
+		<div class="checkbox"><label><input  type="checkbox" name="day4" value="1" {% if day4 == 1 %}checked{% endif %}>Piątek</label></div>
+		<div class="checkbox"><label><input  type="checkbox" name="day5" value="1" {% if day5 == 1 %}checked{% endif %}>Sobota</label></div>
+		<div class="checkbox"><label><input  type="checkbox" name="day6" value="1" {% if day6 == 1 %}checked{% endif %}>Niedziela</label></div>
+	</div>
+	<div class="input-group ">
+	<label class=" control-label">Od:&nbsp; </label><input type="time" autocomplete="on" name="shour" value="{% if type == "edit" %}{{sHour}}:{{sMinutes}}:00{% else %}08:00:00{% endif %}" /> 
+	<label class=" control-label">&nbsp;Do: &nbsp;</label><input type="time" name="ehour" value="{% if type == "edit" %}{{eHour}}:{{eMinutes}}:00{% else %}12:00:00{% endif %}" /> 
+	</div>
+	<div class="input-group"><label class="control-label">Dla: </label>
+	<div class="">
+	<select name="type" class="form-control">
 		<option value="0" {% if typeFor == "0" %}selected{% endif %}>Zarejestrowani</option>
 		<option value="1" {% if typeFor == "1" %}selected{% endif %}>Niezarejestrowani</option>
 		<option value="2" {% if typeFor == "2" %}selected{% endif %}>Wszyscy</option>
 	</select>
 	</div>
-	<div>% zniżki: <input type="text" name="disc" value="{% if type == "edit" %}{{disc}}{% else %}0{% endif %}" />
-	<input type="hidden" name="sent" value="1" /></div><div><input type="submit" value="Zapisz" /></div>
+	</div>
+	<div class="input-group ">
+	<label  class="control-label">Zniżka %: </label>
+	<input type="text" name="disc" value="{% if type == "edit" %}{{disc}}{% else %}0{% endif %}"  class="form-control"/>
+	</div>
+	<div class="input-group"><input type="hidden" name="sent" value="1" /></div>
+	<div><input type="submit" value="Zapisz" class="btn btn-primary"/></div>
 	</div>
 	</form>
 {% endif %}
