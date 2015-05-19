@@ -1,0 +1,66 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+
+{% block content %}
+  {% if messageType == "danger" or messageType == "success" %}
+  <div class="alert alert-{{messageType}}">
+    {{message}}
+  </div>
+  {% endif %}
+  <form action="/user/register" method="POST">
+  {% csrf_token %}
+	<table border=0>
+ <tr>
+    <td>Dane:</td>
+  </tr>
+ <tr>
+   <td style="height: 20px"></td>
+  </tr>
+ <tr>
+    <td>Imię:</td><td><input type="text" name="name" value={{name}} ></td>
+  </tr>
+ <tr>
+    <td>Nazwisko:</td><td><input type="text" name="second_name" value={{second_name}} ></td>
+  </tr>
+ <tr>
+    <td>Adres:</td><td><input type="text" name="address" value={{address}} ></td>
+  </tr>
+ <tr>
+    <td>Miasto:</td><td><input type="text" name="city" value={{city}} ></td>
+  </tr>
+ <tr>
+    <td>Kod pocztowy:</td><td><input type="text" name="postal_code" value={{postal_code}} ></td>
+  </tr>
+ <tr>
+    <td>Numer telefonu:</td><td><input type="text" name="phone_number" value={{phone_number}} ></td>
+  </tr>
+ <tr>
+    <td>Hasło:</td><td><input type="password" name="password" value="" ></td>
+  </tr>
+ <tr>
+    <td>Nazwa użytkownika:</td><td><input type="text" name="username" value={{username}} ></td>
+  </tr>
+ <tr>
+   <td style="height: 20px"></td>
+  </tr>
+ <tr>
+   <td>Zgody:<td>
+  </tr>
+ <tr>
+   <td style="height: 20px"></td>
+  </tr>
+ <tr>
+    <td><input type="checkbox" name="agg0" value="1" {% if agg0 == 1 %}checked{% endif %}>Zgadzam się z regulaminem strony<br/></td>
+  </tr>
+ <tr>
+    <td><input type="checkbox" name="agg1" value="1" {% if agg1 == 1 %}checked{% endif %}>Zgadzam się na przetwarzanie danych osobowych<br/></td>
+  </tr>
+ <tr>
+    <td colspan="2"><input type="hidden" name="sent" value="1" /><input type="submit" value="Rejestruj" /></td>
+  </tr>
+</table>
+<a href="/">Powrót</a><br/><br/>
+	</form>
+{% endblock %}

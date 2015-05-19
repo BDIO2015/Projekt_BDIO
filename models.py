@@ -25,8 +25,11 @@ class User(models.Model):
 	city = models.CharField(max_length=30)
 	postal_code = models.CharField(max_length=5)
 	phone_number = models.CharField(max_length=15)
-	scheduled = models.ForeignKey(Schedule)
-	type = models.ForeignKey(User_Type)
+	password = models.CharField(max_length=64)
+	username = models.CharField(max_length=64)
+	## CHWILOWO ZEZWOLONE NA NULL ##
+	scheduled = models.ForeignKey(Schedule, null=True)
+	type = models.ForeignKey(User_Type, null=True)
 	
 class Delivery(models.Model):
 	delivery_id = models.AutoField(primary_key=True)
