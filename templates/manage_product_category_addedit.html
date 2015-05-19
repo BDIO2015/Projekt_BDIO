@@ -1,0 +1,49 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+{% if messageType == "danger" or messageType == "success" %}
+<div class="alert alert-{{messageType}}">
+  {{message}}
+</div>
+{% endif %}
+<a href="/manage/product_category/" class="btn btn-primary">Powrót</a><br /><br />
+{{ content }}
+{% if type == "add" or type == "edit" %}
+	<form action="/manage/product_category/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST" class="form-horizontal">
+	{% csrf_token %}
+	<div class="input-group ">
+	<label  class="control-label">Nazwa kategorii: </label>
+	<input type="text" name="name" value="{% if type == "edit" %}{{name}}{% endif %}"  class="form-control" required/>
+	</div>
+	<div class="input-group"><label>Typ: </label>
+		<div class="radio"><label><input  type="radio" name="type" value="1" {% if day0 == 1 %}checked{% endif %} required>Kategoria</label></div>
+		<div class="radio"><label><input  type="radio" name="type" value="2" {% if day1 == 1 %}checked{% endif %} required>Nagłówek Kategorii</label></div>
+	</div>
+	<div class="input-group ">
+	<label  class="control-label">Opis: </label>
+	<textarea class="form-control" rows="5" style="resize: none;" name="description">{% if type == "edit" %}{{desc}}{% endif %}</textarea>
+	</div>
+	<div class="input-group ">
+	<label  class="control-label">Opłata dodatkowa: </label>
+	<input type="number" name="additional_price" value="{% if type == "edit" %}{{add_price}}{% else %}0{% endif %}"  class="form-control" min="0" data-bind="value:replyNumber" step="any"/>
+	</div>
+	<div class="input-group"><label class="control-label">Kategoria nadrzędna</label>
+	<div class="">
+	<select name="parent" class="form-control" >
+		<option value="0">--Brak kategorii nadrzędnej--</option>
+		{% if count > 0 %}
+		{% for row in contents %}
+		<option value="{{row.id}}">{{row.name}}</option>
+		{% endfor %}
+		{% endif %}
+	</select>
+	</div>
+	</div>
+	<div class="input-group"><input type="hidden" name="sent" value="1" /></div>
+	<div><input type="submit" value="Zapisz" class="btn btn-primary"/></div>
+	</div>
+	</form>
+{% endif %}
+{% endblock %}
