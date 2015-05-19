@@ -399,5 +399,4 @@ def user_register(request):
 			newUser = User(name=reg_name, second_name=reg_second_name, username=reg_username, password=reg_password, postal_code=reg_postal_code, phone_number=reg_phone_number, city=reg_city, address=reg_address)
 			newUser.save()
 			contents = {'messageType':'success', 'message':'Użytkownik zarejestrowany','name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
-			return render(request,'user_register.html',contents)
 	return render(request, 'user_register.html', contents)
