@@ -14,7 +14,7 @@
 		<table class="table table-hovered table-responsive">
 		<tr><th>Typ</th><th>Nazwa</th><th>Dodatkowa opłata</th><th>Kategoria nadrzędna</th><th>Zarządzaj</th></tr>
 		{% for row in content %}
-			<tr><td>{row.type}</td><td>{{row.name}}</td><td>{{row.add_price}}</td><td>{{row.parent}}</td><><td><a href="edit/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="delete/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
+			<tr><td>{{row.name}}</td><td>{{row.type}}</td><td>{{row.add_price}}</td><td>{{row.parent}}</td><td><a href="edit/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="delete/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
 		{% endfor %}
 		</table>
 	{% else %}

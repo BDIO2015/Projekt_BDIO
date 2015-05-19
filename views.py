@@ -407,9 +407,39 @@ def product_category(request):
 	if(product_categories.count() > 0):
 		toDisp = []
 		for curRow in product_categories:
-			row = {'name':curRow.name, 'desc':curRow.desc,'type':curRow.type , 'add_price':curRow.additional_price, 'parent':curRow.parent.name, 'id':curRow.id}
+			if(curRow.parent != None):
+				parent_name = curRow.parent.name
+			else:
+				parent_name = "-"
+			row = {'name':curRow.name, 'desc':curRow.description,'type':curRow.get_type_display() , 'add_price':curRow.additional_price, 'parent':parent_name, 'id':curRow.cat_id}
 			toDisp.append(row)
 			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'content':toDisp}
 	else:
-		contents = {'title':'Kategorie Produktów', 'content':'Brak zdefiniowanych kategorii'}
+		contents = {'title':'Kategorie Produktów', 'content':'Brak zdefiniowanych kategorii', 'count':'0'}
 	return render(request, 'manage_product_category.html', contents)
+
+def product_category_add(request):
+	product_categories = Product_Category.objects.all()
+	toDisp = []
+	if(product_categories.count() > 0):
+		for curRow in product_categories:
+			row = {'name':curRow.name, 'id':curRow.cat_id}
+			toDisp.append(row)
+			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'content':toDisp}
+	isSent = request.POST.get('sent', False);
+	if(isSent):
+		cname =  request.POST.get('name', False);
+		cdesc = request.POST.get('description', False);
+		cadd_price = request.POST.get('additional_price', False);
+		cparent = request.POST.get('parent', False);
+		if(int(cparent) == 0):
+			cparent = None
+		else:
+			cparent = Product_Category.objects.get(cat_id=cparent)
+		ctype = request.POST.get('type', False);
+		newCategory = Product_Category(name = cname, description = cdesc, additional_price = cadd_price, parent = cparent, type = ctype)
+		newCategory.save()
+		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':toDisp, 'messageType': 'success','message':'Dodano nową kategorię', 'count':product_categories.count()}
+	else:
+		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':toDisp, 'messageType': '', 'count':product_categories.count()}
+	return render(request, 'manage_product_category_addedit.html', contents)

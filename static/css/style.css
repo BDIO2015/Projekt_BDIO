@@ -1,7 +1,12 @@
 .input-group, .form-group{
 margin-bottom:10px !important;
+width: 100% !important;
 }
-
+@media screen and (min-width: 700px) {
+    .input-group, .form-group{
+	width: 50% !important;
+	}
+}
 .menu {
 margin-bottom: 10px;
 }
