@@ -89,6 +89,11 @@ class Product_Category(models.Model):
 	name = models.CharField(max_length=30)
 	description = models.TextField()
 	additional_price = models.DecimalField(max_digits=5, decimal_places=2)
+	parent = models.ForeignKey("self")
+	type = (
+			('1', 'Kategoria'),
+			('2', 'Nagłówek kategorii'),
+		)
 
 class Product_Pc(models.Model):
 	product = models.ForeignKey(Product)

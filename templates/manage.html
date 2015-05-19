@@ -3,7 +3,14 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-	{{question}}
-	<br/>
-	{{content}}
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+
+		<table class="table table-hovered table-responsive">
+		<tr><th>Nazwa modułu</th></tr>
+			<tr><td><a href="discount">Discount</a></td></tr>
+		</table>
 {% endblock %}

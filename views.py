@@ -3,7 +3,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.http import HttpResponse
-from .models import Discount
+from .models import *
 
 def index(request):
 	contents = {'title':'Testujemy', 'question':'test'}
@@ -354,3 +354,16 @@ def discount_add(request):
 		else:
 			contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Nie wybrano żadnego dnia', 'type':'add'}
 	return render(request, 'manage_discountaddedit.html', contents)
+	
+def product_category(request):
+	product_categories = Product_Category.objects.all()
+	contents = {'title':'Kategorie Produktów', 'content':''}
+	if(product_categories.count > 0):
+		toDisp = []
+		for curRow in product_categories:
+			row = {'name':curRow.name, 'desc':curRow.desc,'type':curRow.type , 'add_price':curRow.additional_price, 'parent':curRow.parent.name, 'id':curRow.id}
+			toDisp.append(row)
+			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'content':toDisp}
+	else:
+		contents = {'title':'Kategorie Produktów', 'content':'Brak zdefiniowanych kategorii'}
+	return render(request, 'manage_product_category.html', contents)
