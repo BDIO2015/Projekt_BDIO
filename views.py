@@ -416,7 +416,7 @@ def user_register(request):
 			contents = {'messageType':'success', 'message':'Użytkownik zarejestrowany','name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
 	return render(request, 'user_register.html', contents)
 
-def product_category(request):
+def display_product_category():
 	product_categories = Product_Category.objects.all()
 	contents = {'title':'Kategorie Produktów', 'content':''}
 	if(product_categories.count() > 0):
@@ -424,23 +424,32 @@ def product_category(request):
 		for curRow in product_categories:
 			if(curRow.parent != None):
 				parent_name = curRow.parent.name
+				parent_id = curRow.parent.cat_id
 			else:
 				parent_name = "-"
-			row = {'name':curRow.name, 'desc':curRow.description,'type':curRow.get_type_display() , 'add_price':curRow.additional_price, 'parent':parent_name, 'id':curRow.cat_id}
+				parent_id = 0
+			row = {'name':curRow.name, 'desc':curRow.description,'type':curRow.get_type_display() , 'add_price':curRow.additional_price, 'parent':parent_name, 'id':curRow.cat_id, 'parent_id': parent_id}
 			toDisp.append(row)
 			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'content':toDisp}
 	else:
 		contents = {'title':'Kategorie Produktów', 'content':'Brak zdefiniowanych kategorii', 'count':0}
-	return render(request, 'manage_product_category.html', contents)
+	return contents	
+	
+def product_category(request):
+	return render(request, 'manage_product_category.html', display_product_category())
 
 def product_category_add(request):
 	product_categories = Product_Category.objects.all()
 	toDisp = []
 	if(product_categories.count() > 0):
 		for curRow in product_categories:
-			row = {'name':curRow.name, 'id':curRow.cat_id}
+			if(curRow.parent != None):
+				cpar = curRow.parent.cat_id
+			else:
+				cpar = 0
+			row = {'name':curRow.name, 'id':curRow.cat_id, 'parent': cpar}
 			toDisp.append(row)
-			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'content':toDisp}
+			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'contents':'','parents':toDisp}
 	isSent = request.POST.get('sent', False);
 	if(isSent):
 		cname =  request.POST.get('name', False);
@@ -454,11 +463,100 @@ def product_category_add(request):
 		ctype = request.POST.get('type', False);
 		newCategory = Product_Category(name = cname, description = cdesc, additional_price = cadd_price, parent = cparent, type = ctype)
 		newCategory.save()
-		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':toDisp, 'messageType': 'success','message':'Dodano nową kategorię', 'count':product_categories.count()}
+		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':'', 'parents':toDisp, 'messageType': 'success','message':'Dodano nową kategorię', 'count':product_categories.count()}
 	else:
-		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':toDisp, 'messageType': '', 'count':product_categories.count()}
+		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':'', 'parents':toDisp, 'messageType': '', 'count':product_categories.count()}
 	return render(request, 'manage_product_category_addedit.html', contents)
-	
+
+def product_category_edit(request, edit_id):
+	contents = display_product_category()
+	try:
+		editid = int(edit_id)
+	except ValueError:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer kategorii'
+		return render(request, 'manage_product_category.html', contents)
+	try:
+		editCat = Product_Category.objects.get(cat_id=edit_id)
+	except Product_Category.DoesNotExist:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Wybrana kategoria nie istnieje'
+		return render(request, 'manage_product_category.html', contents)
+	contents = {'title':'Kategorie Produktów', 'type':'edit'}
+	contents['id']=editCat.cat_id
+	contents['name']=editCat.name
+	contents['ctype']=editCat.type
+	contents['desc']=editCat.description
+	contents['add_price']=editCat.additional_price
+	if(editCat.parent != None):
+		contents['parent']=editCat.parent.cat_id
+	else:
+		contents['parent']=0
+		
+	product_categories = Product_Category.objects.all()
+	toDisp = []
+	contents['count']=0
+	if(product_categories.count() > 0):
+		for curRow in product_categories:
+			if(curRow.parent != None):
+				cpar = curRow.parent.cat_id
+			else:
+				cpar = 0
+			row = {'name':curRow.name, 'id':curRow.cat_id, 'parent': cpar}
+			toDisp.append(row)
+			contents['count']=product_categories.count()
+			contents['parents']=toDisp
+			
+	if(request.POST.get('sent', False)):
+		cid = request.POST.get('id',False);
+		cname =  request.POST.get('name', False);
+		cdesc = request.POST.get('description', False);
+		cadd_price = request.POST.get('additional_price', False);
+		cparent = request.POST.get('parent', False);
+		if(int(cparent) == 0):
+			cparent = None
+		else:
+			cparent = Product_Category.objects.get(cat_id=cparent)
+		ctype = request.POST.get('type', False);
+
+		try:
+			check = Product_Category.objects.get(cat_id=cid)
+		except Product_Category.DoesNotExist:
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Wystąpił nieoczekiwany błąd'
+			return render(request, 'manage_product_category.html', contents)
+		editCat.name = cname
+		editCat.description = cdesc
+		editCat.additional_price = cadd_price
+		editCat.parent = cparent
+		editCat.type = ctype
+		editCat.save()
+		contents = display_product_category()
+		contents['messageType'] = 'success'
+		contents['message'] = 'Kategoria poprawnie zapisana'
+		return render(request, 'manage_product_category.html', contents)
+	return render(request, 'manage_product_category_addedit.html', contents)
+
+def product_category_delete(request, del_id):
+	contents = display_product_category()
+	try:
+		delete = int(del_id)
+	except ValueError:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer kategorii'
+		return render(request, 'manage_product_category.html', contents)
+	try:
+		delCat = Product_Category.objects.get(cat_id=delete)
+	except User_Type.DoesNotExist:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Wybrana kategoria nie istnieje'
+		return render(request, 'manage_product_category.html', contents)
+	delCat.delete()
+	contents = display_product_category()
+	contents['messageType'] = 'success'
+	contents['message'] = 'Poprawnie usunięto wybraną kategorię'
+	return render(request, 'manage_product_category.html', contents)
+
 	
 def display_user_type():
 	types = User_Type.objects.all()

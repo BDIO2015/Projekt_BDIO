@@ -12,9 +12,22 @@
 	<a href="/manage/product_category/add/" class="btn btn-primary">Dodaj nową kategorię</a><br /><br />
 	{% if count > 0 %}
 		<table class="table table-hovered table-responsive">
-		<tr><th>Typ</th><th>Nazwa</th><th>Dodatkowa opłata</th><th>Kategoria nadrzędna</th><th>Zarządzaj</th></tr>
+		<tr><th>Typ</th><th>Nazwa</th><th>Dodatkowa opłata</th><th>Opis</th><th>Zarządzaj</th></tr>
 		{% for row in content %}
-			<tr><td>{{row.name}}</td><td>{{row.type}}</td><td>{{row.add_price}}</td><td>{{row.parent}}</td><td><a href="/manage/product_category/edit/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/product_category/delete/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
+			{% if row.parent_id == 0 %}
+			<tr><td>{{row.name}}</td><td>{{row.type}}</td><td>{{row.add_price}}</td><td>{{row.desc}}</td><td><a href="/manage/product_category/edit/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/product_category/delete/{{row.id}}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
+				{% for rowx in content %}
+					{% if rowx.parent_id == row.id and rowx.id != 0 %} 
+						<tr><td>&nbsp;|--- {{rowx.name}}</td><td>{{rowx.type}}</td><td>{{rowx.add_price}}</td><td>{{rowx.desc}}</td><td><a href="/manage/product_category/edit/{{rowx.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/product_category/delete/{{rowx.id}}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
+						{% for rowy in content %}
+							{% if rowy.parent_id == rowx.id and rowy.id != 0 %}
+								<tr><td>&nbsp;&nbsp;|---- {{rowy.name}}</td><td>{{rowy.type}}</td><td>{{rowy.add_price}}</td><td>{{rowy.desc}}</td><td><a href="/manage/product_category/edit/{{rowy.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/product_category/delete/{{rowy.id}}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
+							
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				{% endfor %}
+			{% endif %}
 		{% endfor %}
 		</table>
 	{% else %}

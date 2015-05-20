@@ -18,8 +18,8 @@
 	<input type="text" name="name" value="{% if type == "edit" %}{{name}}{% endif %}"  class="form-control" required/>
 	</div>
 	<div class="input-group"><label>Typ: </label>
-		<div class="radio"><label><input  type="radio" name="type" value="1" {% if day0 == 1 %}checked{% endif %} required>Kategoria</label></div>
-		<div class="radio"><label><input  type="radio" name="type" value="2" {% if day1 == 1 %}checked{% endif %} required>Nagłówek Kategorii</label></div>
+		<div class="radio"><label><input  type="radio" name="type" value="1" {% if ctype == '1' %}checked{% endif %} required>Kategoria</label></div>
+		<div class="radio"><label><input  type="radio" name="type" value="2" {% if ctype == '2' %}checked{% endif %} required>Nagłówek Kategorii</label></div>
 	</div>
 	<div class="input-group ">
 	<label  class="control-label">Opis: </label>
@@ -27,21 +27,40 @@
 	</div>
 	<div class="input-group ">
 	<label  class="control-label">Opłata dodatkowa: </label>
-	<input type="number" name="additional_price" value="{% if type == "edit" %}{{add_price}}{% else %}0{% endif %}"  class="form-control" min="0" data-bind="value:replyNumber" step="any"/>
+	<input type="number" name="additional_price" value="{% if type == "edit" %}{{add_price}}{% else %}0{% endif %}"  class="form-control" min="0" max="999.99" data-bind="value:replyNumber" step="any"/>
 	</div>
 	<div class="input-group"><label class="control-label">Kategoria nadrzędna</label>
 	<div class="">
+	<!-- Wyświetla tylko 3 stopnie drzewa kategorii, wiecej chyba nie trzeba -->
 	<select name="parent" class="form-control" >
 		<option value="0">--Brak kategorii nadrzędnej--</option>
 		{% if count > 0 %}
-		{% for row in contents %}
-		<option value="{{row.id}}">{{row.name}}</option>
-		{% endfor %}
+			{% for row in parents %}
+				{% if row.parent == 0 %}
+				<option value="{{row.id}}" {% if type == "edit" %} {% if row.id == parent %} selected {% endif %} {% endif %} >{{row.name}}</option>
+				
+					{% for rowx in parents %}
+
+						{% if rowx.parent == row.id and rowx.id != 0 %} 
+						<option value="{{rowx.id}}" {% if type == "edit" %} {% if rowx.id == parent %} selected {% endif %} {% endif %} >|- {{rowx.name}}</option>
+						
+							{% for rowy in parents %}
+								{% if rowy.parent == rowx.id and rowx.id != 0 %} 
+								<option value="{{rowy.id}}" {% if type == "edit" %} {% if rowy.id == parent %} selected {% endif %} {% endif %} > |-- {{rowy.name}}</option>
+								{% endif %}
+						
+							{% endfor %}}
+						{% endif %}
+					{% endfor %}}
+				{% endif %}
+			{% endfor %}
 		{% endif %}
 	</select>
 	</div>
 	</div>
-	<div class="input-group"><input type="hidden" name="sent" value="1" /></div>
+	<div class="input-group">
+	{%if type == "edit"  %}<input type="hidden" name="id" value="{{id}}" />{% endif %}
+	<input type="hidden" name="sent" value="1" /></div>
 	<div><input type="submit" value="Zapisz" class="btn btn-primary"/></div>
 	</div>
 	</form>
