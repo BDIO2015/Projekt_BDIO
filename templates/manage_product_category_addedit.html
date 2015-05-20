@@ -42,11 +42,11 @@
 					{% for rowx in parents %}
 
 						{% if rowx.parent == row.id and rowx.id != 0 %} 
-						<option value="{{rowx.id}}" {% if type == "edit" %} {% if rowx.id == parent %} selected {% endif %} {% endif %} >|- {{rowx.name}}</option>
+						<option value="{{rowx.id}}" {% if type == "edit" %} {% if rowx.id == parent %} selected {% endif %} {% endif %} >&nbsp;|-- {{rowx.name}}</option>
 						
 							{% for rowy in parents %}
 								{% if rowy.parent == rowx.id and rowx.id != 0 %} 
-								<option value="{{rowy.id}}" {% if type == "edit" %} {% if rowy.id == parent %} selected {% endif %} {% endif %} > |-- {{rowy.name}}</option>
+								<option value="{{rowy.id}}" {% if type == "edit" %} {% if rowy.id == parent %} selected {% endif %} {% endif %} >&nbsp;&nbsp;|---- {{rowy.name}}</option>
 								{% endif %}
 						
 							{% endfor %}}
