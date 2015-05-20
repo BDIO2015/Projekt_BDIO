@@ -451,3 +451,124 @@ def product_category_add(request):
 	else:
 		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':toDisp, 'messageType': '', 'count':product_categories.count()}
 	return render(request, 'manage_product_category_addedit.html', contents)
+	
+	
+def display_user_type():
+	types = User_Type.objects.all()
+	contents = {'title':'Typy użytkowników', 'content':''}
+	if(types.count() > 0):
+		toDisp = []
+		for curRow in types:
+			add = "Nie"
+			if(curRow.canCreate == 1):
+				add = "Tak"
+			edit = "Nie"
+			if(curRow.canEdit == 1):
+				edit = "Tak"
+			delete = "Nie"
+			if(curRow.canDelete == 1):
+				delete = "Tak"
+			manage = "Nie"
+			if(curRow.canManage == 1):
+				manage = "Tak"
+			row = {'name':curRow.type_name, 'add':add,'edit':edit , 'delete':delete, 'manage':manage, 'id':curRow.id}
+			toDisp.append(row)
+			contents = {'title':'Typy użytkowników','count':types.count(), 'content':toDisp}
+	else:
+		contents = {'title':'Typy użytkowników', 'content':'Brak zdefiniowanych typów', 'count':0}
+	return contents
+
+def user_type(request):
+	return render(request, 'manage_user_type.html', display_user_type())
+	
+def user_type_add(request):
+	contents = {'title':'Typy użytkowników', 'type':'add'}
+	if(request.POST.get('sent', False)):
+		name = request.POST.get('name', False)
+		create = request.POST.get('create', False)
+		edit = request.POST.get('edit', False)
+		delete = request.POST.get('delete', False)
+		manage = request.POST.get('manage', False)
+		if(len(name) < 3):
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Nazwa nie może być krótsza niż 3 znaki'
+			return render(request, 'manage_user_type_addedit.html', contents)
+		try:
+			check = User_Type.objects.get(type_name=name)
+		except User_Type.DoesNotExist:
+			toSave = User_Type(type_name=name, canCreate=create, canEdit=edit, canDelete=delete, canManage=manage)
+			toSave.save()
+			contents['messageType'] = 'success'
+			contents['message'] = 'Dodano nowy typ użytkowników'
+			return render(request, 'manage_user_type_addedit.html', contents)
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Nazwa jest już używana'
+	return render(request, 'manage_user_type_addedit.html', contents)
+	
+def user_type_delete(request, del_id):
+	contents = display_user_type()
+	try:
+		delete = int(del_id)
+	except ValueError:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer typu'
+		return render(request, 'manage_user_type.html', contents)
+	try:
+		user = User_Type.objects.get(id=delete)
+	except User_Type.DoesNotExist:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Wybrany typ nie istnieje'
+		return render(request, 'manage_user_type.html', contents)
+	user.delete()
+	contents = display_user_type()
+	contents['messageType'] = 'success'
+	contents['message'] = 'Poprawnie usunięto wybrany typ'
+	return render(request, 'manage_user_type.html', contents)
+
+def user_type_edit(request, edit_id):
+	contents = display_user_type()
+	try:
+		editid = int(edit_id)
+	except ValueError:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer typu'
+		return render(request, 'manage_user_type.html', contents)
+	try:
+		user = User_Type.objects.get(id=editid)
+	except User_Type.DoesNotExist:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Wybrany typ nie istnieje'
+		return render(request, 'manage_user_type.html', contents)
+	contents = {'title':'Typy użytkowników', 'type':'edit'}
+	contents['id']=user.id
+	contents['name']=user.type_name
+	contents['create']=user.canCreate
+	contents['edit']=user.canEdit
+	contents['delete']=user.canDelete
+	contents['manage']=user.canManage
+	if(request.POST.get('sent', False)):
+		name = request.POST.get('name', False)
+		create = request.POST.get('create', False)
+		edit = request.POST.get('edit', False)
+		delete = request.POST.get('delete', False)
+		manage = request.POST.get('manage', False)
+		if(len(name) < 3):
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Nazwa nie może być krótsza niż 3 znaki'
+			return render(request, 'manage_user_type_addedit.html', contents)
+		try:
+			check = User_Type.objects.get(type_name=name)
+		except User_Type.DoesNotExist:
+			user.type_name = name
+			user.canCreate = create
+			user.canEdit = edit
+			user.canDelete = delete
+			user.canManage = manage
+			user.save()
+			contents = display_user_type()
+			contents['messageType'] = 'success'
+			contents['message'] = 'Typ został zmieniony'
+			return render(request, 'manage_user_type.html', contents)
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Nazwa jest już używana'
+	return render(request, 'manage_user_type_addedit.html', contents)

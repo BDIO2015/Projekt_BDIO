@@ -1,0 +1,24 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	<a href="/manage" class="btn btn-primary">Powrót</a><br /><br />
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	<a href="/manage/user_type/add/" class="btn btn-primary">Dodaj nowy typ</a><br /><br />
+	{% if count > 0 %}
+		<table class="table table-hovered table-responsive">
+		<tr><th rowspan="2">Nazwa</th><th colspan="4">Uprawnienia</th><th rowspan="2">Zarządzaj</th></tr>
+		<tr><th>Dodawanie zamówień</th><th>Edytowanie zamówień</th><th>Usuwanie zamówień</th><th>Zarządzanie systemem</th></tr>
+		{% for row in content %}
+			<tr><td>{{row.name}}</td><td>{{row.add}}</td><td>{{row.edit}}</td><td>{{row.delete}}</td><td>{{row.manage}}</td><td><a href="/manage/user_type/edit/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/user_type/delete/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
+		{% endfor %}
+		</table>
+	{% else %}
+		{{content}}
+	{% endif %}
+{% endblock %}
