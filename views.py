@@ -12,8 +12,8 @@ def index(request):
 def manage(request):
 	contents = {'title':'Testujemy2', 'question':'test2'}
 	return render(request, 'manage.html', contents)
-	
-def discount(request):
+
+def display_discount():
 	discounts = Discount.objects.all()
 	contents = {'title':'Zniżki', 'content':''}
 	if(discounts.count() > 0):
@@ -86,31 +86,39 @@ def discount(request):
 		contents = {'title':'Zniżki','count':discounts.count(), 'content':toDisp}
 	else:
 		contents = {'title':'Zniżki', 'content':'Brak zdefiniowanych zniżek'}
-	return render(request, 'manage_discount.html', contents)
+	return contents
+	
+def discount(request):
+	return render(request, 'manage_discount.html', display_discount())
 
 def discount_delete(request, del_id):
 	try:
 		did = int(del_id)
 	except ValueError:
-		contents = {'title':'Zniżki','messageType':'danger', 'message':'Podano niepoprawny numer'}
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer'
 		return render(request, 'manage_discount.html', contents)
 	mainContent = ''
-	contents = {'title':'Zniżki','messageType':'danger', 'message':'Podano niepoprawny numer'}
+	contents = display_discount()
 	toDel = Discount.objects.filter(id=did)
 	if(toDel.count() == 1):
 		toDel[0].delete()
-		contents = {'title':'Zniżki','messageType':'success', 'message':'Poprawnie usunięto wybraną zniżkę'}
+		contents = display_discount()
+		contents['messageType'] = 'success'
+		contents['message'] = 'Poprawnie usunięto wybraną zniżkę'
 	elif(toDel.count() > 1):
-		contents = {'title':'Zniżki','messageType':'danger', 'message':'Nieznany błąd'}
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Nieznany błąd'
 	else:
-		contents = {'title':'Zniżki','messageType':'danger', 'message':'Podano niepoprawny numer'}
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer'
 	return render(request, 'manage_discount.html', contents)
 
 def discount_edit(request, edit_id):
 	try:
 		eid = int(edit_id)
 	except ValueError:
-		contents = {'title':'Zniżki', 'type':'danger', 'content':'Podano niepoprawny numer'}
+		contents = {'title':'Zniżki', 'type':'danger', 'message':'Podano niepoprawny numer'}
 		return render(request, 'manage_discount.html', contents)
 	mainContent = ''
 	contents = {'title':'Zniżki', 'type':'edit', 'content':mainContent}
@@ -245,10 +253,10 @@ def discount_edit(request, edit_id):
 			contents['messageType'] = 'success'
 			contents['message'] = 'Zapisano poprawnie'
 	elif(toEdit.count() > 1):
-		contents = {'title':'Zniżki', 'messageType':'danger', 'content':'Nieznany błąd'}
+		contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Nieznany błąd'}
 		return render(request, 'manage_discount.html', contents)
 	else:
-		contents = {'title':'Zniżki', 'messageType':'danger', 'content':'Podano niepoprawny numer'}
+		contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Podano niepoprawny numer'}
 		return render(request, 'manage_discount.html', contents)
 	return render(request, 'manage_discountaddedit.html', contents)
 
@@ -349,8 +357,8 @@ def discount_add(request):
 			typeFormat += str(disc)
 			newDisc = Discount(type=typeFormat, value=disc)
 			newDisc.save()
-			contents = {'title':'Zniżki', 'messageType':'success', 'message':'Dodano nową zniżkę'}
-			return render(request, 'manage_discount.html', contents)
+			contents = {'title':'Zniżki', 'messageType':'success', 'message':'Dodano nową zniżkę', 'type':'add'}
+			return render(request, 'manage_discountaddedit.html', contents)
 		else:
 			contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Nie wybrano żadnego dnia', 'type':'add'}
 	return render(request, 'manage_discountaddedit.html', contents)
