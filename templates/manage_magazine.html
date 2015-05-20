@@ -1,0 +1,55 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<a href="/manage/discount/">Powrót</a><br /><br />
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	<a href="/manage/magazine/add/">Dodaj nowy składnik do bazy</a><br /><br />
+
+	<table border=1 cellpadding="2">
+	<tr>
+	<td style="min-width: 150px;" align="center">
+	Składnik
+	</td>
+	<td style="min-width:80px;" align="center" colspan="2">
+	Magazyn
+	</td>
+	<td style="min-width: 70px;" align="center">
+	Cena
+	</td>
+	</tr>
+	{% for element in ingredients %}
+	<tr>
+	<td>
+	{{ element.name }}
+	</td>
+	<td  align="right" width="60">
+		{% if element.quantity < element.min_quantity %}
+			<font color="red">
+		{% endif %}
+		{{ element.quantity }}&nbsp
+		</font>
+	</td>
+	<td style="border-left-style: hidden;">
+		{% if element.quantity < element.min_quantity %}
+			<font color="red">
+		{% endif %}
+		{{ element.units }}&nbsp	
+		</font>
+	</td>
+	<td align="right">
+	{{ element.price }} PLN&nbsp
+	</td>
+	<td align="right" >
+	<a href="/manage/magazine/edit/{{ element.id }}/">[Edytuj]</a> <a href="/manage/magazine/delete/{{ element.id }}/" class="delete_button" >[Usuń]</a>
+	</td>
+	</tr>
+	{% endfor %}
+	</table>
+	
+{% endblock %}

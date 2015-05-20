@@ -677,3 +677,161 @@ def user_type_edit(request, edit_id):
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Nazwa jest już używana'
 	return render(request, 'manage_user_type_addedit.html', contents)
+
+	
+def magazine(request):
+	ingredients = Ingredient.objects.all()
+	
+	contents = {'ingredients': ingredients, 'title': "Magazyn", 'messageType':'None'}
+	return render(request, 'manage_magazine.html', contents)
+	
+def magazine_add(request):
+	ingredients = Ingredient.objects.all()
+
+	if(request.POST.get('sent')):		
+		ingredient_name = request.POST.get('ingredient_name', False);
+		quantityx = request.POST.get('count', False);
+		min_quantityx = request.POST.get('min_count', False)
+		pricex = request.POST.get('price', False)
+		unitsx = request.POST.get('units', False)
+		
+		ingredient_name = str(ingredient_name)
+		if re.match('^[a-zA-Zćśźżńłóąę ]+$',ingredient_name) and ingredient_name != "Nazwa składnika": 	
+			
+
+			if(pricex.count(",") > 1 or pricex.count(".") > 1 or quantityx.count(",") > 1 or quantityx.count(".") > 1 or min_quantityx.count(",") > 1 or min_quantityx.count(".") > 1):
+				contents = {'title': "Magazyn", 'result':'Błędna/e wartości cena, ilość, min. ilość!', 'type': 'add'}		
+				return render(request, 'manage_magazine_addedit.html', contents)
+			
+			for ingredient in ingredients:
+				if(ingredient.name == ingredient_name):		
+					contents = {'title': "Magazyn", 'result':'Składnik o takiej nazwie już istnieje!'}		
+					return render(request, 'manage_magazine_addedit.html', contents)
+			
+			pricex = pricex.replace(',', '.');	
+			quantityx = quantityx.replace(',', '.');
+			min_quantityx = min_quantityx.replace(',', '.');
+			
+			if(unitsx == 'Kilogram'):
+				unitsx = 'kg'
+			elif(unitsx == 'Litr'):
+				unitsx = 'l'
+			else:
+				unitsx = 'szt'
+				
+			try:	
+				quantityx = float(quantityx)
+			except ValueError:
+				quantityx = 0
+			try:		
+				min_quantityx = float(min_quantityx)
+			except ValueError:
+				min_quantityx = 0
+			try:	
+				pricex = float(pricex)
+			except ValueError:
+				pricex = 0
+		
+			newIngredient = Ingredient(name=ingredient_name, price=pricex, quantity=quantityx, units=unitsx, min_quantity=min_quantityx)
+			newIngredient.save()	
+			
+			return magazine(request)
+			
+		else:	
+			contents = {'title': "Magazyn", 'messageType':'none', 'result': 'Niepoprawna nazwa składnika!', 'type': 'add'}
+	else:
+		contents = {'title': "Magazyn", 'messageType':'none', 'type': 'add'}
+		
+	return render(request, 'manage_magazine_addedit.html', contents)	
+
+def magazine_edit(request, edit_id):
+	try:
+		eid = int(edit_id)
+	except ValueError:
+		contents = {'title':'Magazyn', 'type':'danger', 'content':'Podany element nie istnieje!'}
+		return render(request, 'manage_magazine.html', contents)
+	ingredients = Ingredient.objects.all()
+	toEdit = Ingredient.objects.get(id=edit_id)
+	if(toEdit):		
+		contents = {'title': "Magazyn", 'messageType':'none', 'type': 'edit', 'toEdit': toEdit}
+		
+		if(request.POST.get('sent')):		
+			ingredient_name = request.POST.get('ingredient_name', False);
+			quantityx = request.POST.get('count', False);
+			min_quantityx = request.POST.get('min_count', False)
+			pricex = request.POST.get('price', False)
+			unitsx = request.POST.get('units', False)
+			
+			ingredient_name = str(ingredient_name)
+			if re.match('^[a-zA-Zćśźżńłóąę ]+$',ingredient_name) and ingredient_name != "Nazwa składnika": 	
+				
+
+				if(pricex.count(",") > 1 or pricex.count(".") > 1 or quantityx.count(",") > 1 or quantityx.count(".") > 1 or min_quantityx.count(",") > 1 or min_quantityx.count(".") > 1):
+					contents = {'title': "Magazyn", 'result':'Błędna/e wartości cena, ilość, min. ilość!'}		
+					return render(request, 'manage_magazine_addedit.html', contents)
+				
+				for ingredient in ingredients:
+					if(ingredient.name == ingredient_name and ingredient.id != eid):		
+						contents = {'title': "Magazyn", 'result':'Składnik o takiej nazwie już istnieje!'}		
+						return render(request, 'manage_magazine_addedit.html', contents)
+				
+				pricex = pricex.replace(',', '.');	
+				quantityx = quantityx.replace(',', '.');
+				min_quantityx = min_quantityx.replace(',', '.');
+				
+				if(unitsx == 'Kilogram'):
+					unitsx = 'kg'
+				elif(unitsx == 'Litr'):
+					unitsx = 'l'
+				else:
+					unitsx = 'szt'
+					
+				try:	
+					quantityx = float(quantityx)
+				except ValueError:
+					quantityx = 0
+				try:		
+					min_quantityx = float(min_quantityx)
+				except ValueError:
+					min_quantityx = 0
+				try:	
+					pricex = float(pricex)
+				except ValueError:
+					pricex = 0
+			
+				toEdit.name = ingredient_name
+				toEdit.price = pricex
+				toEdit.quantity = quantityx
+				toEdit.units = unitsx
+				toEdit.min_quantity = min_quantityx
+				toEdit.save()	
+				
+				return magazine(request)
+				
+			else:	
+				contents = {'title': "Magazyn", 'messageType':'none', 'result': 'Niepoprawna nazwa składnika!', 'type': 'edit', 'toEdit': toEdit }
+	else:	
+		contents = {'title': "Magazyn", 'messageType':'danger', 'message': 'Podany element nie istnieje!', 'type': 'edit', 'toEdit': toEdit}
+		
+	return render(request, 'manage_magazine_addedit.html', contents)
+	
+def magazine_delete(request, del_id):
+	try:
+		did = int(del_id)
+	except ValueError:
+		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!'}
+		return render(request, 'manage_magazine.html', contents)
+		
+	toDel = Ingredient.objects.filter(id=did)
+	if(toDel.count() == 1):
+		toDel[0].delete()
+		return magazine(request)
+	elif(toDel.count() > 1):
+		contents = {'title':'Magazyn','messageType':'danger', 'message':'Nieznany błąd'}
+	else:
+		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!'}
+
+	return render(request, 'manage_magazine.html', contents)
+	
+	
+	
