@@ -415,7 +415,7 @@ def product_category(request):
 			toDisp.append(row)
 			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'content':toDisp}
 	else:
-		contents = {'title':'Kategorie Produktów', 'content':'Brak zdefiniowanych kategorii', 'count':'0'}
+		contents = {'title':'Kategorie Produktów', 'content':'Brak zdefiniowanych kategorii', 'count':0}
 	return render(request, 'manage_product_category.html', contents)
 
 def product_category_add(request):
