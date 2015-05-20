@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 from django.shortcuts import render
-import re
+import re, hashlib
 # Create your views here.
 from django.http import HttpResponse
 from .models import Discount, User
@@ -395,6 +395,7 @@ def user_register(request):
 				return render(request,'user_register.html',contents)	
 		good=1
 		if good:
+			reg_password=hashlib.sha256(reg_password.encode()).hexdigest()
 			##DOPOKI NIE MA TYPE I SCHEDULE, TRZEBA ZEZWOLIC CHWILOWO NA NULL!, PRZYJMUJEMY ZE UZYTKOWNICY ZE ZWYKLEGO REGISTER DOSTAJA SCHEDULE 0 CZYLI BRAK BO TO KLIENCI, TYP 0, ZMIANA TYPU MOZLIWA PRZEZ PANEL ADMINA KTORY KTOS ZROBI##
 			newUser = User(name=reg_name, second_name=reg_second_name, username=reg_username, password=reg_password, postal_code=reg_postal_code, phone_number=reg_phone_number, city=reg_city, address=reg_address)
 			newUser.save()

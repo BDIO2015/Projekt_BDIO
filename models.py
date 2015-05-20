@@ -25,7 +25,7 @@ class User(models.Model):
 	city = models.CharField(max_length=30)
 	postal_code = models.CharField(max_length=5)
 	phone_number = models.CharField(max_length=15)
-	password = models.CharField(max_length=64)
+	password = models.CharField(max_length=512)
 	username = models.CharField(max_length=64)
 	## CHWILOWO ZEZWOLONE NA NULL ##
 	scheduled = models.ForeignKey(Schedule, null=True)
