@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 from django.db import models
 
 # Create your models here.
@@ -92,7 +93,13 @@ class Product_Category(models.Model):
 	name = models.CharField(max_length=30)
 	description = models.TextField()
 	additional_price = models.DecimalField(max_digits=5, decimal_places=2)
-
+	parent = models.ForeignKey("self", null=True)
+	TYPE_STATUS= (
+			('1', 'Kategoria'),
+			('2', 'Nagłówek kategorii'),
+		)
+	type = models.CharField(max_length=1, choices=TYPE_STATUS)
+	
 class Product_Pc(models.Model):
 	product = models.ForeignKey(Product)
 	category = models.ForeignKey(Product_Category)

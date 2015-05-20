@@ -3,7 +3,7 @@ from django.shortcuts import render
 import re, hashlib
 # Create your views here.
 from django.http import HttpResponse
-from .models import Discount, User
+from .models import *
 
 def index(request):
 	contents = {'title':'Testujemy', 'question':'test'}
@@ -12,8 +12,8 @@ def index(request):
 def manage(request):
 	contents = {'title':'Testujemy2', 'question':'test2'}
 	return render(request, 'manage.html', contents)
-	
-def discount(request):
+
+def display_discount():
 	discounts = Discount.objects.all()
 	contents = {'title':'Zniżki', 'content':''}
 	if(discounts.count() > 0):
@@ -86,31 +86,39 @@ def discount(request):
 		contents = {'title':'Zniżki','count':discounts.count(), 'content':toDisp}
 	else:
 		contents = {'title':'Zniżki', 'content':'Brak zdefiniowanych zniżek'}
-	return render(request, 'manage_discount.html', contents)
+	return contents
+	
+def discount(request):
+	return render(request, 'manage_discount.html', display_discount())
 
 def discount_delete(request, del_id):
 	try:
 		did = int(del_id)
 	except ValueError:
-		contents = {'title':'Zniżki','messageType':'danger', 'message':'Podano niepoprawny numer'}
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer'
 		return render(request, 'manage_discount.html', contents)
 	mainContent = ''
-	contents = {'title':'Zniżki','messageType':'danger', 'message':'Podano niepoprawny numer'}
+	contents = display_discount()
 	toDel = Discount.objects.filter(id=did)
 	if(toDel.count() == 1):
 		toDel[0].delete()
-		contents = {'title':'Zniżki','messageType':'success', 'message':'Poprawnie usunięto wybraną zniżkę'}
+		contents = display_discount()
+		contents['messageType'] = 'success'
+		contents['message'] = 'Poprawnie usunięto wybraną zniżkę'
 	elif(toDel.count() > 1):
-		contents = {'title':'Zniżki','messageType':'danger', 'message':'Nieznany błąd'}
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Nieznany błąd'
 	else:
-		contents = {'title':'Zniżki','messageType':'danger', 'message':'Podano niepoprawny numer'}
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer'
 	return render(request, 'manage_discount.html', contents)
 
 def discount_edit(request, edit_id):
 	try:
 		eid = int(edit_id)
 	except ValueError:
-		contents = {'title':'Zniżki', 'type':'danger', 'content':'Podano niepoprawny numer'}
+		contents = {'title':'Zniżki', 'type':'danger', 'message':'Podano niepoprawny numer'}
 		return render(request, 'manage_discount.html', contents)
 	mainContent = ''
 	contents = {'title':'Zniżki', 'type':'edit', 'content':mainContent}
@@ -245,10 +253,10 @@ def discount_edit(request, edit_id):
 			contents['messageType'] = 'success'
 			contents['message'] = 'Zapisano poprawnie'
 	elif(toEdit.count() > 1):
-		contents = {'title':'Zniżki', 'messageType':'danger', 'content':'Nieznany błąd'}
+		contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Nieznany błąd'}
 		return render(request, 'manage_discount.html', contents)
 	else:
-		contents = {'title':'Zniżki', 'messageType':'danger', 'content':'Podano niepoprawny numer'}
+		contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Podano niepoprawny numer'}
 		return render(request, 'manage_discount.html', contents)
 	return render(request, 'manage_discountaddedit.html', contents)
 
@@ -349,12 +357,12 @@ def discount_add(request):
 			typeFormat += str(disc)
 			newDisc = Discount(type=typeFormat, value=disc)
 			newDisc.save()
-			contents = {'title':'Zniżki', 'messageType':'success', 'message':'Dodano nową zniżkę'}
-			return render(request, 'manage_discount.html', contents)
+			contents = {'title':'Zniżki', 'messageType':'success', 'message':'Dodano nową zniżkę', 'type':'add'}
+			return render(request, 'manage_discountaddedit.html', contents)
 		else:
 			contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Nie wybrano żadnego dnia', 'type':'add'}
 	return render(request, 'manage_discountaddedit.html', contents)
-
+	
 def user_register(request):
 	mainContent = '';
 	contents = {'title':'Rejestracja', 'name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
@@ -401,3 +409,167 @@ def user_register(request):
 			newUser.save()
 			contents = {'messageType':'success', 'message':'Użytkownik zarejestrowany','name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
 	return render(request, 'user_register.html', contents)
+
+def product_category(request):
+	product_categories = Product_Category.objects.all()
+	contents = {'title':'Kategorie Produktów', 'content':''}
+	if(product_categories.count() > 0):
+		toDisp = []
+		for curRow in product_categories:
+			if(curRow.parent != None):
+				parent_name = curRow.parent.name
+			else:
+				parent_name = "-"
+			row = {'name':curRow.name, 'desc':curRow.description,'type':curRow.get_type_display() , 'add_price':curRow.additional_price, 'parent':parent_name, 'id':curRow.cat_id}
+			toDisp.append(row)
+			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'content':toDisp}
+	else:
+		contents = {'title':'Kategorie Produktów', 'content':'Brak zdefiniowanych kategorii', 'count':0}
+	return render(request, 'manage_product_category.html', contents)
+
+def product_category_add(request):
+	product_categories = Product_Category.objects.all()
+	toDisp = []
+	if(product_categories.count() > 0):
+		for curRow in product_categories:
+			row = {'name':curRow.name, 'id':curRow.cat_id}
+			toDisp.append(row)
+			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'content':toDisp}
+	isSent = request.POST.get('sent', False);
+	if(isSent):
+		cname =  request.POST.get('name', False);
+		cdesc = request.POST.get('description', False);
+		cadd_price = request.POST.get('additional_price', False);
+		cparent = request.POST.get('parent', False);
+		if(int(cparent) == 0):
+			cparent = None
+		else:
+			cparent = Product_Category.objects.get(cat_id=cparent)
+		ctype = request.POST.get('type', False);
+		newCategory = Product_Category(name = cname, description = cdesc, additional_price = cadd_price, parent = cparent, type = ctype)
+		newCategory.save()
+		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':toDisp, 'messageType': 'success','message':'Dodano nową kategorię', 'count':product_categories.count()}
+	else:
+		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':toDisp, 'messageType': '', 'count':product_categories.count()}
+	return render(request, 'manage_product_category_addedit.html', contents)
+	
+	
+def display_user_type():
+	types = User_Type.objects.all()
+	contents = {'title':'Typy użytkowników', 'content':''}
+	if(types.count() > 0):
+		toDisp = []
+		for curRow in types:
+			add = "Nie"
+			if(curRow.canCreate == 1):
+				add = "Tak"
+			edit = "Nie"
+			if(curRow.canEdit == 1):
+				edit = "Tak"
+			delete = "Nie"
+			if(curRow.canDelete == 1):
+				delete = "Tak"
+			manage = "Nie"
+			if(curRow.canManage == 1):
+				manage = "Tak"
+			row = {'name':curRow.type_name, 'add':add,'edit':edit , 'delete':delete, 'manage':manage, 'id':curRow.id}
+			toDisp.append(row)
+			contents = {'title':'Typy użytkowników','count':types.count(), 'content':toDisp}
+	else:
+		contents = {'title':'Typy użytkowników', 'content':'Brak zdefiniowanych typów', 'count':0}
+	return contents
+
+def user_type(request):
+	return render(request, 'manage_user_type.html', display_user_type())
+	
+def user_type_add(request):
+	contents = {'title':'Typy użytkowników', 'type':'add'}
+	if(request.POST.get('sent', False)):
+		name = request.POST.get('name', False)
+		create = request.POST.get('create', False)
+		edit = request.POST.get('edit', False)
+		delete = request.POST.get('delete', False)
+		manage = request.POST.get('manage', False)
+		if(len(name) < 3):
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Nazwa nie może być krótsza niż 3 znaki'
+			return render(request, 'manage_user_type_addedit.html', contents)
+		try:
+			check = User_Type.objects.get(type_name=name)
+		except User_Type.DoesNotExist:
+			toSave = User_Type(type_name=name, canCreate=create, canEdit=edit, canDelete=delete, canManage=manage)
+			toSave.save()
+			contents['messageType'] = 'success'
+			contents['message'] = 'Dodano nowy typ użytkowników'
+			return render(request, 'manage_user_type_addedit.html', contents)
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Nazwa jest już używana'
+	return render(request, 'manage_user_type_addedit.html', contents)
+	
+def user_type_delete(request, del_id):
+	contents = display_user_type()
+	try:
+		delete = int(del_id)
+	except ValueError:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer typu'
+		return render(request, 'manage_user_type.html', contents)
+	try:
+		user = User_Type.objects.get(id=delete)
+	except User_Type.DoesNotExist:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Wybrany typ nie istnieje'
+		return render(request, 'manage_user_type.html', contents)
+	user.delete()
+	contents = display_user_type()
+	contents['messageType'] = 'success'
+	contents['message'] = 'Poprawnie usunięto wybrany typ'
+	return render(request, 'manage_user_type.html', contents)
+
+def user_type_edit(request, edit_id):
+	contents = display_user_type()
+	try:
+		editid = int(edit_id)
+	except ValueError:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podano niepoprawny numer typu'
+		return render(request, 'manage_user_type.html', contents)
+	try:
+		user = User_Type.objects.get(id=editid)
+	except User_Type.DoesNotExist:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Wybrany typ nie istnieje'
+		return render(request, 'manage_user_type.html', contents)
+	contents = {'title':'Typy użytkowników', 'type':'edit'}
+	contents['id']=user.id
+	contents['name']=user.type_name
+	contents['create']=user.canCreate
+	contents['edit']=user.canEdit
+	contents['delete']=user.canDelete
+	contents['manage']=user.canManage
+	if(request.POST.get('sent', False)):
+		name = request.POST.get('name', False)
+		create = request.POST.get('create', False)
+		edit = request.POST.get('edit', False)
+		delete = request.POST.get('delete', False)
+		manage = request.POST.get('manage', False)
+		if(len(name) < 3):
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Nazwa nie może być krótsza niż 3 znaki'
+			return render(request, 'manage_user_type_addedit.html', contents)
+		try:
+			check = User_Type.objects.get(type_name=name)
+		except User_Type.DoesNotExist:
+			user.type_name = name
+			user.canCreate = create
+			user.canEdit = edit
+			user.canDelete = delete
+			user.canManage = manage
+			user.save()
+			contents = display_user_type()
+			contents['messageType'] = 'success'
+			contents['message'] = 'Typ został zmieniony'
+			return render(request, 'manage_user_type.html', contents)
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Nazwa jest już używana'
+	return render(request, 'manage_user_type_addedit.html', contents)

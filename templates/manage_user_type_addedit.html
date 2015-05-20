@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+{% if messageType == "danger" or messageType == "success" %}
+<div class="alert alert-{{messageType}}">
+  {{message}}
+</div>
+{% endif %}
+<a href="/manage/user_type/" class="btn btn-primary">Powrót</a><br /><br />
+{{ content }}
+{% if type == "add" or type == "edit" %}
+	<form action="/manage/user_type/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST" class="form-horizontal">
+	{% csrf_token %}
+	<div class="input-group ">
+	<label  class="control-label">Nazwa typu: </label>
+	<input type="text" name="name" value="{% if type == "edit" %}{{name}}{% endif %}"  class="form-control" required/>
+	</div>
+	<div class="input-group"><label>Uprawnienia: </label>
+		<div class="checkbox"><label><input  type="checkbox" name="create" value="1" {% if create == 1 %}checked{% endif %}>Tworzenie zamówień</label></div>
+		<div class="checkbox"><label><input  type="checkbox" name="edit" value="1" {% if edit == 1 %}checked{% endif %}>Edycja zamówień</label></div>
+		<div class="checkbox"><label><input  type="checkbox" name="delete" value="1" {% if delete == 1 %}checked{% endif %}>Usuwanie zamówień</label></div>
+		<div class="checkbox"><label><input  type="checkbox" name="manage" value="1" {% if manage == 1 %}checked{% endif %}>Zarządzanie systemem</label></div>
+	</div>
+	<div class="input-group"><input type="hidden" name="sent" value="1" /></div>
+	<div><input type="submit" value="Zapisz" class="btn btn-primary"/></div>
+	</div>
+	</form>
+{% endif %}
+{% endblock %}

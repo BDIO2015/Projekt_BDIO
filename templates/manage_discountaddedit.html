@@ -15,7 +15,6 @@
 {% if type == "add" or type == "edit" %}
 	<form action="/manage/discount/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST" class="form-horizontal">
 	{% csrf_token %}
-	<div class="col-xs-6 row">
 	<div class="checkbox input-group" class="bottom6">
 	{% if type == "edit" %}<label>
 	<input type="checkbox" name="active" value="1" {% if active == 1 %}checked{% endif %}/>Aktywna</label>{% endif %}
@@ -48,7 +47,6 @@
 	</div>
 	<div class="input-group"><input type="hidden" name="sent" value="1" /></div>
 	<div><input type="submit" value="Zapisz" class="btn btn-primary"/></div>
-	</div>
 	</form>
 {% endif %}
 {% endblock %}
