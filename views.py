@@ -365,7 +365,7 @@ def discount_add(request):
 	
 def user_register(request):
 	mainContent = '';
-	contents = {'title':'Rejestracja', 'name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
+	contents = {'title':'Rejestracja', 'name':'', 'second_name':'', 'password':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
 	if(request.POST.get('sent')):
 		reg_username = request.POST.get('username')
 		reg_name = request.POST.get('name')
@@ -393,8 +393,14 @@ def user_register(request):
 		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
 			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
-		if not((len(str(reg_password)) > 5) or (len(str(reg_password))) < 64):
+		if (not(re.match('.{6,64}',str(reg_password)))):
 				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				return render(request,'user_register.html',contents)
+		if (not(re.match('.{6,64}',str(reg_username)))):
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				return render(request,'user_register.html',contents)
+		if (not(re.match('.{1,64}',str(reg_address)))):
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 				return render(request,'user_register.html',contents)
 		users = User.objects.all()
 		for user in users:
