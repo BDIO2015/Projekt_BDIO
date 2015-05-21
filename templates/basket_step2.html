@@ -21,6 +21,16 @@
 	{% else %}
 		<input type="hidden" name="basket_products_ingredients" value="0">
 	{% endif %}
+	{% for keycat, maincat in categories.iteritems %}
+	<div class="input-group ">
+	<label  class="control-label">{{keycat}}:</label>
+		<select class="form-control" name="selections">
+		{% for category in maincat %}
+			<option value="{{keycat}}?-?{{category}}">{{category}}</option>
+		{% endfor %}
+		</select>
+	</div>
+	{% endfor %}
 	<div class="input-group ">
 	<label  class="control-label">Komentarz do produktu: </label>
 	<input type="text" name="basket_products_remarks" value=" " class="form-control" />

@@ -100,7 +100,12 @@ class Product_Category(models.Model):
 			('2', 'Nagłówek kategorii'),
 		)
 	type = models.CharField(max_length=1, choices=TYPE_STATUS)
-	
+
+class Order_Product_Categories(models.Model):
+	id = models.AutoField(primary_key=True)
+	order_product_id = models.ForeignKey(Order_Product)
+	category_id = models.ForeignKey(Product_Category)
+
 class Product_Pc(models.Model):
 	product = models.ForeignKey(Product)
 	category = models.ForeignKey(Product_Category)

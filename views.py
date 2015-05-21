@@ -863,11 +863,31 @@ def basket_add(request, product_id):
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Wybranego produktu nie ma w bazie'
 		return render(request, 'basket.html', contents)'''
+	categories = Product_Category.objects.filter(parent=None) #dodac pobieranie po id z produktow
+	subcategories = {}
+	for cat in categories:
+		if(cat.type == '2'):
+			subcategory = Product_Category.objects.filter(parent=cat.cat_id)
+			subcategories[cat.name] = []
+			for subcat in subcategory:
+				if(subcat.type == '2'):
+					subsubcat = Product_Category.objects.filter(parent=subcat.cat_id)
+					subcategories[subcat.name] = []
+					for curcat in subsubcat:
+						subcategories[subcat.name].append(curcat.name) 
+				else:
+					subcategories[cat.name].append(subcat.name)
+	for key, each in subcategories.iteritems():
+		if(len(each) == 0):
+			del subcategories[key]
+			break
 	if(request.POST.get('sent', False)):
-		pingreds = request.POST.getlist('basket_products_ingredients', '')
+		pingreds = request.POST.getlist('basket_products_ingredients', [])
 		pingreds.sort()
 		premarks = request.POST.get('basket_products_remarks', '')
 		premarks = premarks.replace(':', ' ').replace(';', ' ')
+		selections = request.POST.getlist('selections', [])
+		selections.sort()
 		if('basket_products' in request.session):
 			products = request.session['basket_products'].split(';')
 			for curProd in products:
@@ -880,9 +900,11 @@ def basket_add(request, product_id):
 					contents['message'] = 'Nieznany błąd'
 					return render(request, 'basket.html', contents)
 				if(id == product_id):
-					prod_in = unpack[3:]
+					prod_in = unpack[3+len(subcategories):]
 					prod_in.sort()
-					if(prod_in == pingreds and premarks == unpack[2]):
+					cat_in = unpack[3:3+len(subcategories)]
+					cat_in.sort()
+					if(prod_in == pingreds and premarks == unpack[2] and cat_in == selections):
 						amount += 1
 						products.remove(curProd)
 						unpack[1] = str(amount)
@@ -892,9 +914,19 @@ def basket_add(request, product_id):
 						contents['messageType'] = 'success'
 						contents['message'] = 'Dodano wybrany produkt do koszyka'
 						return render(request, 'basket.html', contents)
-			request.session['basket_products'] += ';' + str(product_id) + ':1' + ':' + premarks + ':' + ':'.join(pingreds)
+			forStr = ';' + str(product_id) + ':1' + ':' + premarks
+			if(len(selections) > 0):
+				forStr += ':' + ':'.join(selections)
+			if(len(pingreds) > 0):
+				forStr += ':' + ':'.join(pingreds)
+			request.session['basket_products'] += forStr
 		else:
-			request.session['basket_products'] = str(product_id) + ':1' + ':' + premarks + ':' + ':'.join(pingreds)
+			forStr = str(product_id) + ':1' + ':' + premarks
+			if(len(selections) > 0):
+				forStr += ':' + ':'.join(selections)
+			if(len(pingreds) > 0):
+				forStr += ':' + ':'.join(pingreds)
+			request.session['basket_products'] = forStr
 		contents['messageType'] = 'success'
 		contents['message'] = 'Dodano wybrany produkt do koszyka'
 		return render(request, 'basket.html', contents)
@@ -909,6 +941,7 @@ def basket_add(request, product_id):
 	#wczytac nazwe produktu z id
 	#dodac wybieranie podkategorii produktu
 	contents['name'] = 'Nazwa produktutt' # check.product_name
+	contents['categories'] = subcategories
 	contents['id'] = product_id
 	return render(request, 'basket_step2.html', contents)
 def basket_remove(request, product_id):
