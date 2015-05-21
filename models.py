@@ -16,6 +16,7 @@ class User_Type(models.Model):
 	canCreate = models.BooleanField(default=False)
 	canEdit = models.BooleanField(default=False)
 	canDelete = models.BooleanField(default=False)
+	canDeliver = models.BooleanField(default=False)
 	canManage = models.BooleanField(default=False)
 
 class User(models.Model):

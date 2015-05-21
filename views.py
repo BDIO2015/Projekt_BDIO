@@ -573,10 +573,13 @@ def display_user_type():
 			delete = "Nie"
 			if(curRow.canDelete == 1):
 				delete = "Tak"
+			deliver = "Nie"
+			if(curRow.canDeliver == 1):
+				deliver = "Tak"
 			manage = "Nie"
 			if(curRow.canManage == 1):
 				manage = "Tak"
-			row = {'name':curRow.type_name, 'add':add,'edit':edit , 'delete':delete, 'manage':manage, 'id':curRow.id}
+			row = {'name':curRow.type_name, 'add':add,'edit':edit , 'delete':delete, 'deliver':deliver, 'manage':manage, 'id':curRow.id}
 			toDisp.append(row)
 			contents = {'title':'Typy użytkowników','count':types.count(), 'content':toDisp}
 	else:
@@ -593,6 +596,7 @@ def user_type_add(request):
 		create = request.POST.get('create', False)
 		edit = request.POST.get('edit', False)
 		delete = request.POST.get('delete', False)
+		deliver = request.POST.get('deliver', False)
 		manage = request.POST.get('manage', False)
 		if(len(name) < 3):
 			contents['messageType'] = 'danger'
@@ -601,7 +605,7 @@ def user_type_add(request):
 		try:
 			check = User_Type.objects.get(type_name=name)
 		except User_Type.DoesNotExist:
-			toSave = User_Type(type_name=name, canCreate=create, canEdit=edit, canDelete=delete, canManage=manage)
+			toSave = User_Type(type_name=name, canCreate=create, canEdit=edit, canDelete=delete, canDeliver=deliver, canManage=manage)
 			toSave.save()
 			contents['messageType'] = 'success'
 			contents['message'] = 'Dodano nowy typ użytkowników'
@@ -650,32 +654,39 @@ def user_type_edit(request, edit_id):
 	contents['create']=user.canCreate
 	contents['edit']=user.canEdit
 	contents['delete']=user.canDelete
+	contents['deliver']=user.canDeliver
 	contents['manage']=user.canManage
 	if(request.POST.get('sent', False)):
 		name = request.POST.get('name', False)
 		create = request.POST.get('create', False)
 		edit = request.POST.get('edit', False)
 		delete = request.POST.get('delete', False)
+		deliver = request.POST.get('deliver', False)
 		manage = request.POST.get('manage', False)
 		if(len(name) < 3):
 			contents['messageType'] = 'danger'
 			contents['message'] = 'Nazwa nie może być krótsza niż 3 znaki'
 			return render(request, 'manage_user_type_addedit.html', contents)
+		goodToGo = False
 		try:
 			check = User_Type.objects.get(type_name=name)
 		except User_Type.DoesNotExist:
-			user.type_name = name
-			user.canCreate = create
-			user.canEdit = edit
-			user.canDelete = delete
-			user.canManage = manage
-			user.save()
-			contents = display_user_type()
-			contents['messageType'] = 'success'
-			contents['message'] = 'Typ został zmieniony'
-			return render(request, 'manage_user_type.html', contents)
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Nazwa jest już używana'
+			goodToGo = True
+		if(goodToGo == False and check.id != user.id):
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Nazwa jest już używana'
+			return render(request, 'manage_user_type_addedit.html', contents)
+		user.type_name = name
+		user.canCreate = create
+		user.canEdit = edit
+		user.canDelete = delete
+		user.canDeliver = deliver
+		user.canManage = manage
+		user.save()
+		contents = display_user_type()
+		contents['messageType'] = 'success'
+		contents['message'] = 'Typ został zmieniony'
+		return render(request, 'manage_user_type.html', contents)
 	return render(request, 'manage_user_type_addedit.html', contents)
 
 	
