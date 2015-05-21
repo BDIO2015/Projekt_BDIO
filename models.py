@@ -54,13 +54,13 @@ class Order(models.Model):
 	order_code = models.AutoField(primary_key=True)
 	status = models.CharField(max_length=1, choices=ORDER_STATUS)
 	time_stamp = models.DateTimeField(auto_now_add=True)
-	order_notes = models.TextField()
+	order_notes = models.TextField(blank=True)
 	order_address = models.CharField(blank=True, max_length=60)
 	payment_name = models.CharField(max_length=30)
 	payment_status = models.BooleanField(default=0)
 	payment_time_stamp = models.DateTimeField(auto_now_add=True)
 	delivery = models.ForeignKey(Delivery)
-	user = models.ForeignKey(User)
+	user = models.ForeignKey(User, null=True)
 	payment_type = models.ForeignKey(Payment_Type)
 
 class Discount(models.Model):

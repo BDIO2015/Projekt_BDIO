@@ -843,6 +843,108 @@ def magazine_delete(request, del_id):
 		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!'}
 
 	return render(request, 'manage_magazine.html', contents)
+
+def basket(request):
+	contents = {'title':'Koszyk'}
+	if('basket_products' in request.session):
+		contents['messageType'] = 'success'
+		contents['message'] = request.session['basket_products']
+	else:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Koszyk jest pusty'
+	return render(request, 'basket.html', contents)
 	
-	
-	
+def basket_add(request, product_id):
+	contents = {'title':'Dodaj do koszyka'}
+	product_id = int(product_id)
+	'''try:
+		check = Product.objects.get(product_code=product_id)
+	except Product.DoesNotExist:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Wybranego produktu nie ma w bazie'
+		return render(request, 'basket.html', contents)'''
+	if(request.POST.get('sent', False)):
+		pingreds = request.POST.getlist('basket_products_ingredients', '')
+		pingreds.sort()
+		premarks = request.POST.get('basket_products_remarks', '')
+		premarks = premarks.replace(':', ' ').replace(';', ' ')
+		if('basket_products' in request.session):
+			products = request.session['basket_products'].split(';')
+			for curProd in products:
+				unpack = curProd.split(':')
+				try:
+					id = int(unpack[0])
+					amount = int(unpack[1])
+				except ValueError:
+					contents['messageType'] = 'danger'
+					contents['message'] = 'Nieznany błąd'
+					return render(request, 'basket.html', contents)
+				if(id == product_id):
+					prod_in = unpack[3:]
+					prod_in.sort()
+					if(prod_in == pingreds and premarks == unpack[2]):
+						amount += 1
+						products.remove(curProd)
+						unpack[1] = str(amount)
+						packed = ':'.join(unpack)
+						products.append(packed)
+						request.session['basket_products'] = ';'.join(products)
+						contents['messageType'] = 'success'
+						contents['message'] = 'Dodano wybrany produkt do koszyka'
+						return render(request, 'basket.html', contents)
+			request.session['basket_products'] += ';' + str(product_id) + ':1' + ':' + premarks + ':' + ':'.join(pingreds)
+		else:
+			request.session['basket_products'] = str(product_id) + ':1' + ':' + premarks + ':' + ':'.join(pingreds)
+		contents['messageType'] = 'success'
+		contents['message'] = 'Dodano wybrany produkt do koszyka'
+		return render(request, 'basket.html', contents)
+	availableIn = Ingredient.objects.filter(quantity__gt=0)
+	if(availableIn.count() > 0):
+		allIngreds = []
+		for ingredient in availableIn:
+			row = {'name':ingredient.name, 'id':ingredient.id, 'price':ingredient.price}
+			allIngreds.append(row)
+		contents['ingredients'] = allIngreds
+		contents['count'] = availableIn.count()
+	#wczytac nazwe produktu z id
+	#dodac wybieranie podkategorii produktu
+	contents['name'] = 'Nazwa produktutt' # check.product_name
+	contents['id'] = product_id
+	return render(request, 'basket_step2.html', contents)
+def basket_remove(request, product_id):
+	contents = {'title':'Usuń z koszyka'}
+	product_id = int(product_id)
+	if('basket_products' in request.session):
+		products = request.session['basket_products'].split(';')
+		for curProd in products:
+			unpack = curProd.split(':')
+			try:
+				id = int(unpack[0])
+			except ValueError:
+				contents['messageType'] = 'danger'
+				contents['message'] = 'Nieznany błąd'
+				return render(request, 'basket.html', contents)
+			if(id == product_id):
+				products.remove(curProd)
+				if(len(products) > 0):
+					request.session['basket_products'] = ";".join(products)
+				else:
+					del request.session['basket_products']
+				contents['messageType'] = 'success'
+				contents['message'] = 'Usunięto wybrany produkt'
+				return render(request, 'basket.html', contents)
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Wybranego produktu nie ma w Twoim koszyku'
+		return render(request, 'basket.html', contents)
+	else:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Twój koszyk jest pusty'
+	return render(request, 'basket.html', contents)
+
+def basket_clear(request):
+	contents = {'title':'Wyczyść koszyk'}
+	if('basket_products' in request.session):
+		del request.session['basket_products']
+	contents['messageType'] = 'success'
+	contents['message'] = 'Koszyk jest pusty'
+	return render(request, 'basket.html', contents)

@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	<a href="/" class="btn btn-primary">Powrót</a><br /><br />
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	{{name}}
+	<form action="/basket/add/{{id}}" method="POST">
+	{% csrf_token %}
+	{% if count > 0 %}
+		<div class="input-group"><label>Dodatkowe składniki: </label>
+			{% for ing in ingredients %}
+				<div class="checkbox"><label><input  type="checkbox" name="basket_products_ingredients" value="{{ing.id}}">{{ing.name}} ({{ing.price}} zł)</label></div>
+			{% endfor %}
+		</div>
+	{% else %}
+		<input type="hidden" name="basket_products_ingredients" value="0">
+	{% endif %}
+	<div class="input-group ">
+	<label  class="control-label">Komentarz do produktu: </label>
+	<input type="text" name="basket_products_remarks" value=" " class="form-control" />
+	</div>
+	<div class="input-group"><input type="hidden" name="sent" value="1" /></div>
+	<div><input type="submit" value="Dodaj" class="btn btn-primary"/></div>
+	</form>
+{% endblock %}
