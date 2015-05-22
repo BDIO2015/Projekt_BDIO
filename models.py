@@ -97,7 +97,8 @@ class Product_Category(models.Model):
 	parent = models.ForeignKey("self", null=True)
 	TYPE_STATUS= (
 			('1', 'Kategoria'),
-			('2', 'Nagłówek kategorii'),
+			('2', 'Nagłówek podkategorii'),
+			('3', 'Podkategoria'),
 		)
 	type = models.CharField(max_length=1, choices=TYPE_STATUS)
 

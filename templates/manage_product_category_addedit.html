@@ -12,22 +12,23 @@
 {{ content }}
 {% if type == "add" or type == "edit" %}
 	<form action="/manage/product_category/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST" class="form-horizontal">
+	<div class="alert alert-info" role="alert"><strong>Info:</strong> Drzewo kategorii może mieć maksymalnie głębokość 3!<br/>Podkategoria kategorii głównej jest nagłówkiem (nazwą)</div>
 	{% csrf_token %}
 	<div class="input-group ">
 	<label  class="control-label">Nazwa kategorii: </label>
 	<input type="text" name="name" value="{% if type == "edit" %}{{name}}{% endif %}"  class="form-control" required/>
 	</div>
-	<div class="input-group"><label>Typ: </label>
+	<!--<div class="input-group"><label>Typ: </label>
 		<div class="radio"><label><input  type="radio" name="type" value="1" {% if ctype == '1' %}checked{% endif %} required>Kategoria</label></div>
 		<div class="radio"><label><input  type="radio" name="type" value="2" {% if ctype == '2' %}checked{% endif %} required>Nagłówek Kategorii</label></div>
-	</div>
+	</div>-->
 	<div class="input-group ">
 	<label  class="control-label">Opis: </label>
 	<textarea class="form-control" rows="5" style="resize: none;" name="description">{% if type == "edit" %}{{desc}}{% endif %}</textarea>
 	</div>
 	<div class="input-group ">
 	<label  class="control-label">Opłata dodatkowa: </label>
-	<input type="number" name="additional_price" value="{% if type == "edit" %}{{add_price}}{% else %}0{% endif %}"  class="form-control" min="0" max="999.99" data-bind="value:replyNumber" step="any"/>
+	<input type="number" name="additional_price" value="{% if type == "edit" %}{{add_price}}{% else %}0{% endif %}"  class="form-control" min="0" max="999.99" data-bind="value:replyNumber" step="0.01"/>
 	</div>
 	<div class="input-group"><label class="control-label">Kategoria nadrzędna</label>
 	<div class="">
@@ -38,20 +39,11 @@
 			{% for row in parents %}
 				{% if row.parent == 0 %}
 				<option value="{{row.id}}" {% if type == "edit" %} {% if row.id == parent %} selected {% endif %} {% endif %} >{{row.name}}</option>
-				
 					{% for rowx in parents %}
-
 						{% if rowx.parent == row.id and rowx.id != 0 %} 
 						<option value="{{rowx.id}}" {% if type == "edit" %} {% if rowx.id == parent %} selected {% endif %} {% endif %} >&nbsp;|-- {{rowx.name}}</option>
-						
-							{% for rowy in parents %}
-								{% if rowy.parent == rowx.id and rowx.id != 0 %} 
-								<option value="{{rowy.id}}" {% if type == "edit" %} {% if rowy.id == parent %} selected {% endif %} {% endif %} >&nbsp;&nbsp;|---- {{rowy.name}}</option>
-								{% endif %}
-						
-							{% endfor %}}
 						{% endif %}
-					{% endfor %}}
+					{% endfor %}
 				{% endif %}
 			{% endfor %}
 		{% endif %}

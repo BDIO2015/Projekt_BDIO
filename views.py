@@ -439,6 +439,7 @@ def product_category(request):
 	return render(request, 'manage_product_category.html', display_product_category())
 
 def product_category_add(request):
+	#zabezpieczyc zeby nie dawca nizej niz 3 poziom
 	product_categories = Product_Category.objects.all()
 	toDisp = []
 	if(product_categories.count() > 0):
@@ -455,21 +456,51 @@ def product_category_add(request):
 		cname =  request.POST.get('name', False);
 		cdesc = request.POST.get('description', False);
 		cadd_price = request.POST.get('additional_price', False);
-		cparent = request.POST.get('parent', False);
-		if(int(cparent) == 0):
+		try:
+			cadd_price = float(cadd_price)
+		except:
+			cadd_price = 0
+		if(cadd_price >= 1000):
+			cadd_price = 999.99
+		elif(cadd_price < 0):
+			cadd_price = 0
+		cid = request.POST.get('parent', False);
+		try:
+			cparent = int(cid)
+		except:
+			cparent = 0
+		if(cparent == 0):
 			cparent = None
 		else:
-			cparent = Product_Category.objects.get(cat_id=cparent)
-		ctype = request.POST.get('type', False);
-		newCategory = Product_Category(name = cname, description = cdesc, additional_price = cadd_price, parent = cparent, type = ctype)
-		newCategory.save()
-		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':'', 'parents':toDisp, 'messageType': 'success','message':'Dodano nową kategorię', 'count':product_categories.count()}
+			try:
+				cparent = Product_Category.objects.get(cat_id=cparent)
+			except Product_Category.DoesNotExist:
+				contents['messageType'] = 'danger'
+				contents['message'] = 'Wystąpił nieoczekiwany błąd'
+				return render(request, 'manage_product_category.html', contents)
+		if(cparent != None):	
+			if(cparent.type == '1'):
+				ctype = '2'
+			else:
+				ctype = '3'
+		else:
+			ctype = '1'
+		contents = {'title':'Kategorie Produktów', 'type': 'add', 'parents':toDisp, 'count':product_categories.count()}
+		if(cparent != None and cparent.type == '3' ):
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Ta podkategoria nie może być kategorią nadrzędną'
+		else:
+			newCategory = Product_Category(name = cname, description = cdesc, additional_price = cadd_price, parent = cparent, type = ctype)
+			newCategory.save()
+			contents['messageType'] = 'success'
+			contents['message'] = 'Dodano nową kategorię'
 	else:
-		contents = {'title':'Kategorie Produktów', 'type': 'add', 'contents':'', 'parents':toDisp, 'messageType': '', 'count':product_categories.count()}
+		contents = {'title':'Kategorie Produktów', 'type': 'add', 'parents':toDisp, 'count':product_categories.count()}
 	return render(request, 'manage_product_category_addedit.html', contents)
 
 def product_category_edit(request, edit_id):
-	contents = display_product_category()
+	#zabezpieczyc zeby nie dawac kategorii nizej niz 3 poziom drzewa
+	#contents = display_product_category()
 	try:
 		editid = int(edit_id)
 	except ValueError:
@@ -485,7 +516,6 @@ def product_category_edit(request, edit_id):
 	contents = {'title':'Kategorie Produktów', 'type':'edit'}
 	contents['id']=editCat.cat_id
 	contents['name']=editCat.name
-	contents['ctype']=editCat.type
 	contents['desc']=editCat.description
 	contents['add_price']=editCat.additional_price
 	if(editCat.parent != None):
@@ -509,45 +539,79 @@ def product_category_edit(request, edit_id):
 			
 	if(request.POST.get('sent', False)):
 		cid = request.POST.get('id',False);
-		cname =  request.POST.get('name', False);
-		cdesc = request.POST.get('description', False);
-		cadd_price = request.POST.get('additional_price', False);
-		cparent = request.POST.get('parent', False);
-		if(int(cparent) == 0):
-			cparent = None
-		else:
-			cparent = Product_Category.objects.get(cat_id=cparent)
-		ctype = request.POST.get('type', False);
-
 		try:
-			check = Product_Category.objects.get(cat_id=cid)
-		except Product_Category.DoesNotExist:
+			cid = int(cid)
+		except:
 			contents['messageType'] = 'danger'
 			contents['message'] = 'Wystąpił nieoczekiwany błąd'
 			return render(request, 'manage_product_category.html', contents)
+		cname =  request.POST.get('name', False)
+		cdesc = request.POST.get('description', False)
+		cadd_price = request.POST.get('additional_price', False)
+		try:
+			cadd_price = float(cadd_price)
+		except:
+			cadd_price = 0
+		if(cadd_price >= 1000):
+			cadd_price = 999.99
+		elif(cadd_price < 0):
+			cadd_price = 0
+		cparent = request.POST.get('parent', False);
+		try:
+			cparent = int(cparent)
+		except:
+			cparent = 0
+		if(cparent == 0):
+			cparent = None
+		else:
+			try:
+				cparent = Product_Category.objects.get(cat_id=cparent)
+			except Product_Category.DoesNotExist:
+				contents['messageType'] = 'danger'
+				contents['message'] = 'Wystąpił nieoczekiwany błąd'
+				return render(request, 'manage_product_category.html', contents)
+		if(cparent != None):	
+			if(cparent.type == '1'):
+				ctype = '2'
+			else:
+				ctype = '3'
+		else:
+			ctype = '1'
+
 		editCat.name = cname
 		editCat.description = cdesc
 		editCat.additional_price = cadd_price
 		editCat.parent = cparent
 		editCat.type = ctype
-		editCat.save()
-		contents = display_product_category()
-		contents['messageType'] = 'success'
-		contents['message'] = 'Kategoria poprawnie zapisana'
-		return render(request, 'manage_product_category.html', contents)
+		if(cparent != None and cparent.type == '3'):
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Ta podkategoria nie może być kategorią nadrzędną'
+		else:
+			editCat.save()
+			contents['messageType'] = 'success'
+			contents['message'] = 'Kategoria poprawnie zapisana'
+		contents['id']=editCat.cat_id
+		contents['name']=editCat.name
+		contents['ctype']=editCat.type
+		contents['desc']=editCat.description
+		contents['add_price']=editCat.additional_price
+		if(editCat.parent != None):
+			contents['parent']=editCat.parent.cat_id
+		else:
+			contents['parent']=0
 	return render(request, 'manage_product_category_addedit.html', contents)
 
 def product_category_delete(request, del_id):
 	contents = display_product_category()
 	try:
 		delete = int(del_id)
-	except ValueError:
+	except:
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Podano niepoprawny numer kategorii'
 		return render(request, 'manage_product_category.html', contents)
 	try:
 		delCat = Product_Category.objects.get(cat_id=delete)
-	except User_Type.DoesNotExist:
+	except Product_Category.DoesNotExist:
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Wybrana kategoria nie istnieje'
 		return render(request, 'manage_product_category.html', contents)
