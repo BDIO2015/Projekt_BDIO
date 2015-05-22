@@ -73,7 +73,7 @@ class Product(models.Model):
 	product_name = models.CharField(max_length=30)
 	price = models.DecimalField(max_digits=5, decimal_places=2)
 	description = models.TextField()
-	discount = models.ForeignKey(Discount)
+	discount = models.ForeignKey(Discount, null=True)
 
 class Ingredient(models.Model):
 	id = models.AutoField(primary_key=True)
@@ -106,10 +106,6 @@ class Order_Product_Categories(models.Model):
 	id = models.AutoField(primary_key=True)
 	order_product_id = models.ForeignKey(Order_Product)
 	category_id = models.ForeignKey(Product_Category)
-
-class Product_Pc(models.Model):
-	product = models.ForeignKey(Product)
-	category = models.ForeignKey(Product_Category)
 	
 class Ingredient_Product(models.Model):
 	quantity = models.IntegerField()
