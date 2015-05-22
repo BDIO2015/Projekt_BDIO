@@ -5,6 +5,28 @@ import re, hashlib
 from django.http import HttpResponse
 from .models import *
 
+
+def user_logout(request):
+	if('login_check' in request.session):
+		del request.session['login_check']
+		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!', 'username':'', 'password':''}
+	return contents
+
+def user_check(request):
+	if not('login_check' in request.session):
+		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!', 'username':'', 'password':''}
+		return contents
+	else:
+		users = User.objects.all()
+		for l_user in users:
+			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==0):
+				return {'user_id':l_user.user_id, 'canCreate':0, 'canEdit':0, 'canDelete':0, 'canDeliver':0, 'canManage':0} 
+			elif(l_user.user_id==int(request.session['login_check'])):
+				return {'user_id':int(l_user.user_id), 'canCreate':int(User_Type.objects.get(id=l_user.type_id).canCreate), 'canEdit':int(User_Type.objects.get(id=l_user.type_id).canEdit), 'canDelete':int(User_Type.objects.get(id=l_user.type_id).canDelete), 'canDeliver':int(User_Type.objects.get(id=l_user.type_id).canDeliver), 'canManage':int(User_Type.objects.get(id=l_user.type_id).canManage) }
+			else:
+				contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Mushisz się zalogować!', 'username':'', 'password':''}
+		return contents
+
 def index(request):
 	contents = {'title':'Testujemy', 'question':'test'}
 	return render(request, 'index.html', contents)
@@ -370,7 +392,7 @@ def user_register(request):
 		reg_username = request.POST.get('username')
 		reg_name = request.POST.get('name')
 		reg_password = request.POST.get('password')
-		reg_postal_code = request.POST.get('postal_code')
+		reg_postal_code = request.POST.get('postal_code1')+request.POST.get('postal_code2')
 		reg_phone_number = request.POST.get('phone_number')
 		reg_address = request.POST.get('address')
 		reg_city = request.POST.get('city')
@@ -387,7 +409,7 @@ def user_register(request):
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
 			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
-		if not(re.match('[0-9][0-9]-[0-9][0-9][0-9]',str(reg_postal_code))):
+		if not(re.match('[0-9]{5,5}',str(reg_postal_code))):
 			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
@@ -1121,3 +1143,20 @@ def product_add(request):
 	
 		
 	return render(request,'manage_product_addedit.html',contents)
+
+def user_login(request):
+	contents = {'title':'Logowanie', 'username':'', 'password':''} 
+	c_username=request.POST.get('username')
+	c_password=request.POST.get('password')
+	users = User.objects.all()
+	if(request.POST.get('sent')):
+		c_password=hashlib.sha256(c_password.encode()).hexdigest()
+		for c_user in users:
+			if((c_user.username==str(c_username)) and (c_password==c_user.password)):
+				contents = {'messageType':'success', 'message':'Zalogowano poprawnie!'}
+				request.session['login_check']=c_user.user_id
+				return render(request,'user_login.html',contents)
+			else:
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Podaj poprawną nazwę użytkownika i/lub hasło!', 'username':'', 'password':''}
+	return render(request, 'user_login.html', contents)
+
