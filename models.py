@@ -74,6 +74,7 @@ class Product(models.Model):
 	price = models.DecimalField(max_digits=5, decimal_places=2)
 	description = models.TextField()
 	discount = models.ForeignKey(Discount, null=True)
+	category = models.ForeignKey("Product_Category")
 
 class Ingredient(models.Model):
 	id = models.AutoField(primary_key=True)
