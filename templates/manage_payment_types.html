@@ -1,0 +1,32 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<a href="/manage/payment/">Powrót</a><br /><br />
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	<a href="/manage/payment/add/">Dodaj nowy typ płatności</a><br /><br />
+
+	<table border=1 cellpadding="2">
+	<tr>
+	<td style="min-width: 150px;" align="center">
+	Nazwa płatności
+	</td>
+	</tr>
+	{% for element in payments %}
+	<tr>
+	<td>
+	{{ element.payment_name }}
+	</td>
+	<td align="right" >
+	<a href="/manage/payment/delete/{{ element.id }}/" class="delete_button" >[Usuń]</a>
+	</td>
+	</tr>
+	{% endfor %}
+	</table>
+	
+{% endblock %}

@@ -1,0 +1,29 @@
+<html>
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<a href="/manage/discount/">Powrót</a><br /><br />
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	<a href="/manage/payment/">Powrót</a><br /><br />
+<form action="/manage/payment/add/" method="POST">
+	
+	{% csrf_token %}
+	<div style="border:1px solid black; width:500;height:120;padding: 10px;position: relative;top: 10px; ">
+	<p> Dodaj nową płatność: </p>
+	<input type="text" name="payment_name" value="Nazwa płatności" maxlength="20"  style="width:150px;" onblur="if(this.value=='')this.value='Nazwa płatności';" onfocus="if(this.value=='Nazwa płatności')this.value='';"/>
+	
+	<br>
+	<input align="right" type="submit" name="sent" value="Zapisz" />  	{{ result }}
+	</div>
+
+</form>
+
+
+
+{% endblock %}

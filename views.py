@@ -1160,3 +1160,47 @@ def user_login(request):
 				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Podaj poprawną nazwę użytkownika i/lub hasło!', 'username':'', 'password':''}
 	return render(request, 'user_login.html', contents)
 
+def payment_types(request):
+	payments = Payment_Type.objects.all()
+
+	contents = {'title':'Płatności','messageType':'none', 'payments': payments}
+	return render(request, 'manage_payment_types.html', contents)
+	
+def payment_types_delete(request, del_id):
+	try:
+		did = int(del_id)
+	except ValueError:
+		contents = {'title':'Płatności','messageType':'danger', 'message':'Taki element nie instnieje!'}
+		return render(request, 'manage_payment_types.html', contents)
+		
+	toDel = Payment_Type.objects.filter(id=did)
+	if(toDel.count() == 1):
+		toDel[0].delete()
+		return payment_types(request)
+	elif(toDel.count() > 1):
+		contents = {'title':'Płatności','messageType':'danger', 'message':'Nieznany błąd'}
+	else:
+		contents = {'title':'Płatności','messageType':'danger', 'message':'Taki element nie instnieje!'}
+
+	return render(request, 'manage_payment_types.html', contents)
+	
+def payment_types_add(request):
+	payments = Payment_Type.objects.all()
+	payment_namex = request.POST.get('payment_name', False)
+	
+	contents = {'title':'Płatności','messageType':'none'}
+	
+	if(request.POST.get('sent')):
+		if(payment_namex):
+			if(not payment_namex == 'Nazwa płatności'):
+				newPayment = Payment_Type(payment_name=payment_namex)
+				newPayment.save()
+				return payment_types(request)
+			else:
+				contents = {'title':'Płatności','messageType':'danger', 'message':'Błąd wprowadzania!'}
+		else:
+			contents = {'title':'Płatności','messageType':'danger', 'message':'Pole puste!'}
+			
+				
+				
+	return render(request, 'manage_payment_types_add.html', contents)
