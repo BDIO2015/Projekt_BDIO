@@ -1,0 +1,27 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+
+{% block content %}
+  {% if messageType == "danger" or messageType == "success" %}
+  <div class="alert alert-{{messageType}}">
+    {{message}}
+  </div>
+  {% endif %}
+  <form action="/user/login" method="POST">
+  {% csrf_token %}
+  <table border=0>
+<tr>
+  <td>Nazwa użytkownika:</td><td><input type="text" maxlength="64" name="username" value={{username}} ></td>
+  </tr>
+<tr>
+  <td>Hasło:</td><td><input type="password" maxlength="64" name="password" value={{password}} ></td>
+  </tr>
+<tr>
+  <td><input type="hidden" name="sent" value="1" /><input type="submit" value="Zaloguj" /></td> 
+  </tr>
+  <a href="/">Powrót</a><br/><br/>
+</table>
+	</form>
+{% endblock %}
