@@ -428,7 +428,7 @@ def display_product_category():
 			else:
 				parent_name = "-"
 				parent_id = 0
-			row = {'name':curRow.name, 'desc':curRow.description,'type':curRow.get_type_display() , 'add_price':curRow.additional_price, 'parent':parent_name, 'id':curRow.cat_id, 'parent_id': parent_id}
+			row = {'name':curRow.name, 'desc':curRow.description,'type':curRow.get_type_display() , 'add_price':curRow.additional_price, 'parent':parent_name, 'id':curRow.cat_id, 'parent_id': parent_id, 'demand': curRow.get_demand_ingredients_display()}
 			toDisp.append(row)
 			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'content':toDisp}
 	else:
@@ -453,9 +453,16 @@ def product_category_add(request):
 			contents = {'title':'Kategorie Produktów','count':product_categories.count(), 'contents':'','parents':toDisp}
 	isSent = request.POST.get('sent', False);
 	if(isSent):
-		cname =  request.POST.get('name', False);
-		cdesc = request.POST.get('description', False);
-		cadd_price = request.POST.get('additional_price', False);
+		cname =  request.POST.get('name', False)
+		cdesc = request.POST.get('description', False)
+		cdemand = request.POST.get('demand_ingredient',False)
+		try:
+			cdemand = int(cdemand)
+		except:
+			cdemand = 0
+		if(cdemand != 1):
+			cdemand = 0
+		cadd_price = request.POST.get('additional_price', False)
 		try:
 			cadd_price = float(cadd_price)
 		except:
@@ -478,6 +485,7 @@ def product_category_add(request):
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Wystąpił nieoczekiwany błąd'
 				return render(request, 'manage_product_category.html', contents)
+			cdemand = 0
 		if(cparent != None):	
 			if(cparent.type == '1'):
 				ctype = '2'
@@ -490,7 +498,7 @@ def product_category_add(request):
 			contents['messageType'] = 'danger'
 			contents['message'] = 'Ta podkategoria nie może być kategorią nadrzędną'
 		else:
-			newCategory = Product_Category(name = cname, description = cdesc, additional_price = cadd_price, parent = cparent, type = ctype)
+			newCategory = Product_Category(name = cname, description = cdesc, additional_price = cadd_price, parent = cparent, type = ctype, demand_ingredients = cdemand)
 			newCategory.save()
 			contents['messageType'] = 'success'
 			contents['message'] = 'Dodano nową kategorię'
@@ -518,6 +526,7 @@ def product_category_edit(request, edit_id):
 	contents['name']=editCat.name
 	contents['desc']=editCat.description
 	contents['add_price']=editCat.additional_price
+	contents['demand']=editCat.demand_ingredients
 	if(editCat.parent != None):
 		contents['parent']=editCat.parent.cat_id
 	else:
@@ -547,6 +556,14 @@ def product_category_edit(request, edit_id):
 			return render(request, 'manage_product_category.html', contents)
 		cname =  request.POST.get('name', False)
 		cdesc = request.POST.get('description', False)
+		cdemand = request.POST.get('demand_ingredient',False)
+		try:
+			cdemand = int(cdemand)
+		except:
+			cdemand = 0
+		if(cdemand != 1):
+			cdemand = 0
+		print (cdemand)
 		cadd_price = request.POST.get('additional_price', False)
 		try:
 			cadd_price = float(cadd_price)
@@ -570,6 +587,7 @@ def product_category_edit(request, edit_id):
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Wystąpił nieoczekiwany błąd'
 				return render(request, 'manage_product_category.html', contents)
+			cdemand = 0
 		if(cparent != None):	
 			if(cparent.type == '1'):
 				ctype = '2'
@@ -577,12 +595,12 @@ def product_category_edit(request, edit_id):
 				ctype = '3'
 		else:
 			ctype = '1'
-
 		editCat.name = cname
 		editCat.description = cdesc
 		editCat.additional_price = cadd_price
 		editCat.parent = cparent
 		editCat.type = ctype
+		editCat.demand_ingredients = cdemand
 		if(cparent != None and cparent.type == '3'):
 			contents['messageType'] = 'danger'
 			contents['message'] = 'Ta podkategoria nie może być kategorią nadrzędną'
@@ -595,6 +613,7 @@ def product_category_edit(request, edit_id):
 		contents['ctype']=editCat.type
 		contents['desc']=editCat.description
 		contents['add_price']=editCat.additional_price
+		contents['demand']=editCat.demand_ingredients
 		if(editCat.parent != None):
 			contents['parent']=editCat.parent.cat_id
 		else:
@@ -1045,3 +1064,60 @@ def basket_clear(request):
 	contents['messageType'] = 'success'
 	contents['message'] = 'Koszyk jest pusty'
 	return render(request, 'basket.html', contents)
+	
+def display_product():
+	products = Product.objects.all()
+	contents = {'title':'Produkty', 'content':''}
+	if(products.count() > 0):
+		toDisp = []
+		for curRow in products:
+			if(curRow.discount != None):
+				disc_count = "NIE"
+			else:
+				disc_count = "TAK"
+			count_product_ingredients = Product_Ingredient.objects.filter(product=curRow).count()
+			row = {'name':curRow.product_name, 'price':curRow.price, 'desc': curRow.description, 'discount': curRow.discount, 'disc_count' : disc_count, 'prod_count': count_product_ingredients}
+			toDisp.append(row)
+			contents = {'title':'Produkty','count':product_categories.count(), 'content':toDisp}
+	else:
+		contents = {'title':'Produkty', 'content':'Brak zdefiniowanych produktów', 'count':0}
+	return contents	
+	
+def product(request):
+	return render(request,'manage_product.html',display_product())
+	
+def product_add(request):
+	contents = {'title':'Produkty', 'content':'', 'type': 'add'}
+	toDisp = []
+	#pobierz kategorie
+	categories = Product_Category.objects.all()
+	if(categories.count() > 0): #przypisz do zmiennej
+		for curRow in categories:
+			if(curRow.parent == None):
+				row = {'name':curRow.name, 'id':curRow.cat_id, 'demand':curRow.demand_ingredients }
+				toDisp.append(row)
+			contents["categories_count"]=categories.count()
+			contents["categories"]=toDisp
+	#pobierz składniki
+	toDisp = []
+	ingredients = Ingredient.objects.all()
+	if(ingredients.count() > 0):
+		for curRow in ingredients:
+			row = {'name': curRow.name, 'units': curRow.units}
+			toDisp.append(row)
+			contents["ingredients"] = toDisp
+			contents["ingredients_count"] = ingredients.count()
+	
+	#pobierz zniżki
+	#nie wiem jak wyswietlic
+	toDisp = []
+	discounts = Discount.objects.all()
+	if(discounts.count() > 0):
+		for curRow in discounts:
+			row = {'name': curRow.id}
+			toDisp.append(row)
+			contents["discounts"] = toDisp
+			contents["discounts_count"] = discounts.count()
+	
+		
+	return render(request,'manage_product_addedit.html',contents)
