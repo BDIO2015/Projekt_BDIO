@@ -12,7 +12,7 @@
 {{ content }}
 {% if type == "add" or type == "edit" %}
 	<form action="/manage/product_category/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST" class="form-horizontal">
-	<div class="alert alert-info" role="alert"><strong>Info:</strong> Drzewo kategorii może mieć maksymalnie głębokość 3!<br/>Podkategoria kategorii głównej jest nagłówkiem (nazwą)</div>
+	<div class="alert alert-info" role="alert"><strong>Info:</strong> Drzewo kategorii może mieć maksymalnie głębokość 3!<br/>Podkategoria kategorii głównej jest nagłówkiem (nazwą)</br>Tylko kategorie główne mogą mieć możliwość przypisania składników</div>
 	{% csrf_token %}
 	<div class="input-group ">
 	<label  class="control-label">Nazwa kategorii: </label>
@@ -22,6 +22,9 @@
 		<div class="radio"><label><input  type="radio" name="type" value="1" {% if ctype == '1' %}checked{% endif %} required>Kategoria</label></div>
 		<div class="radio"><label><input  type="radio" name="type" value="2" {% if ctype == '2' %}checked{% endif %} required>Nagłówek Kategorii</label></div>
 	</div>-->
+	<div class="input-group ">
+	<div class="checkbox"><label><input  type="checkbox" name="demand_ingredient" value="1" {% if demand == 1 %} checked {% endif %} >Składniki są wybierane dla tej kategorii</label></div>
+	</div>
 	<div class="input-group ">
 	<label  class="control-label">Opis: </label>
 	<textarea class="form-control" rows="5" style="resize: none;" name="description">{% if type == "edit" %}{{desc}}{% endif %}</textarea>

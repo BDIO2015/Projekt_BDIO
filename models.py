@@ -80,8 +80,6 @@ class Ingredient(models.Model):
 	name = models.CharField(max_length=30)
 	price = models.DecimalField(max_digits=5, decimal_places=2)
 	quantity = models.DecimalField(max_digits=5, decimal_places=2)
-	#określa ile przy dodawaniu do produktu ma jeden składnik np. ser 0,15 kg gdy pojedynczy
-	value = models.DecimalField(max_digits=5, decimal_places=2)
 	units = models.CharField(max_length=5)
 	min_quantity = models.DecimalField(max_digits=5, decimal_places=2)
 	
@@ -103,6 +101,11 @@ class Product_Category(models.Model):
 			('3', 'Podkategoria'),
 		)
 	type = models.CharField(max_length=1, choices=TYPE_STATUS)
+	DEMAND_STATUS=(
+			(0, 'NIE'),
+			(1, 'TAK'),
+		)
+	demand_ingredients = models.IntegerField(choices=DEMAND_STATUS)
 
 class Order_Product_Categories(models.Model):
 	id = models.AutoField(primary_key=True)

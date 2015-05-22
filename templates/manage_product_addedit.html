@@ -1,0 +1,61 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+
+{% block content %}
+{% if messageType == "danger" or messageType == "success" %}
+<div class="alert alert-{{messageType}}">
+  {{message}}
+</div>
+{% endif %}
+<a href="/manage/product/" class="btn btn-primary">Powrót</a><br /><br />
+{% if type == "add" or type == "edit" %}
+	<form action="/manage/product/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST" class="form-horizontal">
+	{% csrf_token %}
+	<div class="input-group ">
+	<label  class="control-label">Nazwa: </label>
+	<input type="text" name="name" value="{% if type == "edit" %}{{name}}{% endif %}"  class="form-control"/>
+	</div>
+	<div class="input-group ">
+	<label  class="control-label">Cena produktu: </label>
+	<input type="number" name="price" value="{% if type == "edit" %}{{price}}{% else %}0{% endif %}"  class="form-control" min="0" max="999.99" data-bind="value:replyNumber" step="0.01"/>
+	</div>
+	<div class="input-group ">
+	<label  class="control-label">Opis: </label>
+	<textarea class="form-control" rows="5" style="resize: none;" name="description">{% if type == "edit" %}{{desc}}{% endif %}</textarea>
+	</div>
+	<div class="input-group"><label class="control-label">Kategoria produktu:</label>
+	<div class="">
+	<!-- Wyświetla dostępne kategorie główne -->
+	<select name="parent" class="form-control" id="product_categories" >	
+		{% for row in categories %}
+		<option value="{{row.id}}" data-ingredients-demand="{{row.demand}}">{{row.name}}</option>
+		{% endfor %}
+	</select>
+	</div>
+	</div>
+	<div class="input-group"><label class="control-label">Zniżka:</label>
+	<div class="">
+	<!-- Wyświetla dostępne zniżki, aktywne i nieaktywne -->
+	<select name="parent" class="form-control" >	
+		<option value="0">Brak zniżki</option>
+	</select>
+	</div>
+	</div>
+	<div id="ingredients_for_product" style="display: none;">
+	<label  class="control-label">Składniki: </label>
+	<!-- wyświetla składniki z inputami określającymi ich ilość w produkcie -->
+	{% for row in ingredients %}
+		<div class="input-group ">
+		<label  class="control-label">{{row.name}} [{{row.units}}]</label>
+		<input class="form-control" type="number" min="0" max="999.99" step="0.01" name="{{row.name}}">{% if type == "edit" %} <!-- quantity -->{% endif %}</input> 
+		</div>
+	{% endfor %}
+	</div>
+	</form>
+	
+{% endif %}
+
+
+{% endblock %}
