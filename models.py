@@ -80,6 +80,8 @@ class Ingredient(models.Model):
 	name = models.CharField(max_length=30)
 	price = models.DecimalField(max_digits=5, decimal_places=2)
 	quantity = models.DecimalField(max_digits=5, decimal_places=2)
+	#określa ile przy dodawaniu do produktu ma jeden składnik np. ser 0,15 kg gdy pojedynczy
+	value = models.DecimalField(max_digits=5, decimal_places=2)
 	units = models.CharField(max_length=5)
 	min_quantity = models.DecimalField(max_digits=5, decimal_places=2)
 	
