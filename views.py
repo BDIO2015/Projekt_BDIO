@@ -1409,16 +1409,12 @@ def product_edit(request,edit_id):
 				contents["message"] = 'Niepoprawna wartość parametru'
 				pproduct.delete()
 				return render(request,'manage_product_addedit.html',contents)
-			#sprawdz wszystkie skladniki
-			if(Ingredient_Product.objects.filter(ingredient = curRow, product = pproduct).count() > 0): # ten obiekt istnieje w bazie, jesli ma wartosc wieksza od 0 to aktualizuj, jesli 0 to usun
-				if(value > 0): #aktualizuj
-					product_ing = Ingredient_Product.objects.get(ingredient = curRow, product = pproduct)
-					product_ing.quantity=value
-					product_ing.save()
-				elif(value == 0): #usun
-					product_ing = Ingredient_Product.objects.filter(ingredient = curRow, product = pproduct)
-					product_ing.delete()			
-			else: #dodaj nowy rekord do bazy
+			#usun wszystkie i przypisz istniejace
+			
+			if(Ingredient_Product.objects.filter(ingredient = curRow, product = pproduct).count() > 0): #usun jesli jest taki wiersz
+				toDel = Ingredient_Product.objects.get(ingredient = curRow, product = pproduct)
+				toDel.delete()
+			if(value > 0):
 				product_ing = Ingredient_Product(quantity=value, ingredient = curRow, product = pproduct)
 				product_ing.save()
 			
