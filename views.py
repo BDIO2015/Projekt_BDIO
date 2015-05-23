@@ -1095,7 +1095,7 @@ def display_product():
 				disc_count = "TAK"
 			else:
 				disc_count = "NIE"
-
+			
 			count_product_ingredients = Ingredient_Product.objects.filter(product=curRow).count()
 			row = {'id':curRow.product_code, 'name':curRow.product_name, 'price':curRow.price, 'desc': curRow.description, 'discount': curRow.discount, 'disc_count' : disc_count, 'prod_count': count_product_ingredients}
 			toDisp.append(row)
@@ -1125,7 +1125,7 @@ def product_add(request):
 	ingredients = Ingredient.objects.all()
 	if(ingredients.count() > 0):
 		for curRow in ingredients:
-			row = {'name': curRow.name, 'units': curRow.units, 'id': curRow.id}
+			row = {'name': curRow.name, 'units': curRow.units, 'id': curRow.id, 'price': curRow.price}
 			toDisp.append(row)
 			contents["ingredients"] = toDisp
 			contents["ingredients_count"] = ingredients.count()
@@ -1214,21 +1214,13 @@ def product_add(request):
 				contents["message"] = 'Niepoprawna wartość parametru'
 				pproduct.delete()
 				return render(request,'manage_product_addedit.html',contents)
-			if(value > 0):
-				try:
-					oingredient = Ingredient.objects.get(id=curRow.id)
-				except Ingredient.DoesNotExist:
-					contents["messageType"] = 'danger'
-					contents["message"] = 'Nieoczekiwany błąd'
-					pproduct.delete()
-					return render(request,'manage_product_addedit.html',contents)
-				if(oingredient.units != "kg"):
-					contents["messageType"] = 'danger'
-					contents["message"] = 'Ten składnik nie może być przypisany do tego produktu'
-					product.delete()
-					return render(request,'manage_product_addedit.html',contents)
-			
-				product_ing = Ingredient_Product(quantity=value, ingredient = oingredient, product = pproduct)
+			if(value < 0 and value >= 1000):
+				contents["messageType"] = 'danger'
+				contents["message"] = 'Niepoprawna wartość parametru'
+				pproduct.delete()
+				return render(request,'manage_product_addedit.html',contents)
+			if(value > 0):			
+				product_ing = Ingredient_Product(quantity=value, ingredient = curRow, product = pproduct)
 				product_ing.save()
 			
 			contents["messageType"] = 'success'
@@ -1236,6 +1228,194 @@ def product_add(request):
 		
 	return render(request,'manage_product_addedit.html',contents)
 
+def product_edit(request,edit_id):
+	contents = {'title':'Produkty', 'content':'', 'type': 'edit'}
+	try:
+		edit_id = int(edit_id)
+	except:
+		contents["messageType"] = 'danger'
+		contents["message"] = 'Podany parametr jest nieprawidłowy'
+		return render(request,"manage_product.html", display_product())
+	###pobierz produkt z bazy ###
+	try:
+		pproduct = Product.objects.get(product_code=edit_id)
+	except Product.DoesNotExist:
+		contents["messageType"] = 'danger'
+		contents["message"] = 'Ten produkt nie istnieje'
+		return render(request,"manage_product.html", display_product())
+	contents["id"] = pproduct.product_code
+	contents["name"] = pproduct.product_name
+	contents["price"] = pproduct.price
+	contents["desc"] = pproduct.description
+	contents["category"] = pproduct.category.cat_id
+	if(pproduct.discount != None):
+		contents["discount_id"] = pproduct.discount.id
+	else:
+		contents["discount_id"] = 0
+	
+	toDisp = []
+	### Wyswietlanie formularza ###
+	#pobierz kategorie główne
+	categories = Product_Category.objects.all()
+	if(categories.count() > 0): #przypisz do zmiennej
+		for curRow in categories:
+			if(curRow.parent == None):
+				row = {'name':curRow.name, 'id':curRow.cat_id, 'demand':curRow.demand_ingredients }
+				toDisp.append(row)
+			contents["categories_count"]=categories.count()
+			contents["categories"]=toDisp
+	#pobierz składniki
+	toDisp = []
+	ingredients = Ingredient.objects.all()
+	if(ingredients.count() > 0):
+		for curRow in ingredients:
+			row = {'name': curRow.name, 'units': curRow.units, 'id': curRow.id, 'price': curRow.price}
+			if(Ingredient_Product.objects.filter(ingredient = curRow, product = pproduct).count() > 0):
+				row["quantity"] = Ingredient_Product.objects.get(ingredient = curRow, product = pproduct).quantity
+			else:
+				row["quantity"] = 0.0
+			toDisp.append(row)
+			contents["ingredients"] = toDisp
+			contents["ingredients_count"] = ingredients.count()
+	#pobierz zniżki
+	contents["discounts"] = display_discount()
+	for curRow in contents["discounts"]["content"]:
+		if(curRow["days"]!= ""):
+			days = curRow["days"].split(', ');
+			curRow["days"] = ""
+			for r in days:
+				if(r == "Poniedziałek"):
+					curRow["days"] += "Pn"
+				elif(r == "Wtorek"):
+					curRow["days"] += "-"
+					curRow["days"] += "Wt"
+				elif(r == "Środa"):
+					curRow["days"] += "-"
+					curRow["days"] += "Śr"
+				elif(r == "Czwartek"):
+					curRow["days"] += "-"
+					curRow["days"] += "Cz"
+				elif(r == "Piątek"):
+					curRow["days"] += "-"
+					curRow["days"] += "Pt"
+				elif(r == "Sobota"):
+					curRow["days"] += "-"
+					curRow["days"] += "Sb"
+				else:
+					curRow["days"] += "-"
+					curRow["days"] += "Nd"
+	###Wczytywanie danych ###
+	if(request.POST.get('sent')):
+		pname = request.POST.get('name')
+		pprice = request.POST.get('price')
+		try:
+			pprice = float(pprice)
+		except:
+			contents["messageType"] = 'danger'
+			contents["message"] = 'Nie prawidłowa cena produktu'
+			return render(request,'manage_product_addedit.html',contents)
+		if(pprice < 0 or pprice >= 1000):
+			contents["messageType"] = 'danger'
+			contents["message"] = 'Nie prawidłowa cena produktu'
+			return render(request,'manage_product_addedit.html',contents)	
+		pdesc = request.POST.get('description')
+		pcat = request.POST.get('category')
+		try:
+			pcat = Product_Category.objects.get(cat_id=pcat)
+		except Product_Category.DoesNotExist:
+			contents["messageType"] = 'danger'
+			contents["message"] = 'Nie istnieje taka kategoria'
+			return render(request,'manage_product_addedit.html',contents)
+		if(pcat.parent != None):
+			contents["messageType"] = 'danger'
+			contents["message"] = 'Produkt nie może należeć do tej kategorii'
+			return render(request,'manage_product_addedit.html',contents)
+		pdisc = request.POST.get('discount')
+		try:
+			pdisc = int(pdisc)
+		except:
+			contents["messageType"] = 'danger'
+			contents["message"] = 'Nie poprawny parametr zniżki'
+			return render(request,'manage_product_addedit.html',contents)
+		if(pdisc == 0):
+			pdisc = None
+		elif(pdisc > 0):
+			try:
+				pdisc = Discount.objects.get(id=pdisc)
+			except Discount.DoesNotExist:
+				contents["messageType"] = 'danger'
+				contents["message"] = 'Wybrana zniżka nie istnieje'
+				return render(request,'manage_product_addedit.html',contents)	
+		try:
+			pproduct = Product.objects.get(product_code=edit_id)
+		except Product.DoesNotExist:
+			contents["messageType"] = 'danger'
+			contents["message"] = 'Ten obiekt nie istnieje w bazie danych'
+			return render(request,'manage_product.html',display_product())
+		pproduct.product_name = pname
+		pproduct.price = pprice
+		pproduct.description = pdesc
+		pproduct.discount = pdisc
+		pproduct.category = pcat
+		pproduct.save()
+		contents["id"] = pproduct.product_code
+		contents["name"] = pproduct.product_name
+		contents["price"] = pproduct.price
+		contents["desc"] = pproduct.description
+		contents["category"] = pproduct.category.cat_id
+		if(pproduct.discount != None):
+			contents["discount_id"] = pproduct.discount.id
+		else:
+			contents["discount_id"] = 0
+		#edycja istniejacych skladnikow, dodanie nowego jesli go nie ma
+		pingredients = Ingredient.objects.filter(units="kg")
+		for curRow in pingredients:
+			#pobiera skladnik po nazwie
+			name = curRow.name+"--"+str(curRow.id)
+			value = request.POST.get(name)
+			try:
+				value = float(value)
+			except:
+				contents["messageType"] = 'danger'
+				contents["message"] = 'Niepoprawna wartość parametru'
+				pproduct.delete()
+				return render(request,'manage_product_addedit.html',contents)
+			if(value < 0 and value >= 1000):
+				contents["messageType"] = 'danger'
+				contents["message"] = 'Niepoprawna wartość parametru'
+				pproduct.delete()
+				return render(request,'manage_product_addedit.html',contents)
+			#sprawdz wszystkie skladniki
+			if(Ingredient_Product.objects.filter(ingredient = curRow, product = pproduct).count() > 0): # ten obiekt istnieje w bazie, jesli ma wartosc wieksza od 0 to aktualizuj, jesli 0 to usun
+				if(value > 0): #aktualizuj
+					product_ing = Ingredient_Product.objects.get(ingredient = curRow, product = pproduct)
+					product_ing.quantity=value
+					product_ing.save()
+				elif(value == 0): #usun
+					product_ing = Ingredient_Product.objects.filter(ingredient = curRow, product = pproduct)
+					product_ing.delete()			
+			else: #dodaj nowy rekord do bazy
+				product_ing = Ingredient_Product(quantity=value, ingredient = curRow, product = pproduct)
+				product_ing.save()
+			
+			#aktualizacja tresci
+			toDisp = []
+			ingredients = Ingredient.objects.all()
+			if(ingredients.count() > 0):
+				for curRow in ingredients:
+					row = {'name': curRow.name, 'units': curRow.units, 'id': curRow.id, 'price': curRow.price}
+					if(Ingredient_Product.objects.filter(ingredient = curRow, product = pproduct).count() > 0):
+						row["quantity"] = Ingredient_Product.objects.get(ingredient = curRow, product = pproduct).quantity
+					else:
+						row["quantity"] = 0.0
+					toDisp.append(row)
+					contents["ingredients"] = toDisp
+					contents["ingredients_count"] = ingredients.count()
+			contents["messageType"] = 'success'
+			contents["message"] = 'Produkt poprawnie zapisany '
+		
+	return render(request,'manage_product_addedit.html',contents)
+	
 def product_delete(request, del_id):
 	contents = display_product()
 	try:
