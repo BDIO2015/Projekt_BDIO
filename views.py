@@ -10,7 +10,7 @@ def user_logout(request):
 	if('login_check' in request.session):
 		del request.session['login_check']
 		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
-	return contents
+	return render(request, 'index.html', contents)
 
 def user_check(request):
 	if not('login_check' in request.session):
@@ -973,28 +973,10 @@ def magazine_delete(request, del_id):
 	
 	return render(request, 'manage_magazine.html', contents)
 
-def basket(request):
-	contents = {'title':'Koszyk'}
-	if('basket_products' in request.session):
-		contents['messageType'] = 'success'
-		contents['message'] = request.session['basket_products']
-	else:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Koszyk jest pusty'
-	return render(request, 'basket.html', contents)
-	
-def basket_add(request, product_id):
-	contents = {'title':'Dodaj do koszyka'}
-	product_id = int(product_id)
-	try:
-		check = Product.objects.get(product_code=product_id)
-	except Product.DoesNotExist:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Wybranego produktu nie ma w bazie'
-		return render(request, 'basket.html', contents)
-	categories = check.category
+def get_subcategories(maincat):
 	subcategories = {}
-	subcategory = Product_Category.objects.filter(parent=check.category)
+	categories = maincat
+	subcategory = Product_Category.objects.filter(parent=maincat)
 	for subcat in subcategory:
 		if(subcat.type == '2'):
 			subsubcat = Product_Category.objects.filter(parent=subcat.cat_id)
@@ -1006,17 +988,131 @@ def basket_add(request, product_id):
 			if not((categories.name) in subcategories):
 				subcategories[categories.name] = []
 			subcategories[categories.name].append([subcat.cat_id, subcat.name])
+	todel = []
 	for key, each in subcategories.iteritems():
 		if(len(each) == 0):
-			del subcategories[key]
-			break
+			todel.append(key)
+	for k in todel:
+		del subcategories[k]
+	return subcategories
+	
+def basket(request):
+	contents = {'title':'Koszyk'}
+	if('basket_products' in request.session):
+		products = request.session['basket_products'].split(';')
+		prodCount = 0
+		prodDisp = []
+		for product in products:
+			unpack = product.split(':')
+			prodId = int(unpack[0])
+			prodNum = int(unpack[1])
+			prodRem = unpack[2]
+			try:
+				getProduct = Product.objects.get(product_code=prodId)
+			except Product.DoesNotExist:
+				toDel.append(product)
+				continue
+			prodId = getProduct.product_name
+			prodCats = []
+			if(len(unpack[3])>0):
+				prodCats = unpack[3].split('-')
+			prodIngs = []
+			if(len(unpack[4])>0):
+				prodIngs = unpack[4].split('-')
+			badCats = []
+			prodCatsNamed = []
+			for cat in prodCats:
+				try:
+					checkCat = Product_Category.objects.get(cat_id=int(cat))
+				except Product_Category.DoesNotExist:
+					badCats.append(cat)
+					continue
+				prodCatsNamed.append(checkCat.name)
+			badIngs = []
+			prodIngsNamed = []
+			for ing in prodIngs:
+				try:
+					checkIng = Ingredient.objects.get(id=int(ing))
+				except Ingredient.DoesNotExist:
+					badIngs.append(ing)
+					continue
+				prodIngsNamed.append(checkIng.name)
+			for badCat in badCats:
+				if(len(badCat)>0):
+					prodCats.remove(badCat)
+			for badIng in badIngs:
+				if(len(badIng)>0):
+					prodIngs.remove(badIng)
+			prodCount += 1
+			row = {'prodId':prodId, 'prodNum':prodNum, 'prodRem': prodRem, 'prodCats': ', '.join(prodCatsNamed), 'prodIngs': ', '.join(prodIngsNamed), 'prodCode': product}
+			prodDisp.append(row)
+		contents['productsList'] = prodDisp
+		contents['products'] = prodCount
+	else:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Koszyk jest pusty'
+	return render(request, 'basket.html', contents)
+	
+def basket_order(request):
+	action = request.POST.get('act', False)
+	contents = {'title':'Koszyk'}
+	contents['messageType'] = 'success'
+	contents['message'] = action
+	if(action == 'Aktualizuj'):
+		newproducts = ''
+		products = request.session['basket_products'].split(';')
+		for curProd in products:
+			unpack = curProd.split(':')
+			try:
+				id = int(unpack[0])
+				amount = int(unpack[1])
+			except ValueError:
+				contents['messageType'] = 'danger'
+				contents['message'] = 'Nieznany błąd'
+				return render(request, 'basket.html', contents)
+			getNums = request.POST.get(curProd, False)
+			if(not getNums == False):
+				prod_in = unpack[4]
+				cat_in = unpack[3]
+				amount = int(getNums)
+				if(amount == 0):
+					continue
+				unpack[1] = str(amount)
+				packed = ':'.join(unpack)
+				if(len(newproducts) == 0):
+					newproducts = packed
+				else:
+					newproducts += ';' + packed
+		request.session['basket_products'] = newproducts
+		contents['messageType'] = 'success'
+		contents['message'] = 'Koszyk został zaktalizowany'
+	elif(not action == False):
+		contents['messageType'] = 'success'
+		contents['message'] = 'Będziemy zamawiać'
+	else:
+		return basket(request)
+	return render(request, 'basket.html', contents)
+	
+def basket_add(request, product_id):
+	contents = {'title':'Dodaj do koszyka'}
+	product_id = int(product_id)
+	try:
+		check = Product.objects.get(product_code=product_id)
+	except Product.DoesNotExist:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Wybranego produktu nie ma w bazie'
+		return render(request, 'basket.html', contents)
+	subcategories = get_subcategories(check.category)
+
 	if(request.POST.get('sent', False)):
 		pingreds = request.POST.getlist('basket_products_ingredients', [])
 		pingreds.sort()
+		pingredsToCheck = '-'.join(pingreds)
 		premarks = request.POST.get('basket_products_remarks', '')
-		premarks = premarks.replace(':', ' ').replace(';', ' ')
+		premarks = premarks.replace(':', ' ').replace(';', ' ').replace('-', ' ')
 		selections = request.POST.getlist('selections', [])
 		selections.sort()
+		selectionsToCheck = '-'.join(selections)
 		if('basket_products' in request.session):
 			products = request.session['basket_products'].split(';')
 			for curProd in products:
@@ -1029,11 +1125,9 @@ def basket_add(request, product_id):
 					contents['message'] = 'Nieznany błąd'
 					return render(request, 'basket.html', contents)
 				if(id == product_id):
-					prod_in = unpack[3+len(subcategories):]
-					prod_in.sort()
-					cat_in = unpack[3:3+len(subcategories)]
-					cat_in.sort()
-					if(prod_in == pingreds and premarks == unpack[2] and cat_in == selections):
+					prod_in = unpack[4]
+					cat_in = unpack[3]
+					if(prod_in == pingredsToCheck and premarks == unpack[2] and cat_in == selectionsToCheck):
 						amount += 1
 						products.remove(curProd)
 						unpack[1] = str(amount)
@@ -1043,18 +1137,20 @@ def basket_add(request, product_id):
 						contents['messageType'] = 'success'
 						contents['message'] = 'Dodano wybrany produkt do koszyka'
 						return render(request, 'basket.html', contents)
-			forStr = ';' + str(product_id) + ':1' + ':' + premarks
+			forStr = ';' + str(product_id) + ':1' + ':' + premarks + ':'
 			if(len(selections) > 0):
-				forStr += ':' + ':'.join(selections)
+				forStr += '-'.join(selections)
+			forStr += ':'
 			if(len(pingreds) > 0):
-				forStr += ':' + ':'.join(pingreds)
+				forStr += '-'.join(pingreds)
 			request.session['basket_products'] += forStr
 		else:
-			forStr = str(product_id) + ':1' + ':' + premarks
+			forStr = str(product_id) + ':1' + ':' + premarks + ':'
 			if(len(selections) > 0):
-				forStr += ':' + ':'.join(selections)
+				forStr += '-'.join(selections)
+			forStr += ':'
 			if(len(pingreds) > 0):
-				forStr += ':' + ':'.join(pingreds)
+				forStr += '-'.join(pingreds)
 			request.session['basket_products'] = forStr
 		contents['messageType'] = 'success'
 		contents['message'] = 'Dodano wybrany produkt do koszyka'
@@ -1073,18 +1169,10 @@ def basket_add(request, product_id):
 	return render(request, 'basket_step2.html', contents)
 def basket_remove(request, product_id):
 	contents = {'title':'Usuń z koszyka'}
-	product_id = int(product_id)
 	if('basket_products' in request.session):
 		products = request.session['basket_products'].split(';')
 		for curProd in products:
-			unpack = curProd.split(':')
-			try:
-				id = int(unpack[0])
-			except ValueError:
-				contents['messageType'] = 'danger'
-				contents['message'] = 'Nieznany błąd'
-				return render(request, 'basket.html', contents)
-			if(id == product_id):
+			if(curProd == product_id):
 				products.remove(curProd)
 				if(len(products) > 0):
 					request.session['basket_products'] = ";".join(products)
@@ -1553,7 +1641,7 @@ def user_management_edit(request, edit_id):
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
 			contents['message'] = 'Niepoprawne miasto!'
 			return render(request,'manage_usermanagement_edit.html',contents)
-		if not(re.match('[0-9][0-9]-[0-9][0-9][0-9]',str(reg_postal_code))):
+		if not(re.match('[0-9][0-9][0-9][0-9][0-9]',str(reg_postal_code))):
 			contents['message'] = 'Niepoprawny kod pocztowy!'
 			return render(request,'manage_usermanagement_edit.html',contents)
 		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
@@ -1651,4 +1739,40 @@ def user_management_delete(request, del_id):
 	else:
 		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownik nie instnieje!', 'users': users}
 	
+	return render(request, 'manage_usermanagement.html', contents)
+
+def management_panel(request):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+	
+	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
+	
+	ingredients = Ingredient.objects.all()
+	
+	for element in ingredients:
+		if element.quantity > element.min_quantity:
+			contents = {'title':'Panel zarządzania','messageType':'alert', 'message':'none'}	
+			return render(request, 'manage_management_panel.html', contents)
+	
+	return render(request, 'manage_management_panel.html', contents)
+
+def user_management(request):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+
+	user_types = User_Type.objects.all()
+	users = User.objects.all()
+	
+	for user in users:
+		for type in user_types:
+			if user.type_id == type.id:
+				user.type_id = type.type_name
+	
+	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'users': users}
 	return render(request, 'manage_usermanagement.html', contents)

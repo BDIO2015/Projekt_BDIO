@@ -1,0 +1,26 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+{% if messageType == "alert" %}
+<font color=red> <label  class="control-label">Ostrzeżenie: Zapasy na wyczerpaniu</label> </font>
+<br /><br />{% endif %}
+
+	<table class="table table-hovered table-responsive">
+		<tr><th>Panel zarządzania:</th></tr>
+			<tr><td><a href="/manage/discount">Zniżki</a></td></tr>
+			<tr><td><a href="/manage/product_category">Kategorie produktów</a></td></tr>
+			<tr><td><a href="/manage/user_type">Typy użytkowników</a></td></tr>
+			<tr><td><a href="/manage/user">Użytkownicy</a></td></tr>
+			<tr><td>	
+			<a href="/manage/magazine">{% if messageType == "alert" %}<font color=red>			{% endif %}Składniki</font></a>
+			 </td></tr>	
+			<tr><td><a href="/manage/product">Produkty</a></td></tr>					
+		</table>
+{% endblock %}
