@@ -1,0 +1,64 @@
+<html>
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	<!-- dodać powrót do panelu -->
+	<a href=""  class="btn btn-primary">Powrót</a><br /><br />
+<form action="/manage/usermanagement/edit/{{toEdit.user_id}}/" method="POST">
+	
+	{% csrf_token %}
+	<div style="position: relative;top: 10px; ">
+	<div class="input-group ">
+	<label  class="control-label">Nazwa użytkownika: </label>
+	<input type="text" name="username" pattern=".{6,64}" value="{% if type == "edit" %}{{toEdit.username}}{% elif type == "editafail" %}{{username}}{% endif %}" maxlength="20" class="form-control"/>
+	</div>
+	<div class="input-group ">
+	<label  class="control-label">Imie: </label>
+	<input type="text" name="name"  pattern="[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$" value="{% if type == "edit" %}{{toEdit.name}}{% elif type == "editafail" %}{{name}}{% endif %}" maxlength="20" class="form-control"/>
+	</div>
+	<div class="input-group ">
+	<label  class="control-label">Nazwisko: </label>
+	<input type="text" name="second_name"  pattern="[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$" value="{% if type == "edit" %}{{toEdit.second_name}}{% elif type == "editafail" %}{{second_name}}{% endif %}" maxlength="9" class="form-control"/>
+		</div>
+	<div class="input-group ">
+	<label  class="control-label">Adres: </label>
+	<input type="text" name="address"  pattern=".{1,64}" value="{% if type == "edit" %}{{toEdit.address}}{% elif type == "editafail" %}{{address}}{% endif %}" maxlength="9"  class="form-control"/>
+		</div>
+	<div class="input-group ">
+	<label  class="control-label">Miasto: </label>
+	<input type="text" name="city"  pattern="[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$" value="{% if type == "edit" %}{{toEdit.city}}{% elif type == "editafail" %}{{city}}{% endif %}" maxlength="9" class="form-control"/>
+		</div>
+	<div class="input-group ">	
+	<label  class="control-label">Kod pocztowy: </label>
+	<input type="text" name="postal_code" pattern="[0-9][0-9]-[0-9][0-9][0-9]" value="{% if type == "edit" %}{{toEdit.postal_code}}{% elif type == "editafail" %}{{postal_code}}{% endif %}" maxlength="9" class="form-control"  min="1000000" max="999999999" data-bind="value:replyNumber" step="any"/>
+		</div>
+	<div class="input-group ">	
+	<label  class="control-label" >Numer telefonu: </label>
+	<input type="text" name="phone_number"  pattern="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" value="{% if type == "edit" %}{{toEdit.phone_number}}{% elif type == "editafail" %}{{phone_number}}{% endif %}" maxlength="9" class="form-control"  min="1000000" max="999999999" data-bind="value:replyNumber" step="any"/>
+		</div>
+		
+	<div class="input-group ">
+	<label  class="control-label">Typ użytkownika: </label>
+	<select name="usertype"  class="form-control">
+	{% for usertype in usertypes %}
+		<option name="{{usertype.id}}" value="{{usertype.id}}" {% if usertype.id == toEdit.type_id%}selected{% endif %}>{{ usertype.type_name }}</option>		
+	{% endfor %}
+	</select>
+	</div>
+		
+	<br>
+	<input align="right" type="submit"  class="btn btn-primary" name="sent" value="Zapisz" />
+	</div>
+
+</form">
+
+
+
+{% endblock %}
