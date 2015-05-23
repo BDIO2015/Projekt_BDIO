@@ -797,7 +797,7 @@ def user_type_edit(request, edit_id):
 	
 def magazine(request):
 	check = user_check(request)
-	if check['messageType'] == 'danger':
+	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
@@ -809,7 +809,7 @@ def magazine(request):
 	
 def magazine_add(request):
 	check = user_check(request)
-	if check['messageType'] == 'danger':
+	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
@@ -872,7 +872,7 @@ def magazine_add(request):
 
 def magazine_edit(request, edit_id):
 	check = user_check(request)
-	if check['messageType'] == 'danger':
+	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
@@ -950,7 +950,7 @@ def magazine_edit(request, edit_id):
 	
 def magazine_delete(request, del_id):
 	check = user_check(request)
-	if check['messageType'] == 'danger':
+	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
@@ -1345,7 +1345,7 @@ def payment_types_add(request):
 
 def user_management_edit(request, edit_id):
 	check = user_check(request)
-	if check['messageType'] == 'danger':
+	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
