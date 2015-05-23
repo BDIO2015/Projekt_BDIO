@@ -26,7 +26,7 @@
 	<label  class="control-label">{{keycat}}:</label>
 		<select class="form-control" name="selections">
 		{% for category in maincat %}
-			<option value="{{keycat}}?-?{{category}}">{{category}}</option>
+			<option value="{{category.0}}">{{category.1}}</option>
 		{% endfor %}
 		</select>
 	</div>
