@@ -12,9 +12,9 @@
 	<a href="/manage/product/add" class="btn btn-primary">Dodaj nowy produkt</a><br /><br />
 	{% if count > 0 %}
 		<table class="table table-hovered table-responsive">
-		<tr><th>Typ</th><th>Nazwa</th><th>Dodatkowa opłata</th><th>Ilość składników</th><th>Opis</th><th>Zarządzaj</th></tr>
+		<tr><th>Nazwa</th><th>Cena</th><th>Opis</th><th>Zniżka</th><th>Ilość składników</th><th>Zarządzaj</th></tr>
 		{% for row in content %}
-		
+		<tr><td>{{row.name}}</td><td>{{row.price}}</td><td>{{row.desc}}</td><td>{{row.disc_count}}</td><td>{{row.prod_count}}</td><td><a href="/manage/producty/edit/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/product/delete/{{row.id}}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
 		{% endfor %}
 		</table>
 	{% else %}
