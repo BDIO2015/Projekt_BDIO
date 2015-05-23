@@ -9,12 +9,12 @@ from .models import *
 def user_logout(request):
 	if('login_check' in request.session):
 		del request.session['login_check']
-		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!', 'username':'', 'password':''}
+		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
 	return contents
 
 def user_check(request):
 	if not('login_check' in request.session):
-		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!', 'username':'', 'password':''}
+		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!'}
 		return contents
 	else:
 		users = User.objects.all()
@@ -24,7 +24,7 @@ def user_check(request):
 			elif(l_user.user_id==int(request.session['login_check'])):
 				return {'user_id':int(l_user.user_id), 'canCreate':int(User_Type.objects.get(id=l_user.type_id).canCreate), 'canEdit':int(User_Type.objects.get(id=l_user.type_id).canEdit), 'canDelete':int(User_Type.objects.get(id=l_user.type_id).canDelete), 'canDeliver':int(User_Type.objects.get(id=l_user.type_id).canDeliver), 'canManage':int(User_Type.objects.get(id=l_user.type_id).canManage) }
 			else:
-				contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Mushisz się zalogować!', 'username':'', 'password':''}
+				contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Mushisz się zalogować!'}
 		return contents
 
 def index(request):
@@ -962,26 +962,26 @@ def basket(request):
 def basket_add(request, product_id):
 	contents = {'title':'Dodaj do koszyka'}
 	product_id = int(product_id)
-	'''try:
+	try:
 		check = Product.objects.get(product_code=product_id)
 	except Product.DoesNotExist:
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Wybranego produktu nie ma w bazie'
-		return render(request, 'basket.html', contents)'''
-	categories = Product_Category.objects.filter(parent=None) #dodac pobieranie po id z produktow
+		return render(request, 'basket.html', contents)
+	categories = check.category
 	subcategories = {}
-	for cat in categories:
-		if(cat.type == '2'):
-			subcategory = Product_Category.objects.filter(parent=cat.cat_id)
-			subcategories[cat.name] = []
-			for subcat in subcategory:
-				if(subcat.type == '2'):
-					subsubcat = Product_Category.objects.filter(parent=subcat.cat_id)
+	subcategory = Product_Category.objects.filter(parent=check.category)
+	for subcat in subcategory:
+		if(subcat.type == '2'):
+			subsubcat = Product_Category.objects.filter(parent=subcat.cat_id)
+			for curcat in subsubcat:
+				if not((subcat.name) in subcategories):
 					subcategories[subcat.name] = []
-					for curcat in subsubcat:
-						subcategories[subcat.name].append(curcat.name) 
-				else:
-					subcategories[cat.name].append(subcat.name)
+				subcategories[subcat.name].append([curcat.cat_id, curcat.name])
+		else:
+			if not((categories.name) in subcategories):
+				subcategories[categories.name] = []
+			subcategories[categories.name].append([subcat.cat_id, subcat.name])
 	for key, each in subcategories.iteritems():
 		if(len(each) == 0):
 			del subcategories[key]
@@ -1043,9 +1043,7 @@ def basket_add(request, product_id):
 			allIngreds.append(row)
 		contents['ingredients'] = allIngreds
 		contents['count'] = availableIn.count()
-	#wczytac nazwe produktu z id
-	#dodac wybieranie podkategorii produktu
-	contents['name'] = 'Nazwa produktutt' # check.product_name
+	contents['name'] = check.product_name
 	contents['categories'] = subcategories
 	contents['id'] = product_id
 	return render(request, 'basket_step2.html', contents)
