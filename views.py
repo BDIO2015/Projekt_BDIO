@@ -10,7 +10,7 @@ def user_logout(request):
 	if('login_check' in request.session):
 		del request.session['login_check']
 		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
-	return contents
+	return render(request, 'index.html', contents)
 
 def user_check(request):
 	if not('login_check' in request.session):
@@ -1645,7 +1645,7 @@ def user_management_edit(request, edit_id):
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
 			contents['message'] = 'Niepoprawne miasto!'
 			return render(request,'manage_usermanagement_edit.html',contents)
-		if not(re.match('[0-9][0-9]-[0-9][0-9][0-9]',str(reg_postal_code))):
+		if not(re.match('[0-9][0-9][0-9][0-9][0-9]',str(reg_postal_code))):
 			contents['message'] = 'Niepoprawny kod pocztowy!'
 			return render(request,'manage_usermanagement_edit.html',contents)
 		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
