@@ -1618,7 +1618,7 @@ def user_management_edit(request, edit_id):
 	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'usertypes': user_types, 'toEdit': toEdit, 'type': 'edit'}
 	return render(request, 'manage_usermanagement_edit.html', contents)
 	
-	def user_management_delete(request, del_id):
+def user_management_delete(request, del_id):
 	check = user_check(request)
 	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
