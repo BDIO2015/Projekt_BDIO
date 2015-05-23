@@ -954,13 +954,13 @@ def magazine_delete(request, del_id):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
-		
+	
+	ingredients = Ingredient.objects.all()	
 	try:
 		did = int(del_id)
 	except ValueError:
 		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!','ingredients': ingredients,}
 		return render(request, 'manage_magazine.html', contents)
-	ingredients = Ingredient.objects.all()
 	toDel = Ingredient.objects.filter(id=did)
 	if(toDel.count() == 1):
 		toDel[0].delete()		
@@ -1437,3 +1437,42 @@ def user_management_edit(request, edit_id):
 		
 	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'usertypes': user_types, 'toEdit': toEdit, 'type': 'edit'}
 	return render(request, 'manage_usermanagement_edit.html', contents)
+	
+	def user_management_delete(request, del_id):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+
+	user_types = User_Type.objects.all()
+	users = User.objects.all()
+	
+	for user in users:
+		for type in user_types:
+			if user.type_id == type.id:
+				user.type_id = type.type_name
+				
+	try:
+		did = int(del_id)
+	except ValueError:
+		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownikk nie instnieje!', 'users': users}
+		return render(request, 'manage_usermanagement.html', contents)
+		
+	toDel = User.objects.filter(user_id=did)
+	iterator = -1
+	if(toDel.count() == 1):
+		toDel[0].delete()					
+		users = User.objects.all()	
+		for user in users:
+			for type in user_types:
+				if user.type_id == type.id:
+					user.type_id = type.type_name					
+		contents = {'title':'Zarządzanie użytkownikami','messageType':'success', 'message': 'Użytkownik usunięty poprawnie!', 'users': users}
+		return render(request, 'manage_usermanagement.html', contents)
+	elif(toDel.count() > 1):
+		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Nieznany błąd', 'users': users}
+	else:
+		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownik nie instnieje!', 'users': users}
+	
+	return render(request, 'manage_usermanagement.html', contents)

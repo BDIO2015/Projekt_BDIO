@@ -1,0 +1,51 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+
+	<table class="table table-hovered table-responsive">
+	<tr>
+	<th>
+	Nazwa użytkownika
+	</th>
+	<th>
+	Imie
+	</th>
+	<th >
+	Nazwisko
+	</th>
+	<th>
+		Typ
+	</th>
+	<th>
+	</th>
+	</tr>
+	{% for element in users %}
+	<tr>
+	<td>
+	{{ element.username }}
+	</td>
+	<td>
+	{{ element.name }}		
+	</td >
+	<td>
+	{{ element.second_name }} 	
+	</td>
+	<td>
+	{{ element.type_id }} 	
+	</td>
+	<td align="right" >
+	<a href="/manage/usermanagement/edit/{{ element.user_id }}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;
+	<a href="/manage/usermanagement/delete/{{ element.user_id }}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a>
+	</td>
+	</tr>
+	{% endfor %}
+	</table>
+	
+{% endblock %}
