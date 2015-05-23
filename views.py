@@ -9,12 +9,12 @@ from .models import *
 def user_logout(request):
 	if('login_check' in request.session):
 		del request.session['login_check']
-		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!', 'username':'', 'password':''}
+		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
 	return contents
 
 def user_check(request):
 	if not('login_check' in request.session):
-		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!', 'username':'', 'password':''}
+		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!'}
 		return contents
 	else:
 		users = User.objects.all()
@@ -24,7 +24,7 @@ def user_check(request):
 			elif(l_user.user_id==int(request.session['login_check'])):
 				return {'user_id':int(l_user.user_id), 'canCreate':int(User_Type.objects.get(id=l_user.type_id).canCreate), 'canEdit':int(User_Type.objects.get(id=l_user.type_id).canEdit), 'canDelete':int(User_Type.objects.get(id=l_user.type_id).canDelete), 'canDeliver':int(User_Type.objects.get(id=l_user.type_id).canDeliver), 'canManage':int(User_Type.objects.get(id=l_user.type_id).canManage) }
 			else:
-				contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Mushisz się zalogować!', 'username':'', 'password':''}
+				contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Mushisz się zalogować!'}
 		return contents
 
 def index(request):
