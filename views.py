@@ -1664,13 +1664,13 @@ def management_panel(request):
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
 	
-	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none'}	
+	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
 	
 	ingredients = Ingredient.objects.all()
 	
 	for element in ingredients:
 		if element.quantity > element.min_quantity:
-			contents = {'title':'Zarządzanie użytkownikami','messageType':'alert', 'message':'none'}	
+			contents = {'title':'Panel zarządzania','messageType':'alert', 'message':'none'}	
 			return render(request, 'manage_management_panel.html', contents)
 	
 	return render(request, 'manage_management_panel.html', contents)
