@@ -1656,3 +1656,21 @@ def user_management_delete(request, del_id):
 		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownik nie instnieje!', 'users': users}
 	
 	return render(request, 'manage_usermanagement.html', contents)
+
+def management_panel(request):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+	
+	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none'}	
+	
+	ingredients = Ingredient.objects.all()
+	
+	for element in ingredients:
+		if element.quantity > element.min_quantity:
+			contents = {'title':'Zarządzanie użytkownikami','messageType':'alert', 'message':'none'}	
+			return render(request, 'manage_management_panel.html', contents)
+	
+	return render(request, 'manage_management_panel.html', contents)
