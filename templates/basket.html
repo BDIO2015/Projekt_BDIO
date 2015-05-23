@@ -3,9 +3,22 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
+	<a href="/basket" class="btn btn-primary">Powrót</a><p style="text-align: right;"><a href="/basket/clear" class="btn btn-primary">Wyczyść koszyk</a></p>
 	{% if messageType == "danger" or messageType == "success" %}
 	<div class="alert alert-{{messageType}}">
 	  {{message}}
 	</div>
+	{% endif %}
+	{% if products > 0 %}
+		<form action="/basket/order" method="POST">
+		{% csrf_token %}
+		<table class="table table-hovered table-responsive">
+		<tr><th>Produkt</th><th>Ilość</th><th>Usuń</th></tr>
+		{% for row in productsList %}
+			<tr><td><b>{{row.prodId}}</b><p style="text-indent: 2%;">Uwagi: {{row.prodRem}}</p><p style="text-indent: 2%;">Kategorie: {{row.prodCats}}</p><p style="text-indent: 2%;">Dodatkowe składniki: {{row.prodIngs}}</p></td><td><input type="number" min="0" max="999" value="{{row.prodNum}}" name="{{row.prodCode}}" /></td><td><a href="/basket/remove/{{row.prodCode}}/" class="btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
+		{% endfor %}
+		</table>
+		<p style="text-align: right;"><input type="submit" name="act" value="Aktualizuj" class="btn btn-primary"/> <input type="submit" name="act" value="Zamów" class="btn btn-primary"/></p>
+		</form>
 	{% endif %}
 {% endblock %}
