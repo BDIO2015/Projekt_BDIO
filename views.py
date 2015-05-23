@@ -796,15 +796,23 @@ def user_type_edit(request, edit_id):
 
 	
 def magazine(request):
-	#dodać sprawdzenie praw
+	check = user_check(request)
+	if check['messageType'] == 'danger':
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+	
 	ingredients = Ingredient.objects.all()
 	
 	contents = {'ingredients': ingredients, 'title': "Magazyn", 'messageType':'None'}
 	return render(request, 'manage_magazine.html', contents)
 	
 def magazine_add(request):
-	#dodać sprawdzenie praw
-	ingredients = Ingredient.objects.all()
+	check = user_check(request)
+	if check['messageType'] == 'danger':
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
 
 	if(request.POST.get('sent')):		
 		ingredient_name = request.POST.get('ingredient_name', False);
@@ -863,7 +871,12 @@ def magazine_add(request):
 	return render(request, 'manage_magazine_addedit.html', contents)	
 
 def magazine_edit(request, edit_id):
-	#dodać sprawdzenie praw
+	check = user_check(request)
+	if check['messageType'] == 'danger':
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+		
 	try:
 		eid = int(edit_id)
 	except ValueError:
@@ -936,7 +949,12 @@ def magazine_edit(request, edit_id):
 	return render(request, 'manage_magazine_addedit.html', contents)
 	
 def magazine_delete(request, del_id):
-	#dodać sprawdzenie praw
+	check = user_check(request)
+	if check['messageType'] == 'danger':
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+		
 	try:
 		did = int(del_id)
 	except ValueError:
@@ -1326,7 +1344,12 @@ def payment_types_add(request):
 	return render(request, 'manage_payment_types_add.html', contents)
 
 def user_management_edit(request, edit_id):
-	#dodać sprawdzenie praw
+	check = user_check(request)
+	if check['messageType'] == 'danger':
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+		
 	try:
 		eid = int(edit_id)
 	except ValueError:
