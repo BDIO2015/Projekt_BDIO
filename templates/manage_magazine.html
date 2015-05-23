@@ -4,49 +4,54 @@
 
 {% block content %}
 	{% if messageType == "danger" or messageType == "success" %}
-	<a href="/manage/discount/">Powrót</a><br /><br />
 	<div class="alert alert-{{messageType}}">
 	  {{message}}
 	</div>
 	{% endif %}
-	<a href="/manage/magazine/add/">Dodaj nowy składnik do bazy</a><br /><br />
+	<a href="/manage/magazine/add/" class="btn btn-primary">Dodaj nowy składnik do bazy</a><br /><br />
 
-	<table border=1 cellpadding="2">
+	<table class="table table-hovered table-responsive">
 	<tr>
-	<td style="min-width: 150px;" align="center">
+	<th align="center">
 	Składnik
-	</td>
-	<td style="min-width:80px;" align="center" colspan="2">
+	</th>
+	<th align="center" colspan="2">
 	Magazyn
-	</td>
-	<td style="min-width: 70px;" align="center">
+	</th>
+	<th align="center" colspan="2">
 	Cena
-	</td>
+	</th>
+	<th>
+	</th>
 	</tr>
 	{% for element in ingredients %}
 	<tr>
 	<td>
 	{{ element.name }}
 	</td>
-	<td  align="right" width="60">
+	<td width=8 align=right>
 		{% if element.quantity < element.min_quantity %}
 			<font color="red">
 		{% endif %}
-		{{ element.quantity }}&nbsp
+		{{ element.quantity }}
 		</font>
 	</td>
-	<td style="border-left-style: hidden;">
+	<td>
 		{% if element.quantity < element.min_quantity %}
 			<font color="red">
 		{% endif %}
-		{{ element.units }}&nbsp	
+		{{ element.units }}
 		</font>
+	</td >
+	<td width=8  align=right>
+	{{ element.price }} 	
 	</td>
-	<td align="right">
-	{{ element.price }} PLN&nbsp
+	<td>
+	PLN
 	</td>
 	<td align="right" >
-	<a href="/manage/magazine/edit/{{ element.id }}/">[Edytuj]</a> <a href="/manage/magazine/delete/{{ element.id }}/" class="delete_button" >[Usuń]</a>
+	<a href="/manage/magazine/edit/{{ element.id }}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;
+	<a href="/manage/magazine/delete/{{ element.id }}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a>
 	</td>
 	</tr>
 	{% endfor %}

@@ -1,3 +1,7 @@
+div#ingredients_for_product .input-group{
+	width:100% !important;
+}
+
 .input-group, .form-group{
 margin-bottom:10px !important;
 width: 100% !important;
@@ -10,3 +14,4 @@ width: 100% !important;
 .menu {
 margin-bottom: 10px;
 }
+

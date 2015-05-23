@@ -5,36 +5,47 @@
 
 {% block content %}
 	{% if messageType == "danger" or messageType == "success" %}
-	<a href="/manage/discount/">Powrót</a><br /><br />
 	<div class="alert alert-{{messageType}}">
 	  {{message}}
 	</div>
 	{% endif %}
-	<a href="/manage/magazine/">Powrót</a><br /><br />
+	<a href="/manage/magazine/"  class="btn btn-primary">Powrót</a><br /><br />
 <form action="/manage/magazine/{% if type == "edit" %}edit/{{toEdit.id}}{% elif type == "add" %}add{% endif %}/" method="POST">
 	
 	{% csrf_token %}
-	<div style="border:1px solid black; width:500;height:120;padding: 10px;position: relative;top: 10px; ">
-	<p> Dodaj nowy składnik: </p>
-	<input type="text" name="ingredient_name" value="{% if type == "edit" %}{{toEdit.name}}{% else %}Nazwa składnika{% endif %}" maxlength="20"  style="width:150px;" onblur="if(this.value=='')this.value='Nazwa składnika';" onfocus="if(this.value=='Nazwa składnika')this.value='';"/>
-	<input type="text" name="count" value="{% if type == "edit" %}{{toEdit.quantity}}{% else %}Ilość{% endif %}" maxlength="9"  style="width:60px;" onblur="if(this.value=='')this.value='Ilość';" onfocus="if(this.value=='Ilość')this.value='';"/>
-	<input type="text" name="min_count" value="{% if type == "edit" %}{{toEdit.min_quantity}}{% else %}Min. ilość{% endif %}" maxlength="9"  style="width:60px;" onblur="if(this.value=='')this.value='Min. ilość';" onfocus="if(this.value=='Min. ilość')this.value='';"/>
-	<input type="text" name="price" value="{% if type == "edit" %}{{toEdit.price}}{% else %}Cena{% endif %}" maxlength="9"  style="width:60px;" onblur="if(this.value=='')this.value='Cena';" onfocus="if(this.value=='Cena')this.value='';"/>
-	<select name="units">
+	<div style="position: relative;top: 10px; ">
+	<div class="input-group ">
+	<label  class="control-label">Nazwa składnika: </label>
+	<input type="text" name="ingredient_name" value="{% if type == "edit" %}{{toEdit.name}}{% endif %}" maxlength="20" class="form-control"/>
+	</div>
+	<div class="input-group ">
+	<label  class="control-label">Ilość: </label>
+	<input type="number" name="count" value="{% if type == "edit" %}{{toEdit.quantity}}{% endif %}" maxlength="9" class="form-control" min="0" max="999.99" data-bind="value:replyNumber" step="any"/>
+		</div>
+	<div class="input-group ">
+	<label  class="control-label">Minimalna ilość: </label>
+	<input type="number" name="min_count" value="{% if type == "edit" %}{{toEdit.min_quantity}}{% endif %}" maxlength="9"  class="form-control" min="0" max="999.99" data-bind="value:replyNumber" step="any"/>
+		</div>
+	<div class="input-group ">
+	<label  class="control-label">Cena za jednostke: </label>
+	<input type="number" name="price" value="{% if type == "edit" %}{{toEdit.price}}{% endif %}" maxlength="9" class="form-control" min="0" max="999.99" data-bind="value:replyNumber" step="any"/>
+		</div>
+			<div class="input-group ">
+	</div>
+	<div class="input-group ">
+	<label  class="control-label">Jednostka: </label>
+	<select name="units"  class="form-control">
 		<option name="kg" {% if type == "edit" and toEdit.units == "kg"%}selected{% endif %}>Kilogram</option>
 		<option name="lt"{% if type == "edit" and toEdit.units == "l"%}selected{% endif %}>Litr</option>
 		<option name="szt"{% if type == "edit" and toEdit.units == "szt"%}selected{% endif %}>Sztuka</option>	
-	</select><br>
-	{% if type == "edit" %}
-	(Nazwa składnika, Ilość, Minimalna ilość, Cena)
-	{% else %}
-	{% endif %}
+	</select>
+	</div>
 	
 	<br>
-	<input align="right" type="submit" name="sent" value="Zapisz" />  	{{ result }}
+	<input align="right" type="submit"  class="btn btn-primary" name="sent" value="Zapisz" />
 	</div>
 
-<form action="/manage/magazine/add/" method="POST">
+</form>
 
 
 

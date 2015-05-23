@@ -114,7 +114,7 @@ class Order_Product_Categories(models.Model):
 	category_id = models.ForeignKey(Product_Category)
 	
 class Ingredient_Product(models.Model):
-	quantity = models.IntegerField()
+	quantity = models.FloatField()
 	ingredient = models.ForeignKey(Ingredient)
 	product = models.ForeignKey(Product)
 	
