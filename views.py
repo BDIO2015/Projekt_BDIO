@@ -19,7 +19,7 @@ def user_check(request):
 	else:
 		users = User.objects.all()
 		for l_user in users:
-			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==0):
+			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==None):
 				return {'user_id':l_user.user_id, 'canCreate':0, 'canEdit':0, 'canDelete':0, 'canDeliver':0, 'canManage':0} 
 			elif(l_user.user_id==int(request.session['login_check'])):
 				return {'user_id':int(l_user.user_id), 'canCreate':int(User_Type.objects.get(id=l_user.type_id).canCreate), 'canEdit':int(User_Type.objects.get(id=l_user.type_id).canEdit), 'canDelete':int(User_Type.objects.get(id=l_user.type_id).canDelete), 'canDeliver':int(User_Type.objects.get(id=l_user.type_id).canDeliver), 'canManage':int(User_Type.objects.get(id=l_user.type_id).canManage) }
@@ -796,13 +796,23 @@ def user_type_edit(request, edit_id):
 
 	
 def magazine(request):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+	
 	ingredients = Ingredient.objects.all()
 	
 	contents = {'ingredients': ingredients, 'title': "Magazyn", 'messageType':'None'}
 	return render(request, 'manage_magazine.html', contents)
 	
 def magazine_add(request):
-	ingredients = Ingredient.objects.all()
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
 
 	if(request.POST.get('sent')):		
 		ingredient_name = request.POST.get('ingredient_name', False);
@@ -812,16 +822,16 @@ def magazine_add(request):
 		unitsx = request.POST.get('units', False)
 		
 		ingredient_name = str(ingredient_name)
-		if re.match('^[a-zA-Zćśźżńłóąę ]+$',ingredient_name) and ingredient_name != "Nazwa składnika": 	
+		if ingredient_name: 	
 			
 
 			if(pricex.count(",") > 1 or pricex.count(".") > 1 or quantityx.count(",") > 1 or quantityx.count(".") > 1 or min_quantityx.count(",") > 1 or min_quantityx.count(".") > 1):
-				contents = {'title': "Magazyn", 'result':'Błędna/e wartości cena, ilość, min. ilość!', 'type': 'add'}		
+				contents = {'title': "Magazyn", 'messageType':'danger', 'message':'Błędna/e wartości cena, ilość, min. ilość!', 'type': 'add'}		
 				return render(request, 'manage_magazine_addedit.html', contents)
 			
 			for ingredient in ingredients:
 				if(ingredient.name == ingredient_name):		
-					contents = {'title': "Magazyn", 'result':'Składnik o takiej nazwie już istnieje!'}		
+					contents = {'title': "Magazyn", 'messageType':'danger', 'message':'Składnik o takiej nazwie już istnieje!'}		
 					return render(request, 'manage_magazine_addedit.html', contents)
 			
 			pricex = pricex.replace(',', '.');	
@@ -849,18 +859,24 @@ def magazine_add(request):
 				pricex = 0
 		
 			newIngredient = Ingredient(name=ingredient_name, price=pricex, quantity=quantityx, units=unitsx, min_quantity=min_quantityx)
-			newIngredient.save()	
-			
-			return magazine(request)
+			newIngredient.save()			
+			contents = {'title': "Magazyn", 'messageType':'success', 'message': 'Pomyślnie dodano składnik do bazy!', 'type': 'add'}
+			return render(request, 'manage_magazine_addedit.html', contents)
 			
 		else:	
-			contents = {'title': "Magazyn", 'messageType':'none', 'result': 'Niepoprawna nazwa składnika!', 'type': 'add'}
+			contents = {'title': "Magazyn", 'messageType':'danger', 'message': 'Niepoprawna nazwa składnika!', 'type': 'add'}
 	else:
 		contents = {'title': "Magazyn", 'messageType':'none', 'type': 'add'}
 		
 	return render(request, 'manage_magazine_addedit.html', contents)	
 
 def magazine_edit(request, edit_id):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+		
 	try:
 		eid = int(edit_id)
 	except ValueError:
@@ -879,16 +895,16 @@ def magazine_edit(request, edit_id):
 			unitsx = request.POST.get('units', False)
 			
 			ingredient_name = str(ingredient_name)
-			if re.match('^[a-zA-Zćśźżńłóąę ]+$',ingredient_name) and ingredient_name != "Nazwa składnika": 	
+			if ingredient_name: 	
 				
 
 				if(pricex.count(",") > 1 or pricex.count(".") > 1 or quantityx.count(",") > 1 or quantityx.count(".") > 1 or min_quantityx.count(",") > 1 or min_quantityx.count(".") > 1):
-					contents = {'title': "Magazyn", 'result':'Błędna/e wartości cena, ilość, min. ilość!'}		
+					contents = {'title': "Magazyn", 'messageType':'danger', 'message':'Błędna/e wartości cena, ilość, min. ilość!'}		
 					return render(request, 'manage_magazine_addedit.html', contents)
 				
 				for ingredient in ingredients:
 					if(ingredient.name == ingredient_name and ingredient.id != eid):		
-						contents = {'title': "Magazyn", 'result':'Składnik o takiej nazwie już istnieje!'}		
+						contents = {'title': "Magazyn",'messageType':'danger', 'message':'Składnik o takiej nazwie już istnieje!'}		
 						return render(request, 'manage_magazine_addedit.html', contents)
 				
 				pricex = pricex.replace(',', '.');	
@@ -922,31 +938,39 @@ def magazine_edit(request, edit_id):
 				toEdit.min_quantity = min_quantityx
 				toEdit.save()	
 				
-				return magazine(request)
+				contents = {'title': "Magazyn", 'messageType':'success', 'message': 'Edycja składnika zakończyła się powodzeniem!', 'type': 'add'}
+				return render(request, 'manage_magazine_addedit.html', contents)
 				
 			else:	
-				contents = {'title': "Magazyn", 'messageType':'none', 'result': 'Niepoprawna nazwa składnika!', 'type': 'edit', 'toEdit': toEdit }
+				contents = {'title': "Magazyn", 'messageType':'danger', 'message': 'Niepoprawna nazwa składnika!', 'type': 'edit', 'toEdit': toEdit }
 	else:	
 		contents = {'title': "Magazyn", 'messageType':'danger', 'message': 'Podany element nie istnieje!', 'type': 'edit', 'toEdit': toEdit}
 		
 	return render(request, 'manage_magazine_addedit.html', contents)
 	
 def magazine_delete(request, del_id):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+	
+	ingredients = Ingredient.objects.all()	
 	try:
 		did = int(del_id)
 	except ValueError:
-		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!'}
+		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!','ingredients': ingredients,}
 		return render(request, 'manage_magazine.html', contents)
-		
 	toDel = Ingredient.objects.filter(id=did)
 	if(toDel.count() == 1):
-		toDel[0].delete()
-		return magazine(request)
+		toDel[0].delete()		
+		contents = {'title':'Magazyn','messageType':'success', 'message':'Składnik został usunięty!','ingredients': ingredients,}
+		return render(request, 'manage_magazine.html', contents)
 	elif(toDel.count() > 1):
-		contents = {'title':'Magazyn','messageType':'danger', 'message':'Nieznany błąd'}
+		contents = {'title':'Magazyn','messageType':'danger', 'message':'Nieznany błąd','ingredients': ingredients}
 	else:
-		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!'}
-
+		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!','ingredients': ingredients}
+	
 	return render(request, 'manage_magazine.html', contents)
 
 def basket(request):
@@ -1498,3 +1522,137 @@ def payment_types_add(request):
 				
 				
 	return render(request, 'manage_payment_types_add.html', contents)
+
+def user_management_edit(request, edit_id):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+		
+	try:
+		eid = int(edit_id)
+	except ValueError:
+		contents = {'title':'Zarządzanie użytkownikami', 'type':'danger', 'content':'Podany użytkownik nie istnieje!'}
+		return render(request, 'manage_magazine.html', contents)
+		
+	toEdit = User.objects.get(user_id=eid)	
+	user_types = User_Type.objects.all()
+	if(request.POST.get('sent')):
+		reg_username = request.POST.get('username')
+		reg_name = request.POST.get('name')
+		reg_postal_code = request.POST.get('postal_code')
+		reg_phone_number = request.POST.get('phone_number')
+		reg_address = request.POST.get('address')
+		reg_city = request.POST.get('city')
+		reg_second_name = request.POST.get('second_name')
+		reg_usertype = request.POST.get('usertype')
+		contents = {'title':'Błąd!!!', 'messageType':'danger', 'usertypes': user_types, 'toEdit': toEdit, 'type': 'edit'}
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_name))):
+			contents['message'] = 'Niepoprawne imię!'
+			return render(request,'manage_usermanagement_edit.html',contents)
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_second_name))):
+			contents['message'] ='Niepoprawne nazwisko!'
+			return render(request,'manage_usermanagement_edit.html',contents)
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
+			contents['message'] = 'Niepoprawne miasto!'
+			return render(request,'manage_usermanagement_edit.html',contents)
+		if not(re.match('[0-9][0-9]-[0-9][0-9][0-9]',str(reg_postal_code))):
+			contents['message'] = 'Niepoprawny kod pocztowy!'
+			return render(request,'manage_usermanagement_edit.html',contents)
+		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
+			contents['message'] = 'Niepoprawny numer telefonu!'
+			return render(request,'manage_usermanagement_edit.html',contents)
+		if (not(re.match('.{6,64}',str(reg_username)))):
+			contents['message'] = 'Nazwa użytkownika musi mieć min 6 znaków i max 64 znaków!'
+			return render(request,'manage_usermanagement_edit.html',contents)
+		if (not(re.match('.{1,64}',str(reg_address)))):
+			contents['message'] = 'Adres nie może być pusty!'
+			return render(request,'manage_usermanagement_edit.html',contents)
+
+		exist = False
+		if(User_Type.objects.filter(id=reg_usertype).count() == 1):
+			exist = True		
+				
+		if not exist:
+			contents['message'] = 'Nie ma takiego typu użytkownika!'
+			contents['username'] = reg_username
+			contents['name'] = reg_name	
+			contents['second_name'] = reg_second_name	
+			contents['city'] = reg_city	
+			contents['phone_number'] = reg_phone_number	
+			contents['address'] = reg_address	
+			contents['postal_code'] = reg_postal_code				
+			contents['type'] = 'editafail'				
+			contents['typeid'] = reg_usertype
+			return render(request,'manage_usermanagement_edit.html',contents)	
+	
+		users = User.objects.all()	
+		for user in users:
+			if(user.username == str(reg_username) and eid != user.user_id):
+				contents['message'] = 'Nazwa użytkownika zajęta!'
+				contents['username'] = toEdit.username
+				contents['name'] = reg_name	
+				contents['second_name'] = reg_second_name	
+				contents['city'] = reg_city	
+				contents['phone_number'] = reg_phone_number	
+				contents['address'] = reg_address	
+				contents['postal_code'] = reg_postal_code				
+				contents['type'] = 'editafail'	
+				contents['usertype'] = reg_usertype
+				return render(request,'manage_usermanagement_edit.html',contents)	
+				
+		toEdit.name = reg_name
+		toEdit.username = reg_username
+		toEdit.second_name = reg_second_name
+		toEdit.city = reg_city
+		toEdit.phone_number = reg_phone_number
+		toEdit.address = reg_address
+		toEdit.postal_code = reg_postal_code
+		toEdit.type_id = reg_usertype
+		toEdit.save()	
+		toEdit = User.objects.get(user_id=eid)	
+		contents = {'title':'Zarządzanie użytkownikami','messageType':'success', 'message':'Edycja użytkownika powiodła się!', 'usertypes': user_types, 'toEdit': toEdit, 'type': 'edit'}
+		return render(request, 'manage_usermanagement_edit.html', contents)
+		
+	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'usertypes': user_types, 'toEdit': toEdit, 'type': 'edit'}
+	return render(request, 'manage_usermanagement_edit.html', contents)
+	
+	def user_management_delete(request, del_id):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+
+	user_types = User_Type.objects.all()
+	users = User.objects.all()
+	
+	for user in users:
+		for type in user_types:
+			if user.type_id == type.id:
+				user.type_id = type.type_name
+				
+	try:
+		did = int(del_id)
+	except ValueError:
+		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownikk nie instnieje!', 'users': users}
+		return render(request, 'manage_usermanagement.html', contents)
+		
+	toDel = User.objects.filter(user_id=did)
+	iterator = -1
+	if(toDel.count() == 1):
+		toDel[0].delete()					
+		users = User.objects.all()	
+		for user in users:
+			for type in user_types:
+				if user.type_id == type.id:
+					user.type_id = type.type_name					
+		contents = {'title':'Zarządzanie użytkownikami','messageType':'success', 'message': 'Użytkownik usunięty poprawnie!', 'users': users}
+		return render(request, 'manage_usermanagement.html', contents)
+	elif(toDel.count() > 1):
+		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Nieznany błąd', 'users': users}
+	else:
+		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownik nie instnieje!', 'users': users}
+	
+	return render(request, 'manage_usermanagement.html', contents)
