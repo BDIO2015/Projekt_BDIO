@@ -10,7 +10,7 @@ def user_logout(request):
 	if('login_check' in request.session):
 		del request.session['login_check']
 		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
-	return contents
+	return render(request, 'index.html', contents)
 
 def user_check(request):
 	if not('login_check' in request.session):
