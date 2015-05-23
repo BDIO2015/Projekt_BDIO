@@ -1674,3 +1674,21 @@ def management_panel(request):
 			return render(request, 'manage_management_panel.html', contents)
 	
 	return render(request, 'manage_management_panel.html', contents)
+
+def user_management(request):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)		
+
+	user_types = User_Type.objects.all()
+	users = User.objects.all()
+	
+	for user in users:
+		for type in user_types:
+			if user.type_id == type.id:
+				user.type_id = type.type_name
+	
+	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'users': users}
+	return render(request, 'manage_usermanagement.html', contents)
