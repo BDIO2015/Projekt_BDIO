@@ -19,7 +19,7 @@ def user_check(request):
 	else:
 		users = User.objects.all()
 		for l_user in users:
-			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==0):
+			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==None):
 				return {'user_id':l_user.user_id, 'canCreate':0, 'canEdit':0, 'canDelete':0, 'canDeliver':0, 'canManage':0} 
 			elif(l_user.user_id==int(request.session['login_check'])):
 				return {'user_id':int(l_user.user_id), 'canCreate':int(User_Type.objects.get(id=l_user.type_id).canCreate), 'canEdit':int(User_Type.objects.get(id=l_user.type_id).canEdit), 'canDelete':int(User_Type.objects.get(id=l_user.type_id).canDelete), 'canDeliver':int(User_Type.objects.get(id=l_user.type_id).canDeliver), 'canManage':int(User_Type.objects.get(id=l_user.type_id).canManage) }
