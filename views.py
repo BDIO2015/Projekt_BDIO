@@ -17,7 +17,8 @@ def user_logout(request):
 
 def user_check(request):
 	users = User.objects.all()
-	if(users.empty()):
+	types = User_Type.objects.all()
+	if(not users or not types):
 		contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
 	if not('login_check' in request.session):
 		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!'}
