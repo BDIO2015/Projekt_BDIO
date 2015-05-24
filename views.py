@@ -16,12 +16,13 @@ def user_logout(request):
 	return render(request, 'index.html', contents)
 
 def user_check(request):
-	contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
+	users = User.objects.all()
+	if(users.empty()):
+		contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
 	if not('login_check' in request.session):
 		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!'}
 		return contents
 	else:
-		users = User.objects.all()
 		for l_user in users:
 			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==None):
 				return {'user_id':l_user.user_id, 'canCreate':0, 'canEdit':0, 'canDelete':0, 'canDeliver':0, 'canManage':0} 
