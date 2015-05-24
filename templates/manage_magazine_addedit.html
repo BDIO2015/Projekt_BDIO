@@ -19,6 +19,10 @@
 	<input type="text" name="ingredient_name" value="{% if type == "edit" %}{{toEdit.name}}{% endif %}" maxlength="20" class="form-control"/>
 	</div>
 	<div class="input-group ">
+	<label  class="control-label">Wartość jednej porcji składnika: </label>
+	<input type="number" name="default_quantity" value="{% if type == "edit" %}{{toEdit.default_quantity}}{% endif %}" maxlength="9"  class="form-control" min="0" max="999.99" data-bind="value:replyNumber" step="any"/>
+		</div>
+	<div class="input-group ">
 	<label  class="control-label">Ilość: </label>
 	<input type="number" name="count" value="{% if type == "edit" %}{{toEdit.quantity}}{% endif %}" maxlength="9" class="form-control" min="0" max="999.99" data-bind="value:replyNumber" step="any"/>
 		</div>

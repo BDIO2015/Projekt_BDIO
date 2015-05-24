@@ -815,18 +815,19 @@ def magazine_add(request):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
-
+		
+	ingredients = Ingredient.objects.all()
 	if(request.POST.get('sent')):		
 		ingredient_name = request.POST.get('ingredient_name', False);
 		quantityx = request.POST.get('count', False);
 		min_quantityx = request.POST.get('min_count', False)
 		pricex = request.POST.get('price', False)
 		unitsx = request.POST.get('units', False)
+		default_quantityx = request.POST.get('default_quantity', False)
 		
 		ingredient_name = str(ingredient_name)
 		if ingredient_name: 	
 			
-
 			if(pricex.count(",") > 1 or pricex.count(".") > 1 or quantityx.count(",") > 1 or quantityx.count(".") > 1 or min_quantityx.count(",") > 1 or min_quantityx.count(".") > 1):
 				contents = {'title': "Magazyn", 'messageType':'danger', 'message':'Błędna/e wartości cena, ilość, min. ilość!', 'type': 'add'}		
 				return render(request, 'manage_magazine_addedit.html', contents)
@@ -859,8 +860,12 @@ def magazine_add(request):
 				pricex = float(pricex)
 			except ValueError:
 				pricex = 0
+			try:	
+				default_quantityx = float(default_quantityx)
+			except ValueError:
+				default_quantityx = 0
 		
-			newIngredient = Ingredient(name=ingredient_name, price=pricex, quantity=quantityx, units=unitsx, min_quantity=min_quantityx)
+			newIngredient = Ingredient(name=ingredient_name, price=pricex, quantity=quantityx, default_quantity=default_quantityx, units=unitsx, min_quantity=min_quantityx)
 			newIngredient.save()			
 			contents = {'title': "Magazyn", 'messageType':'success', 'message': 'Pomyślnie dodano składnik do bazy!', 'type': 'add'}
 			return render(request, 'manage_magazine_addedit.html', contents)
@@ -878,7 +883,7 @@ def magazine_edit(request, edit_id):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
-		
+	
 	try:
 		eid = int(edit_id)
 	except ValueError:
@@ -895,6 +900,7 @@ def magazine_edit(request, edit_id):
 			min_quantityx = request.POST.get('min_count', False)
 			pricex = request.POST.get('price', False)
 			unitsx = request.POST.get('units', False)
+			default_quantityx = request.POST.get('default_quantity', False)		
 			
 			ingredient_name = str(ingredient_name)
 			if ingredient_name: 	
@@ -932,12 +938,17 @@ def magazine_edit(request, edit_id):
 					pricex = float(pricex)
 				except ValueError:
 					pricex = 0
+				try:	
+					default_quantityx = float(default_quantityx)
+				except ValueError:
+					default_quantityx = 0
 			
 				toEdit.name = ingredient_name
 				toEdit.price = pricex
 				toEdit.quantity = quantityx
 				toEdit.units = unitsx
 				toEdit.min_quantity = min_quantityx
+				toEdit.default_quantity = default_quantityx				
 				toEdit.save()	
 				
 				contents = {'title': "Magazyn", 'messageType':'success', 'message': 'Edycja składnika zakończyła się powodzeniem!', 'type': 'add'}

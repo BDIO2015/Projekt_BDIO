@@ -16,6 +16,10 @@
 	Składnik
 	</th>
 	<th align="center" colspan="2">
+	Jedna porcja
+	
+	</th>
+	<th align="center" colspan="2">
 	Magazyn
 	</th>
 	<th align="center" colspan="2">
@@ -29,6 +33,16 @@
 	<td>
 	{{ element.name }}
 	</td>
+	<td width=8 align=right>
+
+		{{ element.default_quantity }}
+
+	</td>
+		<td>
+
+		{{ element.units }}
+
+	</td >
 	<td width=8 align=right>
 		{% if element.quantity < element.min_quantity %}
 			<font color="red">

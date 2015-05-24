@@ -81,6 +81,7 @@ class Ingredient(models.Model):
 	name = models.CharField(max_length=30)
 	price = models.DecimalField(max_digits=5, decimal_places=2)
 	quantity = models.DecimalField(max_digits=5, decimal_places=2)
+	default_quantity  = models.DecimalField(max_digits=5, decimal_places=2)
 	units = models.CharField(max_length=5)
 	min_quantity = models.DecimalField(max_digits=5, decimal_places=2)
 	
