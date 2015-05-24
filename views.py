@@ -1408,6 +1408,37 @@ def display_product():
 	else:
 		contents = {'title':'Produkty', 'content':'Brak zdefiniowanych produktów', 'count':0}
 	return contents	
+
+def display_product_front(request):
+	#get main categories
+	contents = {'title':'Produkty', 'content':''}
+	categories = Product_Category.objects.filter(parent=None)
+	toDisp = []
+	if(categories.count() > 0):
+		for curRow in categories:
+			#get products for this category with ingredients
+			prodDisp = []
+			products = Product.objects.filter(category=curRow)
+			if(products.count() > 0):
+				for prodRow in products:
+					if(prodRow.discount == None):
+						disc = 1
+					else:
+						disc = 0
+					#get all ingredients for current product
+					if(curRow.demand_ingredients == 1):
+						ingredients = Ingredient_Product.objects.filter(product=prodRow)
+						inDisp = []
+						if(ingredients.count() > 0):
+							for inRow in ingredients:
+								in_row = {'name' : inRow.ingredient.name}
+								inDisp.append(in_row)
+					prod_row = {'name' : prodRow.product_name, 'id': prodRow.product_code, 'price': prodRow.price, 'desc': prodRow.description, 'ingredients':inDisp, 'discount': disc}
+					prodDisp.append(prod_row)
+			row = {'name': curRow.name, 'products' : prodDisp}
+			toDisp.append(row)
+		contents["content"] = toDisp
+	return render(request,"order.html",contents)
 	
 def product(request):
 	return render(request,'manage_product.html',display_product())
