@@ -7,6 +7,7 @@ from .models import *
 from decimal import *
 import time
 import os
+from itertools import *
 
 def user_logout(request):
 	contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
@@ -1012,6 +1013,9 @@ def get_subcategories(maincat):
 	for k in todel:
 		del subcategories[k]
 	return subcategories
+
+def xor_crypt_string(data):
+    return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(data, cycle('somethig123Bsd')))
 	
 def basket(request):
 	contents = {'title':'Koszyk'}
@@ -1029,7 +1033,6 @@ def basket(request):
 			try:
 				getProduct = Product.objects.get(product_code=prodId)
 			except Product.DoesNotExist:
-				toDel.append(product)
 				continue
 			prodId = getProduct.product_name
 			prodPrice += getProduct.price
@@ -1128,8 +1131,6 @@ def basket(request):
 def basket_order(request):
 	action = request.POST.get('act', False)
 	contents = {'title':'Koszyk'}
-	contents['messageType'] = 'success'
-	contents['message'] = action
 	if(action == 'Aktualizuj'):
 		newproducts = ''
 		products = request.session['basket_products'].split(';')
@@ -1155,109 +1156,129 @@ def basket_order(request):
 					newproducts = packed
 				else:
 					newproducts += ';' + packed
-		request.session['basket_products'] = newproducts
+		if(len(newproducts)>0):
+			request.session['basket_products'] = newproducts
+		else:
+			del request.session['basket_products']
 		contents['messageType'] = 'success'
 		contents['message'] = 'Koszyk został zaktalizowany'
 	elif(not action == False):
 		if('basket_products' in request.session):
-			products = request.session['basket_products'].split(';')
-			orderPrice = 0
-			for product in products:
-				prodPrice = 0
-				unpack = product.split(':')
-				prodId = int(unpack[0])
-				prodNum = int(unpack[1])
-				prodRem = unpack[2]
-				try:
-					getProduct = Product.objects.get(product_code=prodId)
-				except Product.DoesNotExist:
-					toDel.append(product)
-					continue
-				prodId = getProduct.product_name
-				prodPrice += getProduct.price
-				prodCats = []
-				if(len(unpack[3])>0):
-					prodCats = unpack[3].split('-')
-				prodIngs = []
-				if(len(unpack[4])>0):
-					prodIngs = unpack[4].split('-')
-				badCats = []
-				prodCatsNamed = []
-				for cat in prodCats:
+			getCheck = user_check(request)
+			if(request.POST.get('sent', False)):
+				oRemarks = request.POST.get('remarks', '')
+				#tylko dla zalogowanego
+				paymentType = request.POST.get('payment')
+				paymentType = Payment_Type.objects.get(id=int(paymentType))
+				oUser = User.objects.get(user_id=getCheck['user_id'])
+				uOrder = Order(status='1', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=oUser, payment_type=paymentType)
+				uOrder.save()
+				products = request.session['basket_products'].split(';')
+				orderPrice = 0
+				for cproduct in products:
+					prodPrice = 0
+					unpack = cproduct.split(':')
+					prodId = int(unpack[0])
+					prodNum = int(unpack[1])
+					prodRem = unpack[2]
 					try:
-						checkCat = Product_Category.objects.get(cat_id=int(cat))
-					except Product_Category.DoesNotExist:
-						badCats.append(cat)
+						getProduct = Product.objects.get(product_code=prodId)
+					except Product.DoesNotExist:
 						continue
-					prodCatsNamed.append(checkCat.name)
-					prodPrice += checkCat.additional_price
-				badIngs = []
-				prodIngsNamed = []
-				for ing in prodIngs:
-					try:
-						checkIng = Ingredient.objects.get(id=int(ing))
-					except Ingredient.DoesNotExist:
-						badIngs.append(ing)
-						continue
-					prodIngsNamed.append(checkIng.name)
-					prodPrice += checkIng.price
-				for badCat in badCats:
-					if(len(badCat)>0):
-						prodCats.remove(badCat)
-				for badIng in badIngs:
-					if(len(badIng)>0):
-						prodIngs.remove(badIng)
-				prodPrice *= prodNum
-				prodPriceDisc = prodPrice
-				if(getProduct.discount != None and getProduct.discount.type[0] == '1'):
-					disc = getProduct.discount.value
-					days = getProduct.discount.type[1:4]
-					days = int(days)
-					isDay=[0,0,0,0,0,0,0]
-					isDay[0] = days&0x1
-					isDay[1] = (days>>1)&0x1
-					isDay[2] = (days>>2)&0x1
-					isDay[3] = (days>>3)&0x1
-					isDay[4] = (days>>4)&0x1
-					isDay[5] = (days>>5)&0x1
-					isDay[6] = (days>>6)&0x1
-					os.environ['TZ'] = 'Poland'
-					time.tzset()
-					timeFormat = time.strftime("%c")
-					timeFormat = timeFormat.split(' ')
-					onlyTime = timeFormat[3].split(':')
-					cHour = int(onlyTime[0])
-					cMin = int(onlyTime[1])
-					sHour = int(getProduct.discount.type[4:6])
-					sMin = int(getProduct.discount.type[6:8])
-					eHour = int(getProduct.discount.type[8:10])
-					eMin = int(getProduct.discount.type[10:12])
-					checkDisc = False
-					if((sHour < cHour or (sHour == cHour and sMin <= cMin)) and (eHour > cHour or (eHour==cHour and eMin >= cMin))):
-						if(timeFormat[0] == 'Sun' and isDay[6] != 0):
-							checkDisc = True
-						elif(timeFormat[0] == 'Mon' and isDay[0] != 0):
-							checkDisc = True
-						elif(timeFormat[0] == 'Tue' and isDay[1] != 0):
-							checkDisc = True
-						elif(timeFormat[0] == 'Wed' and isDay[2] != 0):
-							checkDisc = True
-						elif(timeFormat[0] == 'Thu' and isDay[3] != 0):
-							checkDisc = True
-						elif(timeFormat[0] == 'Fri' and isDay[4] != 0):
-							checkDisc = True
-						elif(timeFormat[0] == 'Sat' and isDay[5] != 0):
-							checkDisc = True
-					if(checkDisc):
-						TWOPLACES = Decimal(10) ** -2
-						if(disc < 100):
-							todec = '0.' + str(getProduct.discount.value)
-						else:
-							todec = '1.00'
-						prodPriceDisc = (prodPrice * (Decimal('1.00') - Decimal(todec))).quantize(TWOPLACES)
-				orderPrice += prodPriceDisc
-			contents['messageType'] = 'success'
-			contents['message'] = orderPrice
+					prodPrice += getProduct.price
+					op = Order_Product(quantity=prodNum, remarks=prodRem, order=uOrder, product=getProduct)
+					op.save()
+					prodCats = []
+					if(len(unpack[3])>0):
+						prodCats = unpack[3].split('-')
+					prodIngs = []
+					if(len(unpack[4])>0):
+						prodIngs = unpack[4].split('-')
+					for cat in prodCats:
+						try:
+							checkCat = Product_Category.objects.get(cat_id=int(cat))
+						except Product_Category.DoesNotExist:
+							continue
+						prodPrice += checkCat.additional_price
+					for ing in prodIngs:
+						try:
+							checkIng = Ingredient.objects.get(id=int(ing))
+						except Ingredient.DoesNotExist:
+							continue
+						prodPrice += checkIng.price
+						uIng = Order_Ingredients(product_order=op, ingredient=checkIng)
+						uIng.save()
+					prodPrice *= prodNum
+					prodPriceDisc = prodPrice
+					if(getProduct.discount != None and getProduct.discount.type[0] == '1'):
+						disc = getProduct.discount.value
+						days = getProduct.discount.type[1:4]
+						days = int(days)
+						isDay=[0,0,0,0,0,0,0]
+						isDay[0] = days&0x1
+						isDay[1] = (days>>1)&0x1
+						isDay[2] = (days>>2)&0x1
+						isDay[3] = (days>>3)&0x1
+						isDay[4] = (days>>4)&0x1
+						isDay[5] = (days>>5)&0x1
+						isDay[6] = (days>>6)&0x1
+						os.environ['TZ'] = 'Poland'
+						time.tzset()
+						timeFormat = time.strftime("%c")
+						timeFormat = timeFormat.split(' ')
+						onlyTime = timeFormat[3].split(':')
+						cHour = int(onlyTime[0])
+						cMin = int(onlyTime[1])
+						sHour = int(getProduct.discount.type[4:6])
+						sMin = int(getProduct.discount.type[6:8])
+						eHour = int(getProduct.discount.type[8:10])
+						eMin = int(getProduct.discount.type[10:12])
+						checkDisc = False
+						if((sHour < cHour or (sHour == cHour and sMin <= cMin)) and (eHour > cHour or (eHour==cHour and eMin >= cMin))):
+							if(timeFormat[0] == 'Sun' and isDay[6] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Mon' and isDay[0] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Tue' and isDay[1] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Wed' and isDay[2] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Thu' and isDay[3] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Fri' and isDay[4] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Sat' and isDay[5] != 0):
+								checkDisc = True
+						if(checkDisc):
+							TWOPLACES = Decimal(10) ** -2
+							if(disc < 100):
+								todec = '0.' + str(getProduct.discount.value)
+							else:
+								todec = '1.00'
+							prodPriceDisc = (prodPrice * (Decimal('1.00') - Decimal(todec))).quantize(TWOPLACES)
+					orderPrice += prodPriceDisc
+				uOrder.price = orderPrice
+				uOrder.save()
+				contents['messageType'] = 'success'
+				toHash = str(uOrder.order_code) + '-zamowienie'
+				hashCode = xor_crypt_string(toHash).encode("hex")
+				del request.session['basket_products']
+				contents['message'] = 'Zamówienie zostało złożone.'
+				contents['displayLink'] = True
+				contents['orderH'] = hashCode
+				return render(request, 'basket_order.html', contents)
+			else:
+				isLogged = True
+				if('messageType' in getCheck):
+					isLogged = False
+				contents['isLogged'] = isLogged
+				payments = Payment_Type.objects.all()
+				assignPayments = []
+				for payment in payments:
+					row = {'name':payment.payment_name, 'id':payment.id}
+					assignPayments.append(row)
+				contents['payments'] = assignPayments
+				return render(request, 'basket_order.html', contents)
 		else:
 			contents['messageType'] = 'danger'
 			contents['message'] = 'Twój koszyk jest pusty'
