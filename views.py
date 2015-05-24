@@ -1769,7 +1769,7 @@ def user_management_edit(request, edit_id):
 	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
+		return render(request, 'index.html', check)	
 		
 	try:
 		eid = int(edit_id)
@@ -1812,8 +1812,11 @@ def user_management_edit(request, edit_id):
 			return render(request,'manage_usermanagement_edit.html',contents)
 
 		exist = False
-		if(User_Type.objects.filter(id=reg_usertype).count() == 1):
-			exist = True		
+		if not reg_usertype == 'user':
+			if(User_Type.objects.filter(id=reg_usertype).count() == 1):
+				exist = True
+		elif reg_usertype == 'user':
+			exist = True
 				
 		if not exist:
 			contents['message'] = 'Nie ma takiego typu użytkownika!'
@@ -1850,7 +1853,10 @@ def user_management_edit(request, edit_id):
 		toEdit.phone_number = reg_phone_number
 		toEdit.address = reg_address
 		toEdit.postal_code = reg_postal_code
-		toEdit.type_id = reg_usertype
+		if(reg_usertype == 'user'):
+			toEdit.type_id = None
+		else:
+			toEdit.type_id = reg_usertype
 		toEdit.save()	
 		toEdit = User.objects.get(user_id=eid)	
 		contents = {'title':'Zarządzanie użytkownikami','messageType':'success', 'message':'Edycja użytkownika powiodła się!', 'usertypes': user_types, 'toEdit': toEdit, 'type': 'edit'}
@@ -1859,13 +1865,32 @@ def user_management_edit(request, edit_id):
 	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'usertypes': user_types, 'toEdit': toEdit, 'type': 'edit'}
 	return render(request, 'manage_usermanagement_edit.html', contents)
 	
+def user_management(request):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)	
+
+	user_types = User_Type.objects.all()
+	users = User.objects.all()
+	
+	for user in users:
+		for type in user_types:
+			if not user.type_id == None:
+				if user.type_id == type.id:
+					user.type_id = type.type_name
+	
+	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'users': users}
+	return render(request, 'manage_usermanagement.html', contents)
+	
 def user_management_delete(request, del_id):
 	check = user_check(request)
 	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
-
+		return render(request, 'index.html', check)	
+		
 	user_types = User_Type.objects.all()
 	users = User.objects.all()
 	
@@ -1897,14 +1922,14 @@ def user_management_delete(request, del_id):
 		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownik nie instnieje!', 'users': users}
 	
 	return render(request, 'manage_usermanagement.html', contents)
-
+	
 def management_panel(request):
 	check = user_check(request)
 	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
-	
+		return render(request, 'index.html', check)	
+		
 	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
 	
 	ingredients = Ingredient.objects.all()
@@ -1915,21 +1940,3 @@ def management_panel(request):
 			return render(request, 'manage_management_panel.html', contents)
 	
 	return render(request, 'manage_management_panel.html', contents)
-
-def user_management(request):
-	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
-	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
-
-	user_types = User_Type.objects.all()
-	users = User.objects.all()
-	
-	for user in users:
-		for type in user_types:
-			if user.type_id == type.id:
-				user.type_id = type.type_name
-	
-	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'users': users}
-	return render(request, 'manage_usermanagement.html', contents)
