@@ -13,12 +13,12 @@
 		<form action="/basket/order" method="POST">
 		{% csrf_token %}
 		<table class="table table-hovered table-responsive">
-		<tr><th>Produkt</th><th>Ilość</th><th>Usuń</th></tr>
+		<tr><th>Produkt</th><th>Ilość</th><th>Cena</th><th>Usuń</th></tr>
 		{% for row in productsList %}
-			<tr><td><b>{{row.prodId}}</b><p style="text-indent: 2%;">Uwagi: {{row.prodRem}}</p><p style="text-indent: 2%;">Kategorie: {{row.prodCats}}</p><p style="text-indent: 2%;">Dodatkowe składniki: {{row.prodIngs}}</p></td><td><input type="number" min="0" max="999" value="{{row.prodNum}}" name="{{row.prodCode}}" /></td><td><a href="/basket/remove/{{row.prodCode}}/" class="btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
+			<tr><td><b>{{row.prodId}}</b>{% if row.prodRem != ' ' and row.prodRem != '' %}<p style="text-indent: 2%;">Uwagi: {{row.prodRem}}</p>{% endif %}{% if row.prodCats != '' %}<p style="text-indent: 2%;">Kategorie: {{row.prodCats}}</p>{% endif %}{% if row.prodIngs != '' %}<p style="text-indent: 2%;">Dodatkowe składniki: {{row.prodIngs}}</p>{% endif %}</td><td><input type="number" min="0" max="999" value="{{row.prodNum}}" name="{{row.prodCode}}" /></td><td>{% if row.prodPrice != row.prodPriceDisc %}<span style="text-decoration: line-through;">{{row.prodPrice}}</span> {{row.prodPriceDisc}}{% else %}{{row.prodPrice}}{% endif %} zł</td><td><a href="/basket/remove/{{row.prodCode}}/" class="btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
 		{% endfor %}
 		</table>
-		<p style="text-align: right;"><input type="submit" name="act" value="Aktualizuj" class="btn btn-primary"/> <input type="submit" name="act" value="Zamów" class="btn btn-primary"/></p>
+		<p style="text-align: right;">Łączna cena: {{orderPrice}} zł<br /><input type="submit" name="act" value="Aktualizuj" class="btn btn-primary"/> <input type="submit" name="act" value="Zamów" class="btn btn-primary"/></p>
 		</form>
 	{% endif %}
 {% endblock %}
