@@ -9,12 +9,14 @@ import time
 import os
 
 def user_logout(request):
+	contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
 	if('login_check' in request.session):
 		del request.session['login_check']
 		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
 	return render(request, 'index.html', contents)
 
 def user_check(request):
+	contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
 	if not('login_check' in request.session):
 		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!'}
 		return contents
