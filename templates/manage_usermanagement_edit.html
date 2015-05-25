@@ -11,7 +11,7 @@
 	{% endif %}
 	<!-- dodać powrót do panelu -->
 	<a href="/manage/usermanagement"  class="btn btn-primary">Powrót</a>
-<form action="/manage/usermanagement/edit/{{toEdit.user_id}}/" method="POST">
+<form action="/manage/usermanagement/edit/{{toEdit.user_id}}" method="POST">
 	
 	{% csrf_token %}
 	<div style="position: relative;top: 10px; ">
@@ -47,6 +47,7 @@
 	<div class="input-group ">
 	<label  class="control-label">Typ użytkownika: </label>
 	<select name="usertype"  class="form-control">
+		<option name="user" value="user">Użytkownik</option>		
 	{% for usertype in usertypes %}
 		<option name="{{usertype.id}}" value="{{usertype.id}}" {% if usertype.id == toEdit.type_id%}selected{% endif %}>{{ usertype.type_name }}</option>		
 	{% endfor %}
@@ -56,8 +57,7 @@
 	<br>
 	<input align="right" type="submit"  class="btn btn-primary" name="sent" value="Zapisz" />
 	</div>
-
-</form">
+</form>
 
 
 

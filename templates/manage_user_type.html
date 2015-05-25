@@ -11,7 +11,7 @@
 	{% endif %}
 	<a href="/manage/user_type/add/" class="btn btn-primary">Dodaj nowy typ</a><br /><br />
 	{% if count > 0 %}
-		<table class="table table-hovered table-responsive">
+		<table class="table table-hover table-responsive">
 		<tr><th rowspan="2">Nazwa</th><th colspan="5">Uprawnienia</th><th rowspan="2">Zarządzaj</th></tr>
 		<tr><th>Dodawanie zamówień</th><th>Edytowanie zamówień</th><th>Usuwanie zamówień</th><th>Dostarczanie zamówień</th><th>Zarządzanie systemem</th></tr>
 		{% for row in content %}

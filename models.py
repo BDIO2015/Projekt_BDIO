@@ -29,7 +29,6 @@ class User(models.Model):
 	phone_number = models.CharField(max_length=15)
 	password = models.CharField(max_length=512)
 	username = models.CharField(max_length=64)
-	## CHWILOWO ZEZWOLONE NA NULL ##
 	scheduled = models.ForeignKey(Schedule, null=True)
 	type = models.ForeignKey(User_Type, null=True)
 	
@@ -56,10 +55,11 @@ class Order(models.Model):
 	time_stamp = models.DateTimeField(auto_now_add=True)
 	order_notes = models.TextField(blank=True)
 	order_address = models.CharField(blank=True, max_length=60)
+	price = models.DecimalField(max_digits=5, decimal_places=2)
 	payment_name = models.CharField(max_length=30)
 	payment_status = models.BooleanField(default=0)
 	payment_time_stamp = models.DateTimeField(auto_now_add=True)
-	delivery = models.ForeignKey(Delivery)
+	delivery = models.ForeignKey(Delivery, null=True)
 	user = models.ForeignKey(User, null=True)
 	payment_type = models.ForeignKey(Payment_Type)
 
@@ -81,6 +81,7 @@ class Ingredient(models.Model):
 	name = models.CharField(max_length=30)
 	price = models.DecimalField(max_digits=5, decimal_places=2)
 	quantity = models.DecimalField(max_digits=5, decimal_places=2)
+	default_quantity  = models.DecimalField(max_digits=5, decimal_places=2)
 	units = models.CharField(max_length=5)
 	min_quantity = models.DecimalField(max_digits=5, decimal_places=2)
 	

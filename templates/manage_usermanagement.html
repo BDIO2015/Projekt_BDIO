@@ -10,7 +10,7 @@
 	{% endif %}
 
 	<a href="/user/register"  class="btn btn-primary">Dodaj nowego użytkownika</a><br></br>
-	<table class="table table-hovered table-responsive">
+	<table class="table table-hover table-responsive">
 	<tr>
 	<th>
 	Nazwa użytkownika
@@ -39,11 +39,12 @@
 	{{ element.second_name }} 	
 	</td>
 	<td>
-	{{ element.type_id }} 	
+	{% if element.type_id == None %} Użytkownik {% else %}
+	{{ element.type_id }} 	{% endif %}
 	</td>
 	<td align="right" >
-	<a href="/manage/usermanagement/edit/{{ element.user_id }}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;
-	<a href="/manage/usermanagement/delete/{{ element.user_id }}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a>
+	<a href="/manage/usermanagement/edit/{{ element.user_id }}" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;
+	<a href="/manage/usermanagement/delete/{{ element.user_id }}" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a>
 	</td>
 	</tr>
 	{% endfor %}

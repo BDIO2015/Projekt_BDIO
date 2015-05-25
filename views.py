@@ -4,7 +4,10 @@ import re, hashlib
 # Create your views here.
 from django.http import HttpResponse
 from .models import *
-
+from decimal import *
+import time
+import os
+from itertools import *
 
 # URL do zarzadzania planem
 #url(r'^manage/schedule_type/(?P<type_id>[0-9]+)', 'bdio.views.schedule_type', name='schedule_type'),
@@ -397,17 +400,21 @@ def schedule_add(request):
 
 
 def user_logout(request):
+	contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
 	if('login_check' in request.session):
 		del request.session['login_check']
 		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
 	return render(request, 'index.html', contents)
 
 def user_check(request):
+	users = User.objects.all()
+	types = User_Type.objects.all()
+	if(not users or not types):
+		contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
 	if not('login_check' in request.session):
 		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!'}
 		return contents
 	else:
-		users = User.objects.all()
 		for l_user in users:
 			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==None):
 				return {'user_id':l_user.user_id, 'canCreate':0, 'canEdit':0, 'canDelete':0, 'canDeliver':0, 'canManage':0} 
@@ -1203,18 +1210,19 @@ def magazine_add(request):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
-
+		
+	ingredients = Ingredient.objects.all()
 	if(request.POST.get('sent')):		
 		ingredient_name = request.POST.get('ingredient_name', False);
 		quantityx = request.POST.get('count', False);
 		min_quantityx = request.POST.get('min_count', False)
 		pricex = request.POST.get('price', False)
 		unitsx = request.POST.get('units', False)
+		default_quantityx = request.POST.get('default_quantity', False)
 		
 		ingredient_name = str(ingredient_name)
 		if ingredient_name: 	
 			
-
 			if(pricex.count(",") > 1 or pricex.count(".") > 1 or quantityx.count(",") > 1 or quantityx.count(".") > 1 or min_quantityx.count(",") > 1 or min_quantityx.count(".") > 1):
 				contents = {'title': "Magazyn", 'messageType':'danger', 'message':'Błędna/e wartości cena, ilość, min. ilość!', 'type': 'add'}		
 				return render(request, 'manage_magazine_addedit.html', contents)
@@ -1247,8 +1255,12 @@ def magazine_add(request):
 				pricex = float(pricex)
 			except ValueError:
 				pricex = 0
+			try:	
+				default_quantityx = float(default_quantityx)
+			except ValueError:
+				default_quantityx = 0
 		
-			newIngredient = Ingredient(name=ingredient_name, price=pricex, quantity=quantityx, units=unitsx, min_quantity=min_quantityx)
+			newIngredient = Ingredient(name=ingredient_name, price=pricex, quantity=quantityx, default_quantity=default_quantityx, units=unitsx, min_quantity=min_quantityx)
 			newIngredient.save()			
 			contents = {'title': "Magazyn", 'messageType':'success', 'message': 'Pomyślnie dodano składnik do bazy!', 'type': 'add'}
 			return render(request, 'manage_magazine_addedit.html', contents)
@@ -1266,7 +1278,7 @@ def magazine_edit(request, edit_id):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
 		return render(request, 'index.html', check)		
-		
+	
 	try:
 		eid = int(edit_id)
 	except ValueError:
@@ -1283,6 +1295,7 @@ def magazine_edit(request, edit_id):
 			min_quantityx = request.POST.get('min_count', False)
 			pricex = request.POST.get('price', False)
 			unitsx = request.POST.get('units', False)
+			default_quantityx = request.POST.get('default_quantity', False)		
 			
 			ingredient_name = str(ingredient_name)
 			if ingredient_name: 	
@@ -1320,12 +1333,17 @@ def magazine_edit(request, edit_id):
 					pricex = float(pricex)
 				except ValueError:
 					pricex = 0
+				try:	
+					default_quantityx = float(default_quantityx)
+				except ValueError:
+					default_quantityx = 0
 			
 				toEdit.name = ingredient_name
 				toEdit.price = pricex
 				toEdit.quantity = quantityx
 				toEdit.units = unitsx
 				toEdit.min_quantity = min_quantityx
+				toEdit.default_quantity = default_quantityx				
 				toEdit.save()	
 				
 				contents = {'title': "Magazyn", 'messageType':'success', 'message': 'Edycja składnika zakończyła się powodzeniem!', 'type': 'add'}
@@ -1385,6 +1403,9 @@ def get_subcategories(maincat):
 	for k in todel:
 		del subcategories[k]
 	return subcategories
+
+def xor_crypt_string(data):
+    return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(data, cycle('somethig123Bsd')))
 	
 def basket(request):
 	contents = {'title':'Koszyk'}
@@ -1392,7 +1413,9 @@ def basket(request):
 		products = request.session['basket_products'].split(';')
 		prodCount = 0
 		prodDisp = []
+		orderPrice = 0
 		for product in products:
+			prodPrice = 0
 			unpack = product.split(':')
 			prodId = int(unpack[0])
 			prodNum = int(unpack[1])
@@ -1400,9 +1423,9 @@ def basket(request):
 			try:
 				getProduct = Product.objects.get(product_code=prodId)
 			except Product.DoesNotExist:
-				toDel.append(product)
 				continue
 			prodId = getProduct.product_name
+			prodPrice += getProduct.price
 			prodCats = []
 			if(len(unpack[3])>0):
 				prodCats = unpack[3].split('-')
@@ -1418,6 +1441,7 @@ def basket(request):
 					badCats.append(cat)
 					continue
 				prodCatsNamed.append(checkCat.name)
+				prodPrice += checkCat.additional_price
 			badIngs = []
 			prodIngsNamed = []
 			for ing in prodIngs:
@@ -1427,6 +1451,7 @@ def basket(request):
 					badIngs.append(ing)
 					continue
 				prodIngsNamed.append(checkIng.name)
+				prodPrice += checkIng.price
 			for badCat in badCats:
 				if(len(badCat)>0):
 					prodCats.remove(badCat)
@@ -1434,8 +1459,58 @@ def basket(request):
 				if(len(badIng)>0):
 					prodIngs.remove(badIng)
 			prodCount += 1
-			row = {'prodId':prodId, 'prodNum':prodNum, 'prodRem': prodRem, 'prodCats': ', '.join(prodCatsNamed), 'prodIngs': ', '.join(prodIngsNamed), 'prodCode': product}
+			prodPrice *= prodNum
+			prodPriceDisc = prodPrice
+			if(getProduct.discount != None and getProduct.discount.type[0] == '1'):
+				disc = getProduct.discount.value
+				days = getProduct.discount.type[1:4]
+				days = int(days)
+				isDay=[0,0,0,0,0,0,0]
+				isDay[0] = days&0x1
+				isDay[1] = (days>>1)&0x1
+				isDay[2] = (days>>2)&0x1
+				isDay[3] = (days>>3)&0x1
+				isDay[4] = (days>>4)&0x1
+				isDay[5] = (days>>5)&0x1
+				isDay[6] = (days>>6)&0x1
+				os.environ['TZ'] = 'Poland'
+				time.tzset()
+				timeFormat = time.strftime("%c")
+				timeFormat = timeFormat.split(' ')
+				onlyTime = timeFormat[3].split(':')
+				cHour = int(onlyTime[0])
+				cMin = int(onlyTime[1])
+				sHour = int(getProduct.discount.type[4:6])
+				sMin = int(getProduct.discount.type[6:8])
+				eHour = int(getProduct.discount.type[8:10])
+				eMin = int(getProduct.discount.type[10:12])
+				checkDisc = False
+				if((sHour < cHour or (sHour == cHour and sMin <= cMin)) and (eHour > cHour or (eHour==cHour and eMin >= cMin))):
+					if(timeFormat[0] == 'Sun' and isDay[6] != 0):
+						checkDisc = True
+					elif(timeFormat[0] == 'Mon' and isDay[0] != 0):
+						checkDisc = True
+					elif(timeFormat[0] == 'Tue' and isDay[1] != 0):
+						checkDisc = True
+					elif(timeFormat[0] == 'Wed' and isDay[2] != 0):
+						checkDisc = True
+					elif(timeFormat[0] == 'Thu' and isDay[3] != 0):
+						checkDisc = True
+					elif(timeFormat[0] == 'Fri' and isDay[4] != 0):
+						checkDisc = True
+					elif(timeFormat[0] == 'Sat' and isDay[5] != 0):
+						checkDisc = True
+				if(checkDisc):
+					TWOPLACES = Decimal(10) ** -2
+					if(disc < 100):
+						todec = '0.' + str(getProduct.discount.value)
+					else:
+						todec = '1.00'
+					prodPriceDisc = (prodPrice * (Decimal('1.00') - Decimal(todec))).quantize(TWOPLACES)
+			orderPrice += prodPriceDisc
+			row = {'prodId':prodId, 'prodNum':prodNum, 'prodRem': prodRem, 'prodCats': ', '.join(prodCatsNamed), 'prodIngs': ', '.join(prodIngsNamed), 'prodCode': product, 'prodPrice':prodPrice, 'prodPriceDisc':prodPriceDisc}
 			prodDisp.append(row)
+		contents['orderPrice'] = orderPrice
 		contents['productsList'] = prodDisp
 		contents['products'] = prodCount
 	else:
@@ -1446,8 +1521,6 @@ def basket(request):
 def basket_order(request):
 	action = request.POST.get('act', False)
 	contents = {'title':'Koszyk'}
-	contents['messageType'] = 'success'
-	contents['message'] = action
 	if(action == 'Aktualizuj'):
 		newproducts = ''
 		products = request.session['basket_products'].split(';')
@@ -1473,12 +1546,132 @@ def basket_order(request):
 					newproducts = packed
 				else:
 					newproducts += ';' + packed
-		request.session['basket_products'] = newproducts
+		if(len(newproducts)>0):
+			request.session['basket_products'] = newproducts
+		else:
+			del request.session['basket_products']
 		contents['messageType'] = 'success'
 		contents['message'] = 'Koszyk został zaktalizowany'
 	elif(not action == False):
-		contents['messageType'] = 'success'
-		contents['message'] = 'Będziemy zamawiać'
+		if('basket_products' in request.session):
+			getCheck = user_check(request)
+			if(request.POST.get('sent', False)):
+				oRemarks = request.POST.get('remarks', '')
+				#tylko dla zalogowanego
+				paymentType = request.POST.get('payment')
+				paymentType = Payment_Type.objects.get(id=int(paymentType))
+				oUser = User.objects.get(user_id=getCheck['user_id'])
+				uOrder = Order(status='1', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=oUser, payment_type=paymentType)
+				uOrder.save()
+				products = request.session['basket_products'].split(';')
+				orderPrice = 0
+				for cproduct in products:
+					prodPrice = 0
+					unpack = cproduct.split(':')
+					prodId = int(unpack[0])
+					prodNum = int(unpack[1])
+					prodRem = unpack[2]
+					try:
+						getProduct = Product.objects.get(product_code=prodId)
+					except Product.DoesNotExist:
+						continue
+					prodPrice += getProduct.price
+					op = Order_Product(quantity=prodNum, remarks=prodRem, order=uOrder, product=getProduct)
+					op.save()
+					prodCats = []
+					if(len(unpack[3])>0):
+						prodCats = unpack[3].split('-')
+					prodIngs = []
+					if(len(unpack[4])>0):
+						prodIngs = unpack[4].split('-')
+					for cat in prodCats:
+						try:
+							checkCat = Product_Category.objects.get(cat_id=int(cat))
+						except Product_Category.DoesNotExist:
+							continue
+						prodPrice += checkCat.additional_price
+					for ing in prodIngs:
+						try:
+							checkIng = Ingredient.objects.get(id=int(ing))
+						except Ingredient.DoesNotExist:
+							continue
+						prodPrice += checkIng.price
+						uIng = Order_Ingredients(product_order=op, ingredient=checkIng)
+						uIng.save()
+					prodPrice *= prodNum
+					prodPriceDisc = prodPrice
+					if(getProduct.discount != None and getProduct.discount.type[0] == '1'):
+						disc = getProduct.discount.value
+						days = getProduct.discount.type[1:4]
+						days = int(days)
+						isDay=[0,0,0,0,0,0,0]
+						isDay[0] = days&0x1
+						isDay[1] = (days>>1)&0x1
+						isDay[2] = (days>>2)&0x1
+						isDay[3] = (days>>3)&0x1
+						isDay[4] = (days>>4)&0x1
+						isDay[5] = (days>>5)&0x1
+						isDay[6] = (days>>6)&0x1
+						os.environ['TZ'] = 'Poland'
+						time.tzset()
+						timeFormat = time.strftime("%c")
+						timeFormat = timeFormat.split(' ')
+						onlyTime = timeFormat[3].split(':')
+						cHour = int(onlyTime[0])
+						cMin = int(onlyTime[1])
+						sHour = int(getProduct.discount.type[4:6])
+						sMin = int(getProduct.discount.type[6:8])
+						eHour = int(getProduct.discount.type[8:10])
+						eMin = int(getProduct.discount.type[10:12])
+						checkDisc = False
+						if((sHour < cHour or (sHour == cHour and sMin <= cMin)) and (eHour > cHour or (eHour==cHour and eMin >= cMin))):
+							if(timeFormat[0] == 'Sun' and isDay[6] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Mon' and isDay[0] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Tue' and isDay[1] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Wed' and isDay[2] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Thu' and isDay[3] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Fri' and isDay[4] != 0):
+								checkDisc = True
+							elif(timeFormat[0] == 'Sat' and isDay[5] != 0):
+								checkDisc = True
+						if(checkDisc):
+							TWOPLACES = Decimal(10) ** -2
+							if(disc < 100):
+								todec = '0.' + str(getProduct.discount.value)
+							else:
+								todec = '1.00'
+							prodPriceDisc = (prodPrice * (Decimal('1.00') - Decimal(todec))).quantize(TWOPLACES)
+					orderPrice += prodPriceDisc
+				uOrder.price = orderPrice
+				uOrder.save()
+				contents['messageType'] = 'success'
+				toHash = str(uOrder.order_code) + '-zamowienie'
+				hashCode = xor_crypt_string(toHash).encode("hex")
+				del request.session['basket_products']
+				contents['message'] = 'Zamówienie zostało złożone.'
+				contents['displayLink'] = True
+				contents['orderH'] = hashCode
+				return render(request, 'basket_order.html', contents)
+			else:
+				isLogged = True
+				if('messageType' in getCheck):
+					isLogged = False
+				contents['isLogged'] = isLogged
+				payments = Payment_Type.objects.all()
+				assignPayments = []
+				for payment in payments:
+					row = {'name':payment.payment_name, 'id':payment.id}
+					assignPayments.append(row)
+				contents['payments'] = assignPayments
+				return render(request, 'basket_order.html', contents)
+		else:
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Twój koszyk jest pusty'
 	else:
 		return basket(request)
 	return render(request, 'basket.html', contents)
@@ -1605,6 +1798,37 @@ def display_product():
 	else:
 		contents = {'title':'Produkty', 'content':'Brak zdefiniowanych produktów', 'count':0}
 	return contents	
+
+def display_product_front(request):
+	#get main categories
+	contents = {'title':'Produkty', 'content':''}
+	categories = Product_Category.objects.filter(parent=None)
+	toDisp = []
+	if(categories.count() > 0):
+		for curRow in categories:
+			#get products for this category with ingredients
+			prodDisp = []
+			products = Product.objects.filter(category=curRow)
+			if(products.count() > 0):
+				for prodRow in products:
+					if(prodRow.discount == None):
+						disc = 1
+					else:
+						disc = 0
+					#get all ingredients for current product
+					if(curRow.demand_ingredients == 1):
+						ingredients = Ingredient_Product.objects.filter(product=prodRow)
+						inDisp = []
+						if(ingredients.count() > 0):
+							for inRow in ingredients:
+								in_row = {'name' : inRow.ingredient.name}
+								inDisp.append(in_row)
+					prod_row = {'name' : prodRow.product_name, 'id': prodRow.product_code, 'price': prodRow.price, 'desc': prodRow.description, 'ingredients':inDisp, 'discount': disc}
+					prodDisp.append(prod_row)
+			row = {'name': curRow.name, 'products' : prodDisp}
+			toDisp.append(row)
+		contents["content"] = toDisp
+	return render(request,"order.html",contents)
 	
 def product(request):
 	return render(request,'manage_product.html',display_product())
@@ -2002,7 +2226,7 @@ def user_management_edit(request, edit_id):
 	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
+		return render(request, 'index.html', check)	
 		
 	try:
 		eid = int(edit_id)
@@ -2045,8 +2269,11 @@ def user_management_edit(request, edit_id):
 			return render(request,'manage_usermanagement_edit.html',contents)
 
 		exist = False
-		if(User_Type.objects.filter(id=reg_usertype).count() == 1):
-			exist = True		
+		if not reg_usertype == 'user':
+			if(User_Type.objects.filter(id=reg_usertype).count() == 1):
+				exist = True
+		elif reg_usertype == 'user':
+			exist = True
 				
 		if not exist:
 			contents['message'] = 'Nie ma takiego typu użytkownika!'
@@ -2083,7 +2310,10 @@ def user_management_edit(request, edit_id):
 		toEdit.phone_number = reg_phone_number
 		toEdit.address = reg_address
 		toEdit.postal_code = reg_postal_code
-		toEdit.type_id = reg_usertype
+		if(reg_usertype == 'user'):
+			toEdit.type_id = None
+		else:
+			toEdit.type_id = reg_usertype
 		toEdit.save()	
 		toEdit = User.objects.get(user_id=eid)	
 		contents = {'title':'Zarządzanie użytkownikami','messageType':'success', 'message':'Edycja użytkownika powiodła się!', 'usertypes': user_types, 'toEdit': toEdit, 'type': 'edit'}
@@ -2092,13 +2322,32 @@ def user_management_edit(request, edit_id):
 	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'usertypes': user_types, 'toEdit': toEdit, 'type': 'edit'}
 	return render(request, 'manage_usermanagement_edit.html', contents)
 	
+def user_management(request):
+	check = user_check(request)
+	if ('messageType' in check and check['messageType'] == 'danger'):
+		return render(request, 'user_login.html', check)
+	elif not check['canManage'] == True:
+		return render(request, 'index.html', check)	
+
+	user_types = User_Type.objects.all()
+	users = User.objects.all()
+	
+	for user in users:
+		for type in user_types:
+			if not user.type_id == None:
+				if user.type_id == type.id:
+					user.type_id = type.type_name
+	
+	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'users': users}
+	return render(request, 'manage_usermanagement.html', contents)
+	
 def user_management_delete(request, del_id):
 	check = user_check(request)
 	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
-
+		return render(request, 'index.html', check)	
+		
 	user_types = User_Type.objects.all()
 	users = User.objects.all()
 	
@@ -2130,14 +2379,14 @@ def user_management_delete(request, del_id):
 		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownik nie instnieje!', 'users': users}
 	
 	return render(request, 'manage_usermanagement.html', contents)
-
+	
 def management_panel(request):
 	check = user_check(request)
 	if ('messageType' in check and check['messageType'] == 'danger'):
 		return render(request, 'user_login.html', check)
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
-	
+		return render(request, 'index.html', check)	
+		
 	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
 	
 	ingredients = Ingredient.objects.all()
@@ -2148,21 +2397,3 @@ def management_panel(request):
 			return render(request, 'manage_management_panel.html', contents)
 	
 	return render(request, 'manage_management_panel.html', contents)
-
-def user_management(request):
-	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
-	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
-
-	user_types = User_Type.objects.all()
-	users = User.objects.all()
-	
-	for user in users:
-		for type in user_types:
-			if user.type_id == type.id:
-				user.type_id = type.type_name
-	
-	contents = {'title':'Zarządzanie użytkownikami','messageType':'none', 'message':'none', 'users': users}
-	return render(request, 'manage_usermanagement.html', contents)

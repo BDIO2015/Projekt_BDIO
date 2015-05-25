@@ -1,0 +1,34 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	<a href="/basket" class="btn btn-primary">Powrót</a><br /><br />
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	{% if displayLink == True %}
+		Oto twój unikalny link by sprawdzić <a href="/order/check/{{orderH}}">STATUS ZAMÓWIENIA</a> 
+	{% else %}
+		<form action="/basket/order" method="POST">
+		{% csrf_token %}
+		{% if isLogged == False %}
+			Jesteś niezalogowany i musisz wypełnić dane dostawy
+		{% endif %}
+		<div class="input-group"><label>Płatność: </label>
+		<select name="payment">
+		{% for payment in payments %}
+			<option value="{{payment.id}}">{{payment.name}}</option>
+		{% endfor %}
+		</select>
+		</div>
+		<div class="input-group"><label>Uwagi do zamówienia: </label>
+		<textarea class="form-control" name="remarks" maxlength=255/></textarea>
+		</div>
+		<input type="hidden" value="1" name="sent" /><br />
+		<input type="submit" name="act" value="Zamów" class="btn btn-primary"/>
+		</form>
+	{% endif %}
+{% endblock %}

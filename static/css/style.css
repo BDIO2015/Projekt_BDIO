@@ -6,9 +6,9 @@ div#ingredients_for_product .input-group{
 margin-bottom:10px !important;
 width: 100% !important;
 }
-@media screen and (min-width: 700px) {
+@media screen and (min-width: 992px) {
     .input-group, .form-group{
-	width: 50% !important;
+	width: 70% !important;
 	}
 }
 .menu {
