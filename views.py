@@ -27,8 +27,7 @@ def schedule_get_packed(schedule_id, affectedUsers, type_ids):
 	userWithSchedule = User.objects.filter(scheduled=schedule_id)
 	if(len(userWithSchedule)==0):
 		schedule_id.delete();
-		return {}
-	return {0:'Wszyscy'}	
+		return {}	
 	if(usersCount==0):
 		return {};
 
@@ -36,7 +35,7 @@ def schedule_get_packed(schedule_id, affectedUsers, type_ids):
 	usersCountCopy=usersCount
 	
 	for user in userWithSchedule:
-		groupsCountCopy[user.type]-=1;
+		groupsCountCopy[user.type.id]-=1;
 		usersCountCopy-=1;
 	if(usersCountCopy==0 and usersCount>0):
 		return {0:'Wszyscy'}
@@ -65,12 +64,10 @@ def display_schedule(request, affectedUsers):
 		compactRes=schedule_get_packed(sched, affectedUsers, types)
 		if(len(compactRes)>0):
 			validScheds+=1;
-			contents['messageType']='success';
-			contents['message']=sched.time_start
 			edit_id=sched.id
 			for i in range(7):
 				if(sched.day[i]=='1'):
-					for j in range(int(sched.time_start[i:(i+2)]), int(sched.time_end[i:(i+2)])):
+					for j in range(int(sched.time_start[(2*i):((2*i)+2)]), int(sched.time_end[(2*i):((2*i)+2)])):
 						timetable[j][i].update(compactRes)
 	contents['timetable']=timetable
 	contents['scheduleCount']=validScheds;
@@ -98,7 +95,7 @@ def display_schedule_user(request, user_id):
 	contents=display_schedule(request, affectedUsers);
 	contents['typeFor']=contents['typeForUsers'];
 	contents['userNames']=affectedUsers[0].username;
-	if(contents['scheduleCount']==1 and User.objects.filter(Scheduled=affectedUsers[0].Scheduled).count()==1):
+	if(contents['scheduleCount']==1 and User.objects.filter(scheduled=affectedUsers[0].scheduled).count()==1):
 		contents['actionType']='edit';
 	else:
 		contents['actionType']="add";
@@ -112,28 +109,20 @@ def schedule_user(request, user_id):
 def display_schedule_type(request, type_id):
 	try:
 		tid=int(type_id);
-		types = User_Type.objects.filter(id=type_id)
-		if(not types.count() == 1):
+		types = User_Type.objects.all()
+		if(types.count() <= tid):
 			contents = {'title':'Rozkład'}
 			contents['messageType'] = 'danger'
-			if(types.count() > 1):
-				contents['message'] = 'Nieznany błąd'
-			else:
-				contents['message'] = 'Podany typ użytkowników nie istnieje'
-			return render(request, 'manage_schedule.html', contents);
-		affectedUsers = User.objects.filter(type=type_id)
-		if(affectedUsers.count() == 0):
-			contents = {'title':'Rozkład'}
-			contents['messageType'] = 'danger'
-			contents['message'] = 'Brak użytkowników o takim typie'
-			return render(request, 'manage_schedule.html', contents);
+			contents['message'] = 'Podany typ użytkowników nie istnieje'+' '+str(types.count())
+			return contents;
+		affectedUsers = User.objects.filter(type=types[tid])
 	except ValueError:
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Podano niepoprawny typ użytkowników'
-		return render(request, 'manage_schedule.html', contents);
+		return contents;
 	contents=display_schedule(request, affectedUsers);
 	contents['typeFor']=tid;
-	contents['userNames']-''
+	contents['userNames']=''
 	if(contents['scheduleCount']==1):
 		contents['actionType']='edit';
 	else:
@@ -170,23 +159,22 @@ def schedule(request):
 		else:
 			if(group==(typeCount+1)):
 				userNames=[];
-				pos=0
-				while True:
-					pos2=users.find(',')
-					if(pos!=-1):
-						userNames.append(users[pos:].strip());
+				while len(users)>0:
+					pos=users.find(',')
+					if(pos==-1):
+						userNames.append(users.strip())
 						break
 					else:
-						userNames.append(users[pos:pos2].strip());
-					pos=pos2+1;
-					users=users[pos2:]
+						userNames.append(users[:pos].strip())
+					users=users[(pos+1):].strip()
 				for name in userNames:
 					try:
 						user = User.objects.get(username=name)
-						if(user.type!=None):
+						if(user.type==None):
 							contents = {'title':'Rozkład'}
 							contents['messageType'] = 'danger'
 							contents['message'] = 'Użytkownik ('+str(name)+') nie może mieć przypisanego planu'
+							return render(request, 'manage_schedule.html', contents)
 						affectedUsers.append(user)
 					except User.DoesNotExist:
 						contents = {'title':'Rozkład'}
@@ -200,7 +188,6 @@ def schedule(request):
 					if(types.count()<group):
 						raise User_Type.DoesNotExist
 					type= types[group]
-					group=type.id
 					affectedUsers= User.objects.filter(type=type.id)
 				except  User_Type.DoesNotExist:
 					contents = {'title':'Rozkład'}
@@ -213,7 +200,7 @@ def schedule(request):
 					usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
 				affectedUsers=usersWithSameSchedule;
 			elif(group==typeCount+1):
-				if(affectedUsers.count()==1):
+				if(len(affectedUsers)==1):
 					return render(request, 'manage_schedule.html', display_schedule_user(request, affectedUsers[0].user_id))
 			else:
 				return render(request, 'manage_schedule.html', display_schedule_type(request, group))
@@ -254,9 +241,9 @@ def schedule_add(request):
 			for i in range(7):
 				contents['day'+str(i)]=request.POST.get('day'+str(i), False);
 			for i in range(7):
-				contents['shour'+str(i)]=request.POST.get('shour'+str(i), 8);
+				contents['shour'+str(i)]=request.POST.get('shour'+str(i), '08')[:2];
 			for i in range(7):
-				contents['ehour'+str(i)]=request.POST.get('ehour'+str(i), 16);
+				contents['ehour'+str(i)]=request.POST.get('ehour'+str(i), '16')[:2];
 			contents['desc']=request.POST.get('description', '');
 		else:
 			contents['viewType']='show'
@@ -298,7 +285,7 @@ def schedule_add(request):
 				for name in userNames:
 					try:
 						user = User.objects.get(username=name)
-						if(user.type!=None):
+						if(user.type==None):
 							contents = {'title':'Rozkład'}
 							contents['messageType'] = 'danger'
 							contents['message'] = 'Użytkownikowi ('+str(name)+') nie można przypisać planu'
@@ -413,8 +400,7 @@ def user_check(request):
 	if(not users or not types):
 		contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
 	if not('login_check' in request.session):
-		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!'}
-		return contents
+		return False
 	else:
 		for l_user in users:
 			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==None):
@@ -422,7 +408,7 @@ def user_check(request):
 			elif(l_user.user_id==int(request.session['login_check'])):
 				return {'user_id':int(l_user.user_id), 'canCreate':int(User_Type.objects.get(id=l_user.type_id).canCreate), 'canEdit':int(User_Type.objects.get(id=l_user.type_id).canEdit), 'canDelete':int(User_Type.objects.get(id=l_user.type_id).canDelete), 'canDeliver':int(User_Type.objects.get(id=l_user.type_id).canDeliver), 'canManage':int(User_Type.objects.get(id=l_user.type_id).canManage) }
 			else:
-				contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Mushisz się zalogować!'}
+				contents = False
 		return contents
 
 def index(request):
@@ -796,41 +782,40 @@ def user_register(request):
 		reg_city = request.POST.get('city')
 		reg_second_name = request.POST.get('second_name')
 		if(not(request.POST.get('agg0')) or not(request.POST.get('agg1'))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Zgody muszą być zaznaczone!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Zgody muszą być zaznaczone!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_name))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_second_name))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username) }
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username) }
 			return render(request,'user_register.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[0-9]{5,5}',str(reg_postal_code))):
 			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if (not(re.match('.{6,64}',str(reg_password)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 				return render(request,'user_register.html',contents)
 		if (not(re.match('.{6,64}',str(reg_username)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 				return render(request,'user_register.html',contents)
 		if (not(re.match('.{1,64}',str(reg_address)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 				return render(request,'user_register.html',contents)
 		users = User.objects.all()
 		for user in users:
 			if(user.username == str(reg_username)):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika zajęta!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':''}	
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika zajęta!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':''}	
 				return render(request,'user_register.html',contents)	
 		good=1
 		if good:
 			reg_password=hashlib.sha256(reg_password.encode()).hexdigest()
-			##DOPOKI NIE MA TYPE I SCHEDULE, TRZEBA ZEZWOLIC CHWILOWO NA NULL!, PRZYJMUJEMY ZE UZYTKOWNICY ZE ZWYKLEGO REGISTER DOSTAJA SCHEDULE 0 CZYLI BRAK BO TO KLIENCI, TYP 0, ZMIANA TYPU MOZLIWA PRZEZ PANEL ADMINA KTORY KTOS ZROBI##
 			newUser = User(name=reg_name, second_name=reg_second_name, username=reg_username, password=reg_password, postal_code=reg_postal_code, phone_number=reg_phone_number, city=reg_city, address=reg_address)
 			newUser.save()
 			contents = {'messageType':'success', 'message':'Użytkownik zarejestrowany','name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
@@ -1563,9 +1548,22 @@ def basket_order(request):
 				#tylko dla zalogowanego
 				paymentType = request.POST.get('payment')
 				paymentType = Payment_Type.objects.get(id=int(paymentType))
-				oUser = User.objects.get(user_id=getCheck['user_id'])
-				uOrder = Order(status='1', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=oUser, payment_type=paymentType)
-				uOrder.save()
+				uOrder = None
+				if(not 'messageType' in getCheck):
+					oUser = User.objects.get(user_id=getCheck['user_id'])
+					uOrder = Order(status='6', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=oUser, payment_type=paymentType)
+					uOrder.save()
+				else:
+					nlName = request.POST.get('name', False)
+					nlAddress = request.POST.get('address', False)
+					if(nlName and nlAddress):
+						oRemarks = nlName + ' ' + oRemarks
+					else:
+						contents['message'] = 'Musisz podać imię, nazwisko oraz adres'
+						contents['messageType'] = 'danger'
+						return render(request, 'basket.html', contents)
+					uOrder = Order(status='6', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=None, payment_type=paymentType)
+					uOrder.save()
 				products = request.session['basket_products'].split(';')
 				orderPrice = 0
 				for cproduct in products:
@@ -1784,7 +1782,37 @@ def basket_clear(request):
 	contents['messageType'] = 'success'
 	contents['message'] = 'Koszyk jest pusty'
 	return render(request, 'basket.html', contents)
-	
+
+def order_check(request, order_id):
+	contents = {'title':'Status zamówienia'}
+	decoded = xor_crypt_string(order_id.decode("hex"))
+	decoded = decoded.split('-')[0]
+	try:
+		decoded = int(decoded)
+	except ValueError:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Twój link jest niepoprawny'
+		return render(request, 'order_check.html', contents)
+	orderData = Order.objects.get(order_code=decoded)
+	contents['order_id'] = str(decoded)
+	status = 'Anulowane'
+	if(orderData.status == '1'):
+		status = 'przyjęte do realizacji'
+	elif(orderData.status == '2'):
+		status = 'przygotowywane'
+	elif(orderData.status == '3'):
+		status = 'oczekuje na dostawcę'
+	elif(orderData.status == '4'):
+		status = 'w dowozie'
+	elif(orderData.status == '5'):
+		status = 'zrealizowane'
+	elif(orderData.status == '6'):
+		status = 'oczekuje na akceptację'
+	contents['order_status'] = status
+	contents['order_type'] = orderData.payment_type.payment_name
+	contents['order_price'] = orderData.price
+	return render(request, 'order_check.html', contents)
+
 def display_product():
 	products = Product.objects.all()
 	contents = {'title':'Produkty', 'content':''}

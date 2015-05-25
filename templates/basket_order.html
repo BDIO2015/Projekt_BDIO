@@ -16,6 +16,12 @@
 		{% csrf_token %}
 		{% if isLogged == False %}
 			Jesteś niezalogowany i musisz wypełnić dane dostawy
+			<div class="input-group"><label>Imię i nazwisko: </label>
+			<input type="text" name="name" class="form-control" required/>
+			</div>
+			<div class="input-group"><label>Adres: </label>
+			<input type="text" name="address" class="form-control" required/>
+			</div>
 		{% endif %}
 		<div class="input-group"><label>Płatność: </label>
 		<select name="payment">

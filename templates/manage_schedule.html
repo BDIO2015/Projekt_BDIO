@@ -54,7 +54,7 @@
 	<table>
 	<tr>
     <th  rowspan="2"><label class="control-label">Dla:&nbsp; </label> </th>
-    <td ><select id="grdgoup" name="group" class="form-control" onchange = "checkSelected()" {% if actionType == 'edit' %}disabled{% endif %}>
+    <td ><select id="grdgoup" name="group" class="form-control" onchange = "checkSelected()" {% if viewType == 'edit' %}disabled{% endif %}>
 		<option value="{{typeForUsers}}" {% if typeFor == typeForUsers %}selected{% endif %}>Użytkownicy</option>
 		<option value="{{typeForAll}}" {% if typeFor == typeForAll %}selected{% endif %}>Wszyscy</option>
 		{% for name in types %}
@@ -92,7 +92,7 @@
 		{% for j in i %}
 			<td>
 			{% for key, value in j.items %}
-				{% if value == "Wszyscy" and key == '0' %}
+				{% if value == "Wszyscy" and key == 0 %}
 				<a href="/manage/schedule/">Wszyscy</a>
 				{% elif value|last == "-" %}
 				<a href="/manage/schedule_type/{{key}}">{{value|slice:"-1"}}</a>
