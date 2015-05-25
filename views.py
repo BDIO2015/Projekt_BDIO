@@ -1392,7 +1392,7 @@ def get_subcategories(maincat):
 				subcategories[categories.name] = []
 			subcategories[categories.name].append([subcat.cat_id, subcat.name])
 	todel = []
-	for key, each in subcategories.iteritems():
+	for key, each in subcategories.items():
 		if(len(each) == 0):
 			todel.append(key)
 	for k in todel:
