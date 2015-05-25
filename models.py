@@ -6,9 +6,9 @@ from django.db import models
 class Schedule(models.Model):
 	id = models.AutoField(primary_key=True)
 	description = models.TextField()
-	day = models.CharField(max_length=15)
-	time_start = models.TimeField()
-	time_end = models.TimeField()
+	day = models.CharField(max_length=7)
+	time_start = models.CharField(max_length=14)
+	time_end = models.CharField(max_length=14)
 	
 class User_Type(models.Model):
 	id = models.AutoField(primary_key=True)
