@@ -399,8 +399,7 @@ def user_check(request):
 	if(not users or not types):
 		contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
 	if not('login_check' in request.session):
-		contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Musisz się zalogować!'}
-		return contents
+		return False
 	else:
 		for l_user in users:
 			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==None):
@@ -408,7 +407,7 @@ def user_check(request):
 			elif(l_user.user_id==int(request.session['login_check'])):
 				return {'user_id':int(l_user.user_id), 'canCreate':int(User_Type.objects.get(id=l_user.type_id).canCreate), 'canEdit':int(User_Type.objects.get(id=l_user.type_id).canEdit), 'canDelete':int(User_Type.objects.get(id=l_user.type_id).canDelete), 'canDeliver':int(User_Type.objects.get(id=l_user.type_id).canDeliver), 'canManage':int(User_Type.objects.get(id=l_user.type_id).canManage) }
 			else:
-				contents = {'title':'Zaloguj się!', 'messageType':'danger', 'message':'Mushisz się zalogować!'}
+				contents = False
 		return contents
 
 def index(request):
@@ -782,41 +781,40 @@ def user_register(request):
 		reg_city = request.POST.get('city')
 		reg_second_name = request.POST.get('second_name')
 		if(not(request.POST.get('agg0')) or not(request.POST.get('agg1'))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Zgody muszą być zaznaczone!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Zgody muszą być zaznaczone!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_name))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_second_name))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username) }
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username) }
 			return render(request,'user_register.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[0-9]{5,5}',str(reg_postal_code))):
 			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'username':str(reg_username)}
 			return render(request,'user_register.html',contents)
 		if (not(re.match('.{6,64}',str(reg_password)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 				return render(request,'user_register.html',contents)
 		if (not(re.match('.{6,64}',str(reg_username)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 				return render(request,'user_register.html',contents)
 		if (not(re.match('.{1,64}',str(reg_address)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
 				return render(request,'user_register.html',contents)
 		users = User.objects.all()
 		for user in users:
 			if(user.username == str(reg_username)):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika zajęta!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'postal_code':str(reg_postal_code), 'phone_number':str(reg_phone_number), 'username':''}	
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika zajęta!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':''}	
 				return render(request,'user_register.html',contents)	
 		good=1
 		if good:
 			reg_password=hashlib.sha256(reg_password.encode()).hexdigest()
-			##DOPOKI NIE MA TYPE I SCHEDULE, TRZEBA ZEZWOLIC CHWILOWO NA NULL!, PRZYJMUJEMY ZE UZYTKOWNICY ZE ZWYKLEGO REGISTER DOSTAJA SCHEDULE 0 CZYLI BRAK BO TO KLIENCI, TYP 0, ZMIANA TYPU MOZLIWA PRZEZ PANEL ADMINA KTORY KTOS ZROBI##
 			newUser = User(name=reg_name, second_name=reg_second_name, username=reg_username, password=reg_password, postal_code=reg_postal_code, phone_number=reg_phone_number, city=reg_city, address=reg_address)
 			newUser.save()
 			contents = {'messageType':'success', 'message':'Użytkownik zarejestrowany','name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
