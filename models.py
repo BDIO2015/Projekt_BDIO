@@ -49,6 +49,7 @@ class Order(models.Model):
 			('3', 'Oczekujace'),
 			('4', 'Dowoz'),
 			('5', 'Zrealizowane'),
+			('6', 'Transfer'),
 		)
 	order_code = models.AutoField(primary_key=True)
 	status = models.CharField(max_length=1, choices=ORDER_STATUS)

@@ -1560,9 +1560,22 @@ def basket_order(request):
 				#tylko dla zalogowanego
 				paymentType = request.POST.get('payment')
 				paymentType = Payment_Type.objects.get(id=int(paymentType))
-				oUser = User.objects.get(user_id=getCheck['user_id'])
-				uOrder = Order(status='1', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=oUser, payment_type=paymentType)
-				uOrder.save()
+				uOrder = None
+				if(not 'messageType' in getCheck):
+					oUser = User.objects.get(user_id=getCheck['user_id'])
+					uOrder = Order(status='6', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=oUser, payment_type=paymentType)
+					uOrder.save()
+				else:
+					nlName = request.POST.get('name', False)
+					nlAddress = request.POST.get('address', False)
+					if(nlName and nlAddress):
+						oRemarks = nlName + ' ' + oRemarks
+					else:
+						contents['message'] = 'Musisz podać imię, nazwisko oraz adres'
+						contents['messageType'] = 'danger'
+						return render(request, 'basket.html', contents)
+					uOrder = Order(status='6', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=None, payment_type=paymentType)
+					uOrder.save()
 				products = request.session['basket_products'].split(';')
 				orderPrice = 0
 				for cproduct in products:
@@ -1779,7 +1792,37 @@ def basket_clear(request):
 	contents['messageType'] = 'success'
 	contents['message'] = 'Koszyk jest pusty'
 	return render(request, 'basket.html', contents)
-	
+
+def order_check(request, order_id):
+	contents = {'title':'Status zamówienia'}
+	decoded = xor_crypt_string(order_id.decode("hex"))
+	decoded = decoded.split('-')[0]
+	try:
+		decoded = int(decoded)
+	except ValueError:
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Twój link jest niepoprawny'
+		return render(request, 'order_check.html', contents)
+	orderData = Order.objects.get(order_code=decoded)
+	contents['order_id'] = str(decoded)
+	status = 'Anulowane'
+	if(orderData.status == '1'):
+		status = 'przyjęte do realizacji'
+	elif(orderData.status == '2'):
+		status = 'przygotowywane'
+	elif(orderData.status == '3'):
+		status = 'oczekuje na dostawcę'
+	elif(orderData.status == '4'):
+		status = 'w dowozie'
+	elif(orderData.status == '5'):
+		status = 'zrealizowane'
+	elif(orderData.status == '6'):
+		status = 'oczekuje na akceptację'
+	contents['order_status'] = status
+	contents['order_type'] = orderData.payment_type.payment_name
+	contents['order_price'] = orderData.price
+	return render(request, 'order_check.html', contents)
+
 def display_product():
 	products = Product.objects.all()
 	contents = {'title':'Produkty', 'content':''}
