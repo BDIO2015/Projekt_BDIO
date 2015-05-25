@@ -36,4 +36,45 @@ jQuery(document).ready(function(){
 	jQuery("#ingredients_for_product input").change(function(){
 		calculate_cost();
 	});
+	
+	//klikniete "informacje" na produkcie
+	
+	function get_number_of_elements_in_row()
+	{
+		var win_width = jQuery(window).width();
+		if(win_width < 768)
+			return 1;
+		else if(win_width >= 768 && win_width < 992)
+			return 2;
+		else if(win_width >= 992 && win_width < 1200)
+			return 3;
+		else
+			return 4;
+	}
+	
+	function make_space(){
+		// usun puste divy
+		jQuery(".product_row").children().each(function(){
+			if(jQuery(this).hasClass("empty-div"))
+				jQuery(this).remove();
+		});
+		var elements = get_number_of_elements_in_row();
+		//dodaj nowe
+		var i = 0;
+		if(elements != 1)
+		{
+			jQuery(".product_row").each(function(){
+				jQuery(this).children().each(function(){
+					var prod_box = parseInt(jQuery(this).attr("id")) + 1;
+					console.log(prod_box);
+					if(prod_box % elements == 0)
+						jQuery(this).after('<div class="col-xs-12 empty-div"></div>');
+				});
+			});
+		}
+	}
+	make_space();
+	jQuery(window).resize(function(){
+		make_space();
+	});
 });

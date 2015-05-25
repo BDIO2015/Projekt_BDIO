@@ -8,6 +8,7 @@ from decimal import *
 import time
 import os
 from itertools import *
+import platform
 
 # URL do zarzadzania planem
 #url(r'^manage/schedule_type/(?P<type_id>[0-9]+)', 'bdio.views.schedule_type', name='schedule_type'),
@@ -1473,8 +1474,10 @@ def basket(request):
 				isDay[4] = (days>>4)&0x1
 				isDay[5] = (days>>5)&0x1
 				isDay[6] = (days>>6)&0x1
-				os.environ['TZ'] = 'Poland'
-				time.tzset()
+				if(platform.system() != "Windows"):
+					os.environ['TZ'] = 'Poland'
+					time.tzset()
+				timeFormat = time.strftime("%a %B %d %H:%M:%S %Y")
 				timeFormat = time.strftime("%c")
 				timeFormat = timeFormat.split(' ')
 				onlyTime = timeFormat[3].split(':')
@@ -1612,8 +1615,10 @@ def basket_order(request):
 						isDay[4] = (days>>4)&0x1
 						isDay[5] = (days>>5)&0x1
 						isDay[6] = (days>>6)&0x1
-						os.environ['TZ'] = 'Poland'
-						time.tzset()
+						if(platform.system() != "Windows"):
+							os.environ['TZ'] = 'Poland'
+							time.tzset()
+						timeFormat = time.strftime("%a %B %d %H:%M:%S %Y")
 						timeFormat = time.strftime("%c")
 						timeFormat = timeFormat.split(' ')
 						onlyTime = timeFormat[3].split(':')
@@ -1811,10 +1816,49 @@ def display_product_front(request):
 			products = Product.objects.filter(category=curRow)
 			if(products.count() > 0):
 				for prodRow in products:
-					if(prodRow.discount == None):
-						disc = 1
-					else:
-						disc = 0
+					#check if discount is now
+					disc = 0
+					if(prodRow.discount != None and prodRow.discount.type[0] == '1'): #jesli produkt ma znizke i jest ona aktywna
+						disc = prodRow.discount.value
+						days = prodRow.discount.type[1:4]
+						days = int(days)
+						isDay=[0,0,0,0,0,0,0]
+						isDay[0] = days&0x1
+						isDay[1] = (days>>1)&0x1
+						isDay[2] = (days>>2)&0x1
+						isDay[3] = (days>>3)&0x1
+						isDay[4] = (days>>4)&0x1
+						isDay[5] = (days>>5)&0x1
+						isDay[6] = (days>>6)&0x1
+						if(platform.system() != "Windows"):
+							os.environ['TZ'] = 'Poland'
+							time.tzset()
+						timeFormat = time.strftime("%a %B %d %H:%M:%S %Y")
+						timeFormat = timeFormat.split(' ')
+						onlyTime = timeFormat[3].split(':')
+						cHour = int(onlyTime[0])
+						cMin = int(onlyTime[1])
+						sHour = int(prodRow.discount.type[4:6])
+						sMin = int(prodRow.discount.type[6:8])
+						eHour = int(prodRow.discount.type[8:10])
+						eMin = int(prodRow.discount.type[10:12])
+						if((sHour < cHour or (sHour == cHour and sMin <= cMin)) and (eHour > cHour or (eHour==cHour and eMin >= cMin))):
+							if(timeFormat[0] == 'Sun' and isDay[6] != 0):
+								disc = 1
+							elif(timeFormat[0] == 'Mon' and isDay[0] != 0):
+								disc = 1
+							elif(timeFormat[0] == 'Tue' and isDay[1] != 0):
+								disc = 1
+							elif(timeFormat[0] == 'Wed' and isDay[2] != 0):
+								disc = 1
+							elif(timeFormat[0] == 'Thu' and isDay[3] != 0):
+								disc = 1
+							elif(timeFormat[0] == 'Fri' and isDay[4] != 0):
+								disc = 1
+							elif(timeFormat[0] == 'Sat' and isDay[5] != 0):
+								disc = 1
+						else:
+							disc = 0
 					#get all ingredients for current product
 					if(curRow.demand_ingredients == 1):
 						ingredients = Ingredient_Product.objects.filter(product=prodRow)

@@ -14,4 +14,43 @@ width: 100% !important;
 .menu {
 margin-bottom: 10px;
 }
+.category_title{
+font-size:30px;
+font-weight: bold;
+text-transform: uppercase;
 
+
+}
+.category_header{
+border-radius:5px;
+background-color: #FFA41A;
+margin-bottom: 20px;
+padding-top:12px;
+padding-bottom:12px;
+}
+
+.product_header_info{
+font-size:18px;
+padding: 0px ! important;
+margin-bottom: 8px;
+}
+
+.product_header{
+font-size:24px;
+font-weight: bold;
+text-transform: uppercase;
+}
+
+.product_price{
+text-align:left;
+padding: 0px ! important;
+}
+
+.product_buttons{
+margin-top: 8px;
+}
+
+.product_info hr{
+margin-top: 8px;
+margin-bottom: 8px;
+}

@@ -1,0 +1,42 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+
+{% for row in content %}
+ <div class="category_title collapsed " data-target="#{{row.name}}" data-toggle="collapse"><div class="col-xs-12 category_header"><div class="col-xs-10 col-lg-11 col-md-11" >{{row.name}}</div><div class="col-xs-2 col-lg-1 col-md-1"><span class="glyphicon glyphicon-plus"></span></div></div></div>
+ <div id="{{row.name}}" class="collapse">
+ 	<div class="row product_row">
+	{% for prow in row.products %}
+
+
+		  <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 product_box" id="{{forloop.counter0}}">
+			<div class="thumbnail">
+			  <div class="caption">
+				<div class="product_info">
+				<div class="product_header">{{prow.name}}</div>
+				<div class="product_header_info col-xs-12"><div class="product_price col-xs-6">{{prow.price|floatformat:2}} PLN</div><div class="col-xs-6 product_discount">{% if prow.discount != 0 %}<span class="label label-warning">PROMOCJA</span>{% endif %}</div></div>
+				<div class="description collapse" id="{{prow.id}}">
+				<hr>
+				<p><strong>Opis:</strong>
+				{{prow.desc}}</p>
+				<div><strong>Składniki:</strong></div>
+				{% for irow in prow.ingredients %}
+				<div>&nbsp;{{irow.name}}</div>
+				{% endfor %}
+				</div>
+				</div>
+				<div class="product_buttons"><a href="/basket/add/{{prow.id}}" class="btn btn-primary" role="button"><span class="glyphicon glyphicon-plus"></span> Dodaj</a> <a data-target="#{{prow.id}}" data-toggle="collapse" class="btn btn-default collapsed show_info" role="button"><span class="glyphicon glyphicon-info-sign"></span> Informacje</a></div>
+			  </div>
+			</div>
+
+		  </div>
+
+	{% empty %}
+	<div class="col-xs-12 product_empty_info">Ta kategoria nie ma żadynch produktów :(</div>
+	{% endfor %}
+	</div>
+</div>
+{% endfor %}
+{% endblock %}
