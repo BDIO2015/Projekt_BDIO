@@ -1,66 +1,124 @@
+
+
 {% extends "index.html" %}
-
 {% block title %}{{title}}{% endblock %}
-
-
 {% block content %}
-  {% if messageType == "danger" or messageType == "success" %}
-  <div class="alert alert-{{messageType}}">
-    {{message}}
-  </div>
-  {% endif %}
-  <form action="/user/register" method="POST">
+{% if messageType == "danger" or messageType == "success" %}
+<div class="alert alert-{{messageType}}">
+  {{message}}
+</div>
+{% endif %}
+<form action="/user/register" method="POST">
   {% csrf_token %}
-	<table border=0>
- <tr>
-    <td>Dane:</td>
-  </tr>
- <tr>
-   <td style="height: 20px"></td>
-  </tr>
- <tr>
-    <td>Imię:</td><td><input type="text" maxlength="64" name="name" value={{name}} ></td>
-  </tr>
- <tr>
-    <td>Nazwisko:</td><td><input type="text" maxlength="64" name="second_name" value={{second_name}} ></td>
-  </tr>
- <tr>
-    <td>Adres:</td><td><input type="text" maxlength="64" name="address" value={{address}} ></td>
-  </tr>
- <tr>
-    <td>Miasto:</td><td><input type="text" maxlength="64" name="city" value={{city}} ></td>
-  </tr>
- <tr>
-    <td>Kod pocztowy:</td><td><input type="text" size="2" maxlength="2" name="postal_code1" value={{postal_code}} > <input type="short" size="3" maxlength="3" name="postal_code2" value={{postal_code}} ></td>
-  </tr>
- <tr>
-    <td>Numer telefonu:</td><td><input type="text" maxlength="9" name="phone_number" value={{phone_number}} ></td>
-  </tr>
- <tr>
-    <td>Hasło:</td><td><input type="password" maxlength="64" name="password" value="" ></td>
-  </tr>
- <tr>
-    <td>Nazwa użytkownika:</td><td><input type="text" maxlength="64" name="username" value={{username}} ></td>
-  </tr>
- <tr>
-   <td style="height: 20px"></td>
-  </tr>
- <tr>
-   <td>Zgody:<td>
-  </tr>
- <tr>
-   <td style="height: 20px"></td>
-  </tr>
- <tr>
-    <td><input type="checkbox" name="agg0" value="1" {% if agg0 == 1 %}checked{% endif %}>Zgadzam się z regulaminem strony<br/></td>
-  </tr>
- <tr>
-    <td><input type="checkbox" name="agg1" value="1" {% if agg1 == 1 %}checked{% endif %}>Zgadzam się na przetwarzanie danych osobowych<br/></td>
-  </tr>
- <tr>
-    <td colspan="2"><input type="hidden" name="sent" value="1" /><input type="submit" value="Rejestruj" /></td>
-  </tr>
-</table>
-<a href="/">Powrót</a><br/><br/>
-	</form>
+  <table border=0>
+    <tr>
+      <td>
+        <label  class="control-label">Dane:</label>
+      </td>
+    </tr>
+    <tr>
+      <td style="height: 20px"></td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Imię:</label>
+      </td>
+      <td>
+        <input type="text" name="name" value="{{name}}" maxlength=64  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Nazwisko:</label>
+      </td>
+      <td>
+        <input type="text" name="second_name" value="{{second_name}}" maxlength=64  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Adres:</label>
+      </td>
+      <td>
+        <input type="text" maxlength="64" name="address" value="{{address}}"  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Miasto:</label>
+      </td>
+      <td>
+        <input type="text" maxlength="64" name="city" value="{{city}}"  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Kod pocztowy:</label>
+      </td>
+      <td>
+        <div class="col-lg-5">
+          <input type="text" size="2" maxlength="2" name="postal_code1" value="{{postal_code}}"  class="form-control" required/>
+        </div>
+        <div class="col-lg-5">
+          <input type="text" size="3" maxlength="3" name="postal_code2" value="{{postal_code}}"  class="form-control" required/>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Numer telefonu:</label>
+      </td>
+      <td>
+        <input type="text" maxlength="9" name="phone_number" value="{{phone_number}}"  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Hasło:</label>
+      </td>
+      <td>
+        <input type="password" maxlength="64" name="password" value=""   class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Nazwa użytkownika:</label>
+      </td>
+      <td>
+        <input type="text" maxlength="64" name="username" value="{{username}}"  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td style="height: 20px"></td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Zgody:</label>
+      <td>
+    </tr>
+    <tr>
+      <td style="height: 20px"></td>
+    </tr>
+    <tr>
+      <td>
+        <input type="checkbox" name="agg0" value="1" {% if agg0 == 1 %}checked{% endif %}/>
+        <label  class="control-label">Zgadzam się z regulaminem strony </label>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input type="checkbox" name="agg1" value="1" {% if agg1 == 1 %}checked{% endif %}/>
+        <label  class="control-label">Zgadzam się na przetwarzanie danych osobowych:</label>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+        <div class="input-group"><input type="hidden" name="sent" value="1" /></div>
+        <div><input type="submit" value="Rejestruj" class="btn btn-primary"/></div>
+      </td>
+    </tr>
+  </table>
+  <a href="/">Powrót</a>
+</form>
 {% endblock %}
+
