@@ -10,7 +10,7 @@
   {{message}}
 </div>
 {% endif %}
-<form action="/user/register" method="POST">
+<form action="/user/edit" method="POST">
   {% csrf_token %}
   <table border=0>
     <tr>
@@ -84,43 +84,26 @@
     </tr>
     <tr>
       <td>
-        <label  class="control-label">Nazwa użytkownika:</label>
+        <label  class="control-label">Stare Hasło:</label>
       </td>
       <td>
-        <input type="text" maxlength="64" name="username" value="{{username}}"  class="form-control" required/>
+        <input type="password" maxlength="64" name="password_old" value=""   class="form-control" required/>
       </td>
-    </tr>
+    </tr>    
     <tr>
       <td style="height: 20px"></td>
     </tr>
     <tr>
-      <td>
-        <label  class="control-label">Zgody:</label>
-      <td>
-    </tr>
-    <tr>
       <td style="height: 20px"></td>
-    </tr>
-    <tr>
-      <td>
-        <input type="checkbox" name="agg0" value="1" {% if agg0 == 1 %}checked{% endif %}/>
-        <label  class="control-label">Zgadzam się z regulaminem strony </label>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <input type="checkbox" name="agg1" value="1" {% if agg1 == 1 %}checked{% endif %}/>
-        <label  class="control-label">Zgadzam się na przetwarzanie danych osobowych:</label>
-      </td>
     </tr>
     <tr>
       <td colspan="2">
         <div class="input-group"><input type="hidden" name="sent" value="1" /></div>
-        <div><input type="submit" value="Rejestruj" class="btn btn-primary"/></div>
+        <div><input type="submit" value="Zapisz zmiany" class="btn btn-primary"/></div>
       </td>
     </tr>
   </table>
-  <a href="/">Powrót</a>
+  <a href="/user/dash">Powrót</a>
 </form>
 {% endblock %}
 

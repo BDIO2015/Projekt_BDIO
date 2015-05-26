@@ -2767,8 +2767,8 @@ def management_panel(request):
 	check = user_check(request)
 	if (check == False):
 		return display_product_front(request)
-	elif not check['canManage'] == True:
-		return management_panel(request)
+	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
+		return display_product_front(request)
 		
 	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
 	
@@ -2781,4 +2781,108 @@ def management_panel(request):
 	
 	return render(request, 'manage_management_panel.html', contents)
 
-	
+def user_dash(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	users = User.objects.all()
+	types = User_Type.objects.all()
+	id=str(request.session['login_check'])
+	url='/manage/schedule_user/'
+	url+=id
+	for l_user in users:
+			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==None):
+				contents =  {'type':'Wyświetl zamówienia','url':url}
+			else:
+				contents =  {'type':'Wyświetl rozkład','url':url}
+	return render(request,'user_dash.html',contents)
+
+def user_delete(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	contents = {'title':'Logowanie', 'username':'', 'password':'', 'messageType':'danger', 'message':'Potwierdź swoją tożsamość!'} 
+	c_username=request.POST.get('username')
+	c_password=request.POST.get('password')
+	users = User.objects.all()
+	if(request.POST.get('sent')):
+		c_password=hashlib.sha256(c_password.encode()).hexdigest()
+		for c_user in users:
+			if((c_user.username==str(c_username)) and (c_password==c_user.password)):
+				Del = User.objects.filter(user_id=c_user.user_id)
+				iterator = -1
+				if(Del.count() == 1):
+					Del[0].delete()					
+					users = User.objects.all()
+					contents = {'messageType':'success', 'message':'Konto usunięte!'}
+					del request.session['login_check']
+					return render(request,'index.html',contents)
+			else:
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Podaj poprawną nazwę użytkownika i/lub hasło!', 'username':'', 'password':''}
+	return render(request,'user_delete.html',contents)
+
+def user_edit(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	users = User.objects.all()
+	for l_user in users:
+			if(l_user.user_id==int(request.session['login_check'])):
+				s_name = l_user.name
+				s_postal_code = l_user.postal_code
+				s_postal_code1 = (str(s_postal_code))[:2]
+				s_postal_code2 = (str(s_postal_code))[-3:]
+				s_phone_number = l_user.phone_number
+				s_address = l_user.address
+				s_city = l_user.city
+				s_second_name = l_user.second_name
+	mainContent = '';
+	contents = {'title':'Edytuj', 'name':str(s_name), 'second_name':str(s_second_name), 'address':str(s_address), 'city':str(s_city),   'phone_number':str(s_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
+	if(request.POST.get('sent')):
+		reg_name = request.POST.get('name')
+		reg_password = request.POST.get('password')
+		reg_postal_code = request.POST.get('postal_code1')+request.POST.get('postal_code2')
+		reg_phone_number = request.POST.get('phone_number')
+		reg_address = request.POST.get('address')
+		reg_city = request.POST.get('city')
+		reg_old_pass = request.POST.get('password_old')
+		reg_second_name = request.POST.get('second_name')
+		reg_old_pass=hashlib.sha256(reg_old_pass.encode()).hexdigest()
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_name))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_edit.html',contents)
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_second_name))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username) }
+			return render(request,'user_edit.html',contents)
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_edit.html',contents)
+		if not(re.match('[0-9]{5,5}',str(reg_postal_code))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_edit.html',contents)
+		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'username':str(reg_username)}
+			return render(request,'user_edit.html',contents)
+		if (not(re.match('.{6,64}',str(reg_password)))):
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				return render(request,'user_edit.html',contents)
+		if (not(re.match('.{1,64}',str(reg_address)))):
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				return render(request,'user_edit.html',contents)
+		good=1
+		if good:
+			for c_user in users:
+				if(c_user.user_id==int(request.session['login_check']) and (reg_old_pass==c_user.password)):
+					reg_password=hashlib.sha256(reg_password.encode()).hexdigest()
+					l_user.name = str(reg_name)
+					l_user.second_name = str(reg_second_name)
+					l_user.password = str(reg_password)
+					l_user.phone_number = str(reg_phone_number)
+					l_user.address = str(reg_address)
+					l_user.postal_code = str(reg_postal_code)
+					l_user.city = str(reg_city)
+					l_user.save()
+					contents = {'messageType':'success', 'message':'Zmiany zapisane!'}
+				else:
+					contents = {'messageType':'alert', 'message':'Wprowadź prawidłowe hasło!', 'title':'Edytuj', 'name':str(s_name), 'second_name':str(s_second_name), 'address':str(s_address), 'city':str(s_city),   'phone_number':str(s_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
+	return render(request, 'user_edit.html', contents)
