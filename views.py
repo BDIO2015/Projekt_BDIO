@@ -457,7 +457,7 @@ def schedule_edit(request, schedule_id):
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Należy zaznaczyć conajmniej jeden dzień'
 				return render(request, 'manage_schedule_addedit.html', contents);
-			schedule.desc=contents['desc']
+			schedule.description=contents['desc']
 			schedule.day=day
 			schedule.time_start=shour
 			schedule.time_end=ehour
