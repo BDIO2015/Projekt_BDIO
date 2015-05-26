@@ -1,0 +1,109 @@
+
+
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+{% if messageType == "danger" or messageType == "success" %}
+<div class="alert alert-{{messageType}}">
+  {{message}}
+</div>
+{% endif %}
+<form action="/user/edit" method="POST">
+  {% csrf_token %}
+  <table border=0>
+    <tr>
+      <td>
+        <label  class="control-label">Dane:</label>
+      </td>
+    </tr>
+    <tr>
+      <td style="height: 20px"></td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Imię:</label>
+      </td>
+      <td>
+        <input type="text" name="name" value="{{name}}" maxlength=64  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Nazwisko:</label>
+      </td>
+      <td>
+        <input type="text" name="second_name" value="{{second_name}}" maxlength=64  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Adres:</label>
+      </td>
+      <td>
+        <input type="text" maxlength="64" name="address" value="{{address}}"  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Miasto:</label>
+      </td>
+      <td>
+        <input type="text" maxlength="64" name="city" value="{{city}}"  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Kod pocztowy:</label>
+      </td>
+      <td>
+        <div class="col-lg-5">
+          <input type="text" size="2" maxlength="2" name="postal_code1" value="{{postal_code1}}"  class="form-control" required/>
+        </div>
+        <div class="col-lg-5">
+          <input type="text" size="3" maxlength="3" name="postal_code2" value="{{postal_code2}}"  class="form-control" required/>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Numer telefonu:</label>
+      </td>
+      <td>
+        <input type="text" maxlength="9" name="phone_number" value="{{phone_number}}"  class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Hasło:</label>
+      </td>
+      <td>
+        <input type="password" maxlength="64" name="password" value=""   class="form-control" required/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label  class="control-label">Stare Hasło:</label>
+      </td>
+      <td>
+        <input type="password" maxlength="64" name="password_old" value=""   class="form-control" required/>
+      </td>
+    </tr>    
+    <tr>
+      <td style="height: 20px"></td>
+    </tr>
+    <tr>
+      <td style="height: 20px"></td>
+    </tr>
+    <tr>
+      <td colspan="2">
+        <div class="input-group"><input type="hidden" name="sent" value="1" /></div>
+        <div><input type="submit" value="Zapisz zmiany" class="btn btn-primary"/></div>
+      </td>
+    </tr>
+  </table>
+  <a href="/user/dash">Powrót</a>
+</form>
+{% endblock %}
+
