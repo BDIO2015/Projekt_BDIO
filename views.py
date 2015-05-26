@@ -421,7 +421,7 @@ def user_logout(request):
 	if('login_check' in request.session):
 		del request.session['login_check']
 		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
-	return display_product_front(request)
+	return display_product_front(request, contents)
 
 def user_check(request):
 	users = User.objects.all()
@@ -1974,7 +1974,7 @@ def display_product():
 		contents = {'title':'Produkty', 'content':'Brak zdefiniowanych produktów', 'count':0}
 	return contents	
 
-def display_product_front(request):
+def display_product_front(request, content=[]):
 	#get main categories
 	contents = {'title':'Produkty', 'content':''}
 	contents["user"] = user_check(request)
@@ -2051,7 +2051,7 @@ def display_product_front(request):
 			row = {'name': curRow.name, 'products' : prodDisp}
 			toDisp.append(row)
 		contents["content"] = toDisp
-
+		contents["msg"] = content
 
 	return render(request,"order.html",contents)
 	
@@ -2188,7 +2188,7 @@ def product_add(request):
 			
 			contents["messageType"] = 'success'
 			contents["message"] = 'Produkt poprawnie dodany '
-		
+
 	return render(request,'manage_product_addedit.html',contents)
 
 def product_edit(request,edit_id):
@@ -2411,6 +2411,14 @@ def product_delete(request, del_id):
 	
 def user_login(request):
 	contents = {'title':'Logowanie', 'username':'', 'password':''} 
+	contents["user"] = user_check(request)
+	#get user info
+	if(contents["user"] != False):
+		if(User.objects.filter(user_id=contents["user"]["user_id"]).count()>0):
+			user = User.objects.get(user_id=contents["user"]["user_id"])
+			row = {'name': user.name, 'surname': user.second_name }
+			contents["user"]["data"] = row
+	user = contents["user"]
 	c_username=request.POST.get('username')
 	c_password=request.POST.get('password')
 	users = User.objects.all()
@@ -2418,12 +2426,12 @@ def user_login(request):
 		c_password=hashlib.sha256(c_password.encode()).hexdigest()
 		for c_user in users:
 			if((c_user.username==str(c_username)) and (c_password==c_user.password)):
-				contents = {'messageType':'success', 'message':'Zalogowano poprawnie!'}
+				contents = {'messageType':'success', 'message':'Zalogowano poprawnie!', 'user':user}
 				request.session['login_check']=c_user.user_id
-				return render(request,'user_login.html',contents)
+				return display_product_front(request,contents)
 			else:
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Podaj poprawną nazwę użytkownika i/lub hasło!', 'username':'', 'password':''}
-	return render(request, 'user_login.html', contents)
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Podaj poprawną nazwę użytkownika i/lub hasło!', 'username':'', 'password':'','user':user}
+	return display_product_front(request, contents)
 
 def payment_types(request):
 	check = user_check(request)

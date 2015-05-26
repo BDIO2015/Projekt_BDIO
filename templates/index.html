@@ -42,7 +42,6 @@
 <body class="col-sm-12 main">
     <div class="logo_header">
 	</div>
-	<div class="top">
     <div id="navbar" class="col-xs-12">
         <ul class="nav nav-pills menu">
 		
@@ -79,13 +78,19 @@
 			  </div>
 			</div>
 			{% else %}
-			<li><a href="#panel_uzytkownika" class="btn " title="Zalogowany jako {{user.data.name}} {{user.data.surname}}"><span class="glyphicon glyphicon-user"></span> Profil</a></li>
+			<li><a href="/user/panel" class="btn " title="Zalogowany jako {{user.data.name}} {{user.data.surname}}"><span class="glyphicon glyphicon-user"></span> Profil</a></li>
 			<li><a href="/user/logout" class="btn " title="Zalogowany jako {{user.data.name}} {{user.data.surname}}"><span class="glyphicon glyphicon-log-out"></span> Wyloguj</a></li>
 			{% endif %}
        </ul>
 	 </div>
 
+	{% if msg %}
+	{% if msg.messageType == "danger" or msg.messageType == "success" %}
+	<div class="alert alert-{{msg.messageType}}">
+	  {{msg.message}}
 	</div>
+	{% endif %}
+	{% endif %}
 	<div id="content" class=" col-sm-12 container-fluid">
 		<!-- TREŚĆ STRONY -->
 		{% block content %}
