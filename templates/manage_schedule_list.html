@@ -1,0 +1,56 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+
+
+{% block content %}
+	<a href="/manage/schedule/" class="btn btn-primary">Powrót</a><br /><br />
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% else %}
+	<div><a href="/manage/schedule/add" class="btn btn-primary" data-toggle="tooltip">Dodaj plan</a></div>
+	</br></br>
+	<label class="control-label">{% if scheduleCount == 0 %} Brak planów do wyświetlenia {% elif scheduleCount > 4 %} Wyświetlono {{scheduleCount}} planów{% elif scheduleCount > 1 %} Wyświetlono {{scheduleCount}} plany{% else %}Wyświetlono 1 plan{% endif %}</label>
+	</br></br>
+	{% if scheduleCount > 0 %}
+	<table class="table table-hovered table-responsive">
+	<tr>
+		<th>Opis:</th>
+		<th>Użytkownicy:</th>
+		<th>Zarządzaj</th>
+		
+	</tr>
+
+	{% for key, value in scheduleList.items %}
+		<tr>
+			{% for x, y in value.items %}
+				<td>
+				{% if x == 'desc' %}
+				{{y}}
+				{% else %}
+				{% for id, name in y.items %}
+					{% if value == "Wszyscy" and key == 0 %}
+					<a href="/manage/schedule/">Wszyscy</a>
+					{% elif value|last == "-" %}
+					<a href="/manage/schedule_type/{{key}}">{{value|slice:"-1"}}</a>
+					{% else %}
+					<a href="/manage/schedule_user/{{key}}">{{value}}</a>
+					{% endif %}
+					{% if not forloop.last %}
+					, 
+					{% endif %}
+					{% endfor %}
+					{% endif %}
+				</td>
+			{% endfor %}
+			<td><a href="/manage/schedule/edit/{{key}}" class="btn btn-primary" data-toggle="tooltip" title="Edytuj plan"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/schedule/delete/{{key}}" class="btn btn-primary" data-toggle="tooltip"  title="Usuń plan"/><span class="glyphicon glyphicon-trash"></span> </a></td>
+		</tr>
+	{% endfor %}
+	</table>
+	{% endif %}
+	{% endif %}
+
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+
+
+{% block content %}
+	<a href="/manage/schedule/" class="btn btn-primary">Powrót</a><br /><br />
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	{% if actionType == "add" or actionType == "edit" %}
+	
+	<form action="/manage/schedule/" method="POST" class="form-horizontal">
+	{% csrf_token %}
+	<script type="text/javascript">
+	function checkSelected() {
+		var selgr = document.getElementById("grdgoup");
+		var sel = selgr.options[selgr.selectedIndex].value;
+		if (sel == {{typeForUsers}}) {
+			document.getElementById('affUsers').disabled = false;
+		} else {
+			document.getElementById('affUsers').disabled = true;
+			document.getElementById('affUsers').value = "";
+		}
+		if (sel == {{typeForAll}}) {
+			document.getElementById('affecting').disabled = true;
+			document.getElementById('affecting').checked = false;
+		} else {
+			document.getElementById('affecting').disabled = false;
+		}
+	}
+    function submitForm(action) {
+        document.getElementById('columnarFor').action = action;
+        document.getElementById('columnarForm').submit();
+    }
+	</script>
+	<input type="hidden" name="sent" value="1" />
+
+	<div class="input-group ">
+	{% if actionType == 'add' %}
+	<table>
+	<tr>
+    <th  rowspan="2"><label class="control-label">Dla:&nbsp; </label> </th>
+    <td ><select id="grdgoup" name="group" class="form-control" onchange = "checkSelected()" {% if actionType == 'edit' %}disabled{% endif %}>
+		<option value="{{typeForUsers}}" {% if typeFor == typeForUsers %}selected{% endif %}>Użytkownicy</option>
+		<option value="{{typeForAll}}" {% if typeFor == typeForAll %}selected{% endif %}>Wszyscy</option>
+		{% for name in types %}
+		<option value="{{forloop.counter0}}" {% if typeFor == forloop.counter0 %}selected{% endif %}>{{name}}</option>
+		{% endfor %}
+	</select></td>
+    <td ><label class="control-label">           </label></td>
+    <td ><input type="text" id="affUsers" name="affUsers" value="{{userNames}}"  class="form-control" {% if typeFor != typeForUsers %}disabled{% endif %} /></td>
+	</tr>
+	<tr>
+    <td colspan="3"><div class="checkbox"><label><input  type="checkbox" id="affecting" name="affecting" value="1" {% if affect == 1 %}checked{% endif %} {% if typeFor == typeForAll %}disabled{% endif %} />Zawierające</label></div></td>
+	</tr>
+	</table>
+	{% else %}
+	<label class="control-label">Dla:&nbsp; </label>
+	{% for key, value in affectedUsers.items %}
+		{% if value == "Wszyscy" and key == 0 %}
+			<a href="/manage/schedule/">Wszyscy</a>
+			{% elif value|last == "-" %}
+			<a href="/manage/schedule_type/{{key}}">{{value|slice:"-1"}}</a>
+			{% else %}
+			<a href="/manage/schedule_user/{{key}}">{{value}}</a>
+			{% endif %}
+			{% if not forloop.last %}
+			, 
+			{% endif %}
+		{% endfor %}
+	{% endif %}
+	</div>
+	</br></br>
+	<table class="table table-hovered table-responsive">
+	<tr>
+		<th>Dzień</th>
+		<th>Od godziny:</th>
+		<th>Do godziny:</th>	
+	</tr>
+	<tr>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day0" name="day0" value="1" {% if day0 == 1 %}checked{% endif %}/>Poniedziałek</label></div></th>
+		<th><input type="time" autocomplete="on" name="shour0" value="{% if actionType == 'edit' %}{{shour0}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
+		<th><input type="time" autocomplete="on" name="ehour0" value="{% if actionType == 'edit' %}{{ehour0}}:00{% else %}16:00{% endif %}" step='3600'/> </th>	
+	</tr>
+	<tr>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day1" name="day1" value="1" {% if day1 == 1 %}checked{% endif %}/>Wtorek</label></div></th>
+		<th><input type="time" autocomplete="on" name="shour1" value="{% if actionType == 'edit' %}{{shour1}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
+		<th><input type="time" autocomplete="on" name="ehour1" value="{% if actionType == 'edit' %}{{ehour1}}:00{% else %}16:00{% endif %}" step='3600'/> </th>	
+	</tr>
+	<tr>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day2" name="day2" value="1" {% if day2 == 1 %}checked{% endif %}/>Środa</label></div></th>
+		<th><input type="time" autocomplete="on" name="shour2" value="{% if actionType == 'edit' %}{{shour2}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
+		<th><input type="time" autocomplete="on" name="ehour2" value="{% if actionType == 'edit' %}{{ehour2}}:00{% else %}16:00{% endif %}" step='3600'/> </th>		
+	</tr>
+	<tr>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day3" name="day3" value="1" {% if day3 == 1 %}checked{% endif %}/>Czwartek</label></div></th>
+		<th><input type="time" autocomplete="on" name="shour3" value="{% if actionType == 'edit' %}{{shour3}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
+		<th><input type="time" autocomplete="on" name="ehour3" value="{% if actionType == 'edit' %}{{ehour3}}:00{% else %}16:00{% endif %}" step='3600'/> </th>	
+	</tr>
+	<tr>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day4" name="day4" value="1" {% if day4 == 1 %}checked{% endif %}/>Piątek</label></div></th>
+		<th><input type="time" autocomplete="on" name="shour4" value="{% if actionType == 'edit' %}{{shour4}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
+		<th><input type="time" autocomplete="on" name="ehour4" value="{% if actionType == 'edit' %}{{ehour4}}:00{% else %}16:00{% endif %}" step='3600'/> </th>		
+	</tr>
+	<tr>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day0" name="day5" value="1" {% if day5 == 1 %}checked{% endif %}/>Sobota</label></div></th>
+		<th><input type="time" autocomplete="on" name="shour5" value="{% if actionType == 'edit' %}{{shour5}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
+		<th><input type="time" autocomplete="on" name="ehour5" value="{% if actionType == 'edit' %}{{ehour5}}:00{% else %}16:00{% endif %}" step='3600'/> </th>		
+	</tr>
+	<tr>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day0" name="day6" value="1" {% if day6 == 1 %}checked{% endif %}/>Niedziela</label></div></th>
+		<th><input type="time" autocomplete="on" name="shour6" value="{% if actionType == 'edit' %}{{shour6}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
+		<th><input type="time" autocomplete="on" name="ehour6" value="{% if actionType == 'edit' %}{{ehour6}}:00{% else %}16:00{% endif %}" step='3600'/> </th>		
+	</tr>
+	</table>
+	<div class="input-group ">
+	<label  class="control-label">Opis: </label>
+	<textarea class="form-control" rows="5" style="resize: none;" name="description">{% if viewsType == "edit" %}{{desc}}{% endif %}</textarea>
+	</div>
+	</br></br>
+	<table>
+	<tr>
+		<td><div><input type="submit" value="{% if actionType == 'add' %}Dodaj plan{% else %}Edytuj plan{% endif %}" class="btn btn-primary" formaction="/manage/schedule/{{actionType}}{% if actionType == 'edit' %}/{{edit_id}}{% endif %}"/></div></td>
+		{% if actionType == 'edit' %}
+		<td><div><a href="/manage/schedule/delete/{{edit_id}}" class="btn btn-primary" data-toggle="tooltip"  title="Usuń plan"/></div></td>
+		{% endif %}
+	</tr>
+	</table>
+	<input type="hidden" name="showing" value="1" />
+	</form>
+	
+	
+	{% endif %}
+
+{% endblock %}

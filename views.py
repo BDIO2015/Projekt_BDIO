@@ -16,6 +16,7 @@ import platform
 #	url(r'^manage/schedule/add', 'bdio.views.schedule_add', name='schedule_add'),	
 #	url(r'^manage/schedule/edit/(?P<schedule_id>[0-2]+)', 'bdio.views.schedule_edit', name='schedule_edit'),
 #	url(r'^manage/schedule/delete/', 'bdio.views.schedule_delete', name='schedule_delete'),	
+#	url(r'^manage/schedule/list', 'bdio.views.schedule_list', name='schedule_list'), 
 #	url(r'^manage/schedule', 'bdio.views.schedule', name='schedule'), 
 
 def schedule_get_packed(schedule_id, affectedUsers, type_ids):
@@ -57,7 +58,7 @@ def display_schedule(request, affectedUsers):
 	validScheds=0;
 	timetable = [[{} for col in range(7)] for row in range(24)]
 	types=User_Type.objects.all()
-	contents = {'title':'Rozkład', 'types':[], 'typeFor':'0', 'typeForAll':types.count(), 'typeForUsers':types.count()+1, 'canManage':'true', 'affecting':'false', 'userNames':'', 'edit_id':0, 'viewType':'show', 'usersAffected':0, 'usersShowed':0}
+	contents = {'title':'Rozkład', 'types':[], 'typeFor':'0', 'typeForAll':types.count(), 'typeForUsers':types.count()+1, 'canManage':'true', 'affecting':'false', 'userNames':'', 'edit_id':0, 'usersAffected':0, 'usersShowed':0}
 	for type in types:
 		contents['types'].append(type.type_name);
 	edit_id=0;
@@ -110,11 +111,6 @@ def display_schedule_user(request, user_id):
 
 
 def schedule_user(request, user_id):
-	check = user_check(request)
-	if (check == False):
-		return display_product_front(request)
-	elif not check['canManage'] == True:
-		return management_panel(request)
 	return render(request, 'manage_schedule.html', display_schedule_user(request, user_id))
 	
 	
@@ -143,19 +139,9 @@ def display_schedule_type(request, type_id):
 
 
 def	schedule_type(request, type_id):
-	check = user_check(request)
-	if (check == False):
-		return display_product_front(request)
-	elif not check['canManage'] == True:
-		return management_panel(request)
 	return render(request, 'manage_schedule.html', display_schedule_type(request, type_id))
 	
 def schedule(request):
-	check = user_check(request)
-	if (check == False):
-		return display_product_front(request)
-	elif not check['canManage'] == True:
-		return management_panel(request)
 	isSent = request.POST.get('sent', False);
 	contents={}
 	if(isSent):
@@ -210,7 +196,7 @@ def schedule(request):
 					if(types.count()<group):
 						raise User_Type.DoesNotExist
 					type= types[group]
-					affectedUsers= User.objects.filter(type=type.id)
+					affectedUsers= User.objects.filter(type=type)
 				except  User_Type.DoesNotExist:
 					contents = {'title':'Rozkład'}
 					contents['messageType'] = 'danger'
@@ -241,7 +227,7 @@ def schedule(request):
 	affectedUsers = User.objects.all();
 	contents=display_schedule(request, affectedUsers);
 	contents['typeFor']=contents['typeForAll']
-	if(contents['scheduleCount']>1 or contents['scheduleCount']==0):
+	if(contents['scheduleCount']>1 or contents['scheduleCount']==0 or contents['usersAffected']!=contents['usersShowed']):
 		contents['actionType']='add';
 	else:
 		contents['actionType']="edit";
@@ -249,51 +235,57 @@ def schedule(request):
 
 
 def schedule_add(request):
-	check = user_check(request)
-	if (check == False):
-		return display_product_front(request)
-	elif not check['canManage'] == True:
-		return management_panel(request)
 	isSent = request.POST.get('sent', False);
 	showing = request.POST.get('showing', False);
-	
-	contents={}
+
 	types=User_Type.objects.all()
-	contents = {'title':'Rozkład', 'types':[], 'typeFor':'0', 'typeForAll':types.count(), 'typeForUsers':types.count()+1, 'canManage':'true', 'affecting':'false', 'userNames':'', 'day0':0, 'day1':0, 'day2':0, 'day3':0, 'day4':0, 'day5':0,'day6':0, 'desc':'', 'edit_id':0}
+	contents = {'title':'Rozkład', 'types':[], 'typeFor':'0', 'typeForAll':types.count(), 'typeForUsers':types.count()+1, 'canManage':'true', 'affecting':'false', 'userNames':'', 'day0':0, 'day1':0, 'day2':0, 'day3':0, 'day4':0, 'day5':0,'day6':0, 'desc':'', 'edit_id':0, 'actionType':'add'}
 	for type in types:
 		contents['types'].append(type.type_name);
 
 	if(isSent):
+		noneHour=False;
 		if(showing):
-			contents['viewType']='edit'
 			for i in range(7):
 				contents['day'+str(i)]=request.POST.get('day'+str(i), False);
 			for i in range(7):
-				contents['shour'+str(i)]=request.POST.get('shour'+str(i), '08')[:2];
+				h=request.POST.get('shour'+str(i), '08')[:2]
+				if(h==''):
+					if(contents['day'+str(i)]!=False):
+						noneHour=True;		
+				else:
+					contents['shour'+str(i)]=int(h)
 			for i in range(7):
-				contents['ehour'+str(i)]=request.POST.get('ehour'+str(i), '16')[:2];
-			contents['desc']=request.POST.get('description', '');
-		else:
-			contents['viewType']='show'
+				h=request.POST.get('ehour'+str(i), '08')[:2]
+				if(h==''):
+					if(contents['day'+str(i)]!=False):
+						noneHour=True;		
+				else:
+					contents['shour'+str(i)]=int(h)
+			contents['desc']=request.POST.get('description', '')
+		
 		affecting=request.POST.get('affecting', False)
 		typeCount=User_Type.objects.all().count();
 		group=int(request.POST.get('group', typeCount))
 		users=request.POST.get('affUsers', '').strip()
 		
+		if(noneHour):
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Wpisano nieprawidłową godzine rozpoczęcia lub zakończenia'
+			return render(request, 'manage_schedule_addedit.html', contents);
+		
 		if(affecting and group==typeCount):
 			affecting=false;
 		if(group==typeCount+1 and users==''):
-			contents = {'title':'Rozkład'}
 			contents['messageType'] = 'danger'
 			contents['message'] = 'Nie wpisano użytkowników'
-			return render(request, 'manage_schedule.html', contents);
+			return render(request, 'manage_schedule_addedit.html', contents);
 		affectedUsers = []
 		if(group==typeCount):
 			if(users!=''):
-				contents = {'title':'Rozkład'}
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Nieprawidłowy wybór użytkowników'
-				return render(request, 'manage_schedule.html', contents)
+				return render(request, 'manage_schedule_addedit.html', contents)
 			if(showing):
 				affectedUsers = User.objects.all();
 			contents['typeFor']=contents['typeForAll']
@@ -314,31 +306,23 @@ def schedule_add(request):
 					try:
 						user = User.objects.get(username=name)
 						if(user.type==None):
-							contents = {'title':'Rozkład'}
 							contents['messageType'] = 'danger'
 							contents['message'] = 'Użytkownikowi ('+str(name)+') nie można przypisać planu'
-						return render(request, 'manage_schedule.html', contents)
+						return render(request, 'manage_schedule_addedit.html', contents)
 						affectedUsers.append(user)
 					except User.DoesNotExist:
-						contents = {'title':'Rozkład'}
 						contents['messageType'] = 'danger'
 						contents['message'] = 'Podany użytkownik nie istnieje ('+str(name)+')'
-						return render(request, 'manage_schedule.html', contents)
+						return render(request, 'manage_schedule_addedit.html', contents)
 				contents['typeFor']=contents['typeForUsers']
 			else:
-				try:
-					types= User_Type.objects.all()
-					if(types.count()<group):
-						raise User_Type.DoesNotExist
-					type= types[group]
-					contents['typeFor']=group;
-					group=type.id
-					affectedUsers= User.objects.filter(type=type.id)
-				except  User_Type.DoesNotExist:
-					contents = {'title':'Rozkład'}
+				if(types.count()<group):
 					contents['messageType'] = 'danger'
 					contents['message'] = 'Wybrano nieprawidłowy typ użytkowników'
-					return render(request, 'manage_schedule.html', contents)
+					return render(request, 'manage_schedule_addedit.html', contents)
+				type= types[group]
+				contents['typeFor']=group;
+				affectedUsers= User.objects.filter(type=type)		
 			if(affecting):
 				usersWithSameSchedule = []
 				for user in affectedUsers:
@@ -358,10 +342,9 @@ def schedule_add(request):
 			for i in range(7):
 				if(contents['day'+str(i)]!=False):
 					if(contents['shour'+str(i)]>=contents['ehour'+str(i)]):
-						contents = {'title':'Rozkład'}
 						contents['messageType'] = 'danger'
 						contents['message'] = 'Wpisano nieprawidłową godzine rozpoczęcia lub zakończenia'
-						return render(request, 'manage_schedule.html', contents);
+						return render(request, 'manage_schedule_addedit.html', contents);
 					else:
 						if(contents['shour'+str(i)]<10):
 							shour+='0'+str(contents['shour'+str(i)])
@@ -377,10 +360,9 @@ def schedule_add(request):
 					shour+='00'
 					ehour+='00'
 			if(day=='0000000'):
-				contents = {'title':'Rozkład'}
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Należy zaznaczyć conajmniej jeden dzień'
-				return render(request, 'manage_schedule.html', contents);
+				return render(request, 'manage_schedule_addedit.html', contents);
 			schedule = Schedule(description=contents['desc'],day=day,time_start=shour,time_end=ehour)
 			schedule.save();
 			i=0;
@@ -391,28 +373,167 @@ def schedule_add(request):
 					i+=1
 			if(i==0):
 				contents['messageType']='danger';
-				contents['message']='Podanym użytkownikom nie można było przypisać planu';
-				schedile.delete()
-				contents['actionType']='add';
-				contents['viewType']='add'
+				contents['message']='Podanym użytkownikom nie można przypisać planu';
+				schedule.delete()
 			else:
 				contents['messageType']='success';
 				contents['message']='Dodano nowy plan dla podanych uzytkowników';
 				contents['affecting']==0
 				contents['actionType']='edit';
-				contents['viewType']='edit'
 				contents['edit_id']=schedule.id
-			return render(request, 'manage_schedule.html', contents)	
+				contents['affectedUsers']=schedule_get_packed(sched, affectedUsers, types)
+			return render(request, 'manage_schedule_addedit.html', contents)	
 	else:
 		contents['typeFor']=contents['typeForAll']
-	contents['actionType']='add';
-	contents['viewType']='add'
-	return render(request, 'manage_schedule.html', contents)
+	return render(request, 'manage_schedule_addedit.html', contents)
 
 
-#def schedule_edit(request)
-
-#def schedule_delete(request)
+def schedule_edit(request, edit_id):
+	isSent = request.POST.get('sent', False);
+	showing = request.POST.get('showing', False);
+	
+	try:
+		schedule = Schedule.objects.get(id=edit_id)
+	except Schedule.DoesNotExists:
+		contents = {'title':'Rozkład'}
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podany plan nie istnieje'
+		return render(request, 'manage_schedule_addedit.html', contents);
+	types=User_Type.objects.all()	
+	contents = {'title':'Rozkład', 'types':[], 'canManage':'true', 'affectedUsers':{}, 'actionType':'edit', 'edit_id':edit_id, 'actionType':'edit'}
+	
+	for i in range(7):
+		contents['day'+str(i)]=schedule.day[i]
+		if(contents['day'+str(i)]=='1'):
+			contents['shour'+str(i)]=int(schedule.time_start[(2*i):((2*i)+2)])
+			contents['ehour'+str(i)]=int(schedule.time_end[(2*i):((2*i)+2)])
+			contents['day'+str(i)]=int(schedule.day[i])
+		else:
+			contents['shour'+str(i)]=8
+			contents['ehour'+str(i)]=16
+			contents['day'+str(i)]=0
+	contents['desc']=schedule.desc;
+	
+	affectedUsers = User.objects.filter(scheduled=schedule)
+	contents['affectedUsers']=schedule_get_packed(sched, affectedUsers, types)
+	
+	if(isSent):
+		if(showing):
+			for i in range(7):
+				contents['day'+str(i)]=request.POST.get('day'+str(i), False);
+			noneHour=False;
+			for i in range(7):
+				h=request.POST.get('shour'+str(i), '08')[:2]
+				if(h==''):
+					if(contents['day'+str(i)]!=False):
+						noneHour=True;		
+				else:
+					contents['shour'+str(i)]=int(h)
+			for i in range(7):
+				h=request.POST.get('ehour'+str(i), '08')[:2]
+				if(h==''):
+					if(contents['day'+str(i)]!=False):
+						noneHour=True;		
+				else:
+					contents['shour'+str(i)]=int(h)
+			
+			contents['desc']=request.POST.get('description', '');
+			
+			if(noneHour):
+				contents['messageType'] = 'danger'
+				contents['message'] = 'Wpisano nieprawidłową godzine rozpoczęcia lub zakończenia'
+				return render(request, 'manage_schedule_addedit.html', contents);
+				
+			day='';
+			shour='';
+			ehour='';
+			
+			for i in range(7):
+				if(contents['day'+str(i)]!=False):
+					if(contents['shour'+str(i)]>=contents['ehour'+str(i)]):
+						contents['messageType'] = 'danger'
+						contents['message'] = 'Wpisano nieprawidłową godzine rozpoczęcia lub zakończenia'
+						return render(request, 'manage_schedule_addedit.html', contents);
+					else:
+						if(contents['shour'+str(i)]<10):
+							shour+='0'+str(contents['shour'+str(i)])
+						else:
+							shour+=str(contents['shour'+str(i)])
+						if(contents['ehour'+str(i)]<10):
+							ehour+='0'+str(contents['ehour'+str(i)])
+						else:
+							ehour+=str(contents['ehour'+str(i)])
+						day+='1'
+				else:
+					day+='0'
+					shour+='00'
+					ehour+='00'
+			if(day=='0000000'):
+				contents['messageType'] = 'danger'
+				contents['message'] = 'Należy zaznaczyć conajmniej jeden dzień'
+				return render(request, 'manage_schedule_addedit.html', contents);
+			schedule = Schedule(description=contents['desc'],day=day,time_start=shour,time_end=ehour)
+			schedule.desc=contents['desc']
+			schedule.save();
+			i=0;
+			for user in affectedUsers:
+				if(user.type!=None):
+					user.scheduled=schedule
+					user.save();
+					i+=1
+			if(i==0):
+				contents['messageType']='danger';
+				contents['message']='Podanym użytkownikom nie można zmienić planu';
+				schedule.delete()
+			else:
+				contents['messageType']='success';
+				contents['message']='Zmieniono plan dla podanych uzytkowników';
+				contents['edit_id']=schedule.id
+			return render(request, 'manage_schedule_addedit.html', contents)	
+	return render(request, 'manage_schedule_addedit.html', contents)
+	
+def schedule_delete(request, schedule_id):
+	try:
+		schedule = Schedule.objects.get(id=edit_id)
+	except Schedule.DoesNotExists:
+		contents = {'title':'Rozkład'}
+		contents['messageType'] = 'danger'
+		contents['message'] = 'Podany plan nie istnieje'
+		return render(request, 'manage_schedule_addedit.html', contents);
+	types=User_Type.objects.all()	
+	contents = {'title':'Rozkład', 'types':[], 'canManage':'true', 'affectedUsers':{}, 'actionType':'edit', 'edit_id':edit_id, 'actionType':'delete'}
+	affectedUsers = User.objects.filter(scheduled=schedule)
+	users=schedule_get_packed(sched, affectedUsers, types)
+	for user in affectedUsers:
+		user.scheduled=None
+		user.save();
+	schedule.delete()
+	contents['messageType'] = 'success'
+	usernames=''
+	for user in users:
+		usernames+=users[user]+', '
+	usernames=usernames[:-2]
+	contents['message'] = 'Plan dla użytkowników ['+usernames+'] został usunięty'
+	return render(request, 'manage_schedule_addedit.html', contents)
+	
+def schedule_list(request):
+	users=User.objects.all();
+	schedules = Schedule.objects.all();
+	validScheds=0;
+	schedList = {}
+	types=User_Type.objects.all()
+	contents = {'title':'Rozkład', 'types':[], 'typeFor':'0', 'typeForAll':types.count(), 'typeForUsers':types.count()+1, 'canManage':'true'}
+	for type in types:
+		contents['types'].append(type.type_name);
+	edit_id=0;
+	for sched in schedules:
+		compactRes=schedule_get_packed(sched, users, types)
+		if(len(compactRes)>0):
+			validScheds+=1;
+			schedules.update({sched.id:{'desc':sched.description, 'users':compactRes}})
+	contents['scheduleList']=schedList
+	contents['scheduleCount']=validScheds;
+	return render(request, 'manage_schedule_list.html', contents)
 
 
 
