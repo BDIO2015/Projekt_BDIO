@@ -26,18 +26,22 @@
 
 	{% for key, value in scheduleList.items %}
 		<tr>
-			{% for x, y in value.items %}
+			{% for x, y in value.items reversed %}
 				<td>
 				{% if x == 'desc' %}
+				{% if y == '' %}
+					Brak opisu
+				{% else %}
 				{{y}}
+				{%endif%}
 				{% else %}
 				{% for id, name in y.items %}
-					{% if value == "Wszyscy" and key == 0 %}
+					{% if name == "Wszyscy" and id == 0 %}
 					<a href="/manage/schedule/">Wszyscy</a>
-					{% elif value|last == "-" %}
-					<a href="/manage/schedule_type/{{key}}">{{value|slice:"-1"}}</a>
+					{% elif name|last == "-" %}
+					<a href="/manage/schedule_type/{{key}}">{{name|slice:"-1"}}</a>
 					{% else %}
-					<a href="/manage/schedule_user/{{key}}">{{value}}</a>
+					<a href="/manage/schedule_user/{{key}}">{{name}}</a>
 					{% endif %}
 					{% if not forloop.last %}
 					, 

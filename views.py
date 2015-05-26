@@ -14,35 +14,37 @@ import platform
 #url(r'^manage/schedule_type/(?P<type_id>[0-9]+)', 'bdio.views.schedule_type', name='schedule_type'),
 #	url(r'^manage/schedule_user/(?P<user_id>[0-9]+)', 'bdio.views.schedule_user', name='schedule_user'),  
 #	url(r'^manage/schedule/add', 'bdio.views.schedule_add', name='schedule_add'),	
-#	url(r'^manage/schedule/edit/(?P<schedule_id>[0-2]+)', 'bdio.views.schedule_edit', name='schedule_edit'),
-#	url(r'^manage/schedule/delete/', 'bdio.views.schedule_delete', name='schedule_delete'),	
+#	url(r'^manage/schedule/edit/(?P<schedule_id>[0-9]+)', 'bdio.views.schedule_edit', name='schedule_edit'),
+#	url(r'^manage/schedule/delete/(?P<schedule_id>[0-9]+)', 'bdio.views.schedule_delete', name='schedule_delete'),	
 #	url(r'^manage/schedule/list', 'bdio.views.schedule_list', name='schedule_list'), 
 #	url(r'^manage/schedule', 'bdio.views.schedule', name='schedule'), 
 
 def schedule_get_packed(schedule_id, affectedUsers, type_ids):
 	usersCount=0;
 	groupsCount={}
+	
 	for typeID in type_ids:
 		groupsCount.update({typeID.id:(User.objects.filter(type=typeID.id).count())})
 		usersCount+=groupsCount[typeID.id]
+
 	userWithSchedule = User.objects.filter(scheduled=schedule_id)
-	userWithSchedule= userWithSchedule.filter(user_id__in=affectedUsers)
 	if(len(userWithSchedule)==0):
 		schedule_id.delete();
-		return {}	
-	if(usersCount==0):
+		return {}
+	userWithSchedule= userWithSchedule.filter(user_id__in=affectedUsers)
+	if(len(userWithSchedule)==0 or usersCount==0):
 		return {};
 
 	groupsCountCopy=groupsCount;
 	usersCountCopy=usersCount
-	
+
 	for user in userWithSchedule:
 		groupsCountCopy[user.type.id]-=1;
 		usersCountCopy-=1;
 	if(usersCountCopy==0 and usersCount>0):
 		return {0:'Wszyscy'}
 	result = {}
-
+	
 	for typeID in type_ids:
 		if(groupsCountCopy[typeID.id]==0 and groupsCount[typeID.id]>0):
 			result.update({type_ids.id:(type_ids.type_name+'-')})
@@ -71,10 +73,7 @@ def display_schedule(request, affectedUsers):
 				if(sched.day[i]=='1'):
 					for j in range(int(sched.time_start[(2*i):((2*i)+2)]), int(sched.time_end[(2*i):((2*i)+2)])):
 						timetable[j][i].update(compactRes)
-	usersWithSameSchedule = []
-	for user in affectedUsers:
-		if(user.scheduled!=None):
-			usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
+	usersWithSameSchedule=User.objects.filter(scheduled__in=[user.scheduled for user in affectedUsers])
 	contents['usersAffected']=len(usersWithSameSchedule)
 	contents['usersShowed']=len(affectedUsers)
 	contents['timetable']=timetable
@@ -84,6 +83,7 @@ def display_schedule(request, affectedUsers):
 	
 	
 def display_schedule_user(request, user_id):
+	contents = {'title':'Rozkład'}
 	try:
 		uid=int(user_id);
 		affectedUsers = User.objects.filter(user_id=uid)
@@ -95,11 +95,13 @@ def display_schedule_user(request, user_id):
 			else:
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Podany użytkownik nie istnieje'
-			return render(request, 'manage_schedule.html', contents);
+			return contents
+		
 	except ValueError:
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Podano niepoprawny numer użytkownika'
-		return render(request, 'manage_schedule.html', contents);
+		return contents
+
 	contents=display_schedule(request, affectedUsers);
 	contents['typeFor']=contents['typeForUsers'];
 	contents['userNames']=affectedUsers[0].username;
@@ -189,7 +191,7 @@ def schedule(request):
 						contents['messageType'] = 'danger'
 						contents['message'] = 'Podany użytkownik nie istnieje ('+str(name)+')'
 						return render(request, 'manage_schedule.html', contents)
-			
+				affectedUsers=User.objects.filter(user_id__in=[user.user_id for user in affectedUsers])
 			else:
 				try:
 					types= User_Type.objects.all();
@@ -203,11 +205,7 @@ def schedule(request):
 					contents['message'] = 'Wybrano nieprawidłowy typ użytkowników'
 					return render(request, 'manage_schedule.html', contents)
 			if(affecting):
-				usersWithSameSchedule = []
-				for user in affectedUsers:
-					if(user.scheduled!=None):
-						usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
-				affectedUsers=usersWithSameSchedule;
+				affectedUsers=User.objects.filter(scheduled__in=[user.scheduled for user in affectedUsers])
 			elif(group==typeCount+1):
 				if(len(affectedUsers)==1):
 					return render(request, 'manage_schedule.html', display_schedule_user(request, affectedUsers[0].user_id))
@@ -249,24 +247,19 @@ def schedule_add(request):
 			for i in range(7):
 				contents['day'+str(i)]=request.POST.get('day'+str(i), False);
 			for i in range(7):
-				h=request.POST.get('shour'+str(i), '08')[:2]
-				if(h==''):
+				contents['shour'+str(i)]=request.POST.get('shour'+str(i), '08')[:2]
+				contents['ehour'+str(i)]=request.POST.get('ehour'+str(i), '08')[:2]
+				if(contents['shour'+str(i)]==''):
 					if(contents['day'+str(i)]!=False):
 						noneHour=True;
 					else:
-						contents['shour'+str(i)]=8				
-				else:
-					contents['shour'+str(i)]=int(h)
-			for i in range(7):
-				h=request.POST.get('ehour'+str(i), '08')[:2]
-				if(h==''):
+						contents['shour'+str(i)]='08'
+				if(contents['ehour'+str(i)]==''):
 					if(contents['day'+str(i)]!=False):
 						noneHour=True;
 					else:
-						contents['ehour'+str(i)]=16
-				else:
-					contents['ehour'+str(i)]=int(h)
-			contents['desc']=request.POST.get('description', '')
+						contents['ehour'+str(i)]='16'
+			contents['desc']=request.POST.get('description', '').strip()
 		
 		affecting=request.POST.get('affecting', False)
 		typeCount=User_Type.objects.all().count();
@@ -296,28 +289,27 @@ def schedule_add(request):
 		else:
 			if(group==(typeCount+1)):
 				userNames=[];
-				pos=0
-				while True:
-					pos2=users.find(',')
-					if(pos!=-1):
-						userNames.append(users[pos:].strip());
+				while len(users)>0:
+					pos=users.find(',')
+					if(pos==-1):
+						userNames.append(users.strip())
 						break
 					else:
-						userNames.append(users[pos:pos2].strip());
-					pos=pos2+1;
-					users=users[pos2:]
+						userNames.append(users[:pos].strip())
+					users=users[(pos+1):].strip()
 				for name in userNames:
 					try:
 						user = User.objects.get(username=name)
 						if(user.type==None):
 							contents['messageType'] = 'danger'
 							contents['message'] = 'Użytkownikowi ('+str(name)+') nie można przypisać planu'
-						return render(request, 'manage_schedule_addedit.html', contents)
+							return render(request, 'manage_schedule_addedit.html', contents)
 						affectedUsers.append(user)
 					except User.DoesNotExist:
 						contents['messageType'] = 'danger'
 						contents['message'] = 'Podany użytkownik nie istnieje ('+str(name)+')'
 						return render(request, 'manage_schedule_addedit.html', contents)
+				affectedUsers=User.objects.filter(user_id__in=[user.user_id for user in affectedUsers])
 				contents['typeFor']=contents['typeForUsers']
 			else:
 				if(types.count()<group):
@@ -328,11 +320,7 @@ def schedule_add(request):
 				contents['typeFor']=group;
 				affectedUsers= User.objects.filter(type=type)		
 			if(affecting):
-				usersWithSameSchedule = []
-				for user in affectedUsers:
-					if(user.scheduled!=None):
-						usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
-				affectedUsers=usersWithSameSchedule;
+				affectedUsers=User.objects.filter(scheduled__in=[user.scheduled for user in affectedUsers])
 				contents['typeFor']=contents['typeForUsers']
 			if(contents['typeFor']==contents['typeForUsers']):
 				for user in affectedUsers:
@@ -340,24 +328,19 @@ def schedule_add(request):
 				contents['userNames']=contents['userNames'][:-1]
 			contents['affecting']==affecting
 		if(showing):
+			
 			day='';
 			shour='';
 			ehour='';
 			for i in range(7):
 				if(contents['day'+str(i)]!=False):
-					if(contents['shour'+str(i)]>=contents['ehour'+str(i)]):
+					if(int(contents['shour'+str(i)])>=int(contents['ehour'+str(i)])):
 						contents['messageType'] = 'danger'
 						contents['message'] = 'Wpisano nieprawidłową godzine rozpoczęcia lub zakończenia'
 						return render(request, 'manage_schedule_addedit.html', contents);
 					else:
-						if(contents['shour'+str(i)]<10):
-							shour+='0'+str(contents['shour'+str(i)])
-						else:
-							shour+=str(contents['shour'+str(i)])
-						if(contents['ehour'+str(i)]<10):
-							ehour+='0'+str(contents['ehour'+str(i)])
-						else:
-							ehour+=str(contents['ehour'+str(i)])
+						shour+=contents['shour'+str(i)]
+						ehour+=contents['ehour'+str(i)]
 						day+='1'
 				else:
 					day+='0'
@@ -367,6 +350,7 @@ def schedule_add(request):
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Należy zaznaczyć conajmniej jeden dzień'
 				return render(request, 'manage_schedule_addedit.html', contents);
+			
 			schedule = Schedule(description=contents['desc'],day=day,time_start=shour,time_end=ehour)
 			schedule.save();
 			i=0;
@@ -385,67 +369,60 @@ def schedule_add(request):
 				contents['affecting']==0
 				contents['actionType']='edit';
 				contents['edit_id']=schedule.id
-				contents['affectedUsers']=schedule_get_packed(sched, affectedUsers, types)
+				contents['affectedUsers']=schedule_get_packed(schedule, affectedUsers, types)
 			return render(request, 'manage_schedule_addedit.html', contents)	
 	else:
 		contents['typeFor']=contents['typeForAll']
 	return render(request, 'manage_schedule_addedit.html', contents)
 
 
-def schedule_edit(request, edit_id):
+def schedule_edit(request, schedule_id):
 	isSent = request.POST.get('sent', False);
 	showing = request.POST.get('showing', False);
-	
 	try:
-		schedule = Schedule.objects.get(id=edit_id)
-	except Schedule.DoesNotExists:
+		schedule = Schedule.objects.get(id=schedule_id)
+	except Schedule.DoesNotExist:
 		contents = {'title':'Rozkład'}
 		contents['messageType'] = 'danger'
-		contents['message'] = 'Podany plan nie istnieje'
+		contents['message'] = 'Podany plan nie istnieje'+str(schedule_id)
 		return render(request, 'manage_schedule_addedit.html', contents);
 	types=User_Type.objects.all()	
-	contents = {'title':'Rozkład', 'types':[], 'canManage':'true', 'affectedUsers':{}, 'actionType':'edit', 'edit_id':edit_id, 'actionType':'edit'}
+	contents = {'title':'Rozkład', 'types':[], 'canManage':'true', 'affectedUsers':{}, 'actionType':'edit', 'edit_id':schedule_id, 'actionType':'edit'}
 	
 	for i in range(7):
-		contents['day'+str(i)]=schedule.day[i]
-		if(contents['day'+str(i)]=='1'):
-			contents['shour'+str(i)]=int(schedule.time_start[(2*i):((2*i)+2)])
-			contents['ehour'+str(i)]=int(schedule.time_end[(2*i):((2*i)+2)])
-			contents['day'+str(i)]=int(schedule.day[i])
+		if(schedule.day[i]=='1'):
+			contents['shour'+str(i)]=schedule.time_start[(2*i):((2*i)+2)]
+			contents['ehour'+str(i)]=schedule.time_end[(2*i):((2*i)+2)]
+			contents['day'+str(i)]=schedule.day[i]
 		else:
-			contents['shour'+str(i)]=8
-			contents['ehour'+str(i)]=16
-			contents['day'+str(i)]=0
-	contents['desc']=schedule.desc;
+			contents['shour'+str(i)]='08'
+			contents['ehour'+str(i)]='16'
+			contents['day'+str(i)]='0'
+	contents['desc']=schedule.description.strip();
 	
 	affectedUsers = User.objects.filter(scheduled=schedule)
-	contents['affectedUsers']=schedule_get_packed(sched, affectedUsers, types)
+	contents['affectedUsers']=schedule_get_packed(schedule, affectedUsers, types)
 	
 	if(isSent):
 		if(showing):
 			for i in range(7):
 				contents['day'+str(i)]=request.POST.get('day'+str(i), False);
-			noneHour=False;
+			noneHour=False
 			for i in range(7):
-				h=request.POST.get('shour'+str(i), '08')[:2]
-				if(h==''):
+				contents['shour'+str(i)]=request.POST.get('shour'+str(i), '08')[:2]
+				contents['ehour'+str(i)]=request.POST.get('ehour'+str(i), '08')[:2]
+				if(contents['shour'+str(i)]==''):
 					if(contents['day'+str(i)]!=False):
 						noneHour=True;
 					else:
-						contents['shour'+str(i)]=8
-				else:
-					contents['shour'+str(i)]=int(h)
-			for i in range(7):
-				h=request.POST.get('ehour'+str(i), '08')[:2]
-				if(h==''):
+						contents['shour'+str(i)]='08'
+				if(contents['ehour'+str(i)]==''):
 					if(contents['day'+str(i)]!=False):
 						noneHour=True;
 					else:
-						contents['ehour'+str(i)]=16							
-				else:
-					contents['ehour'+str(i)]=int(h)
+						contents['ehour'+str(i)]='16'
 			
-			contents['desc']=request.POST.get('description', '');
+			contents['desc']=request.POST.get('description', '').strip();
 			
 			if(noneHour):
 				contents['messageType'] = 'danger'
@@ -458,7 +435,7 @@ def schedule_edit(request, edit_id):
 			
 			for i in range(7):
 				if(contents['day'+str(i)]!=False):
-					if(contents['shour'+str(i)]>=contents['ehour'+str(i)]):
+					if(int(contents['shour'+str(i)])>=int(contents['ehour'+str(i)])):
 						contents['messageType'] = 'danger'
 						contents['message'] = 'Wpisano nieprawidłową godzine rozpoczęcia lub zakończenia'
 						return render(request, 'manage_schedule_addedit.html', contents);
@@ -480,8 +457,10 @@ def schedule_edit(request, edit_id):
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Należy zaznaczyć conajmniej jeden dzień'
 				return render(request, 'manage_schedule_addedit.html', contents);
-			schedule = Schedule(description=contents['desc'],day=day,time_start=shour,time_end=ehour)
 			schedule.desc=contents['desc']
+			schedule.day=day
+			schedule.time_start=shour
+			schedule.time_end=ehour
 			schedule.save();
 			i=0;
 			for user in affectedUsers:
@@ -502,26 +481,26 @@ def schedule_edit(request, edit_id):
 	
 def schedule_delete(request, schedule_id):
 	try:
-		schedule = Schedule.objects.get(id=edit_id)
-	except Schedule.DoesNotExists:
+		schedule = Schedule.objects.get(id=schedule_id)
+	except Schedule.DoesNotExist:
 		contents = {'title':'Rozkład'}
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Podany plan nie istnieje'
 		return render(request, 'manage_schedule_addedit.html', contents);
 	types=User_Type.objects.all()	
-	contents = {'title':'Rozkład', 'types':[], 'canManage':'true', 'affectedUsers':{}, 'actionType':'edit', 'edit_id':edit_id, 'actionType':'delete'}
+	contents = {'title':'Rozkład', 'types':[], 'canManage':'true', 'affectedUsers':{}, 'actionType':'delete', 'actionType':'delete'}
 	affectedUsers = User.objects.filter(scheduled=schedule)
-	users=schedule_get_packed(sched, affectedUsers, types)
+	users=schedule_get_packed(schedule, affectedUsers, types)
 	for user in affectedUsers:
 		user.scheduled=None
-		user.save();
+		user.save()
 	schedule.delete()
 	contents['messageType'] = 'success'
 	usernames=''
 	for user in users:
 		usernames+=users[user]+', '
 	usernames=usernames[:-2]
-	contents['message'] = 'Plan dla użytkowników ['+usernames+'] został usunięty'
+	contents['message'] = 'Plan dla użytkowników ['+str(usernames)+'] został usunięty'
 	return render(request, 'manage_schedule_addedit.html', contents)
 	
 def schedule_list(request):
@@ -538,7 +517,7 @@ def schedule_list(request):
 		compactRes=schedule_get_packed(sched, users, types)
 		if(len(compactRes)>0):
 			validScheds+=1;
-			schedules.update({sched.id:{'desc':sched.description, 'users':compactRes}})
+			schedList.update({sched.id:{'desc':sched.description, 'users':compactRes}})
 	contents['scheduleList']=schedList
 	contents['scheduleCount']=validScheds;
 	return render(request, 'manage_schedule_list.html', contents)
@@ -557,6 +536,7 @@ def user_check(request):
 	types = User_Type.objects.all()
 	if(not users or not types):
 		contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
+		return False
 	if not('login_check' in request.session):
 		return False
 	else:

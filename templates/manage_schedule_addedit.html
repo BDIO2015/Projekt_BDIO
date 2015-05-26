@@ -82,37 +82,37 @@
 		<th>Do godziny:</th>	
 	</tr>
 	<tr>
-		<th><div class="checkbox"><label><input  type="checkbox" id="day0" name="day0" value="1" {% if day0 == 1 %}checked{% endif %}/>Poniedziałek</label></div></th>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day0" name="day0" value="1" {% if day0 == '1' %}checked{% endif %}/>Poniedziałek</label></div></th>
 		<th><input type="time" autocomplete="on" name="shour0" value="{% if actionType == 'edit' %}{{shour0}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
 		<th><input type="time" autocomplete="on" name="ehour0" value="{% if actionType == 'edit' %}{{ehour0}}:00{% else %}16:00{% endif %}" step='3600'/> </th>	
 	</tr>
 	<tr>
-		<th><div class="checkbox"><label><input  type="checkbox" id="day1" name="day1" value="1" {% if day1 == 1 %}checked{% endif %}/>Wtorek</label></div></th>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day1" name="day1" value="1" {% if day1 == '1' %}checked{% endif %}/>Wtorek</label></div></th>
 		<th><input type="time" autocomplete="on" name="shour1" value="{% if actionType == 'edit' %}{{shour1}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
 		<th><input type="time" autocomplete="on" name="ehour1" value="{% if actionType == 'edit' %}{{ehour1}}:00{% else %}16:00{% endif %}" step='3600'/> </th>	
 	</tr>
 	<tr>
-		<th><div class="checkbox"><label><input  type="checkbox" id="day2" name="day2" value="1" {% if day2 == 1 %}checked{% endif %}/>Środa</label></div></th>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day2" name="day2" value="1" {% if day2 == '1' %}checked{% endif %}/>Środa</label></div></th>
 		<th><input type="time" autocomplete="on" name="shour2" value="{% if actionType == 'edit' %}{{shour2}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
 		<th><input type="time" autocomplete="on" name="ehour2" value="{% if actionType == 'edit' %}{{ehour2}}:00{% else %}16:00{% endif %}" step='3600'/> </th>		
 	</tr>
 	<tr>
-		<th><div class="checkbox"><label><input  type="checkbox" id="day3" name="day3" value="1" {% if day3 == 1 %}checked{% endif %}/>Czwartek</label></div></th>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day3" name="day3" value="1" {% if day3 == '1' %}checked{% endif %}/>Czwartek</label></div></th>
 		<th><input type="time" autocomplete="on" name="shour3" value="{% if actionType == 'edit' %}{{shour3}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
 		<th><input type="time" autocomplete="on" name="ehour3" value="{% if actionType == 'edit' %}{{ehour3}}:00{% else %}16:00{% endif %}" step='3600'/> </th>	
 	</tr>
 	<tr>
-		<th><div class="checkbox"><label><input  type="checkbox" id="day4" name="day4" value="1" {% if day4 == 1 %}checked{% endif %}/>Piątek</label></div></th>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day4" name="day4" value="1" {% if day4 == '1' %}checked{% endif %}/>Piątek</label></div></th>
 		<th><input type="time" autocomplete="on" name="shour4" value="{% if actionType == 'edit' %}{{shour4}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
 		<th><input type="time" autocomplete="on" name="ehour4" value="{% if actionType == 'edit' %}{{ehour4}}:00{% else %}16:00{% endif %}" step='3600'/> </th>		
 	</tr>
 	<tr>
-		<th><div class="checkbox"><label><input  type="checkbox" id="day0" name="day5" value="1" {% if day5 == 1 %}checked{% endif %}/>Sobota</label></div></th>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day0" name="day5" value="1" {% if day5 == '1' %}checked{% endif %}/>Sobota</label></div></th>
 		<th><input type="time" autocomplete="on" name="shour5" value="{% if actionType == 'edit' %}{{shour5}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
 		<th><input type="time" autocomplete="on" name="ehour5" value="{% if actionType == 'edit' %}{{ehour5}}:00{% else %}16:00{% endif %}" step='3600'/> </th>		
 	</tr>
 	<tr>
-		<th><div class="checkbox"><label><input  type="checkbox" id="day0" name="day6" value="1" {% if day6 == 1 %}checked{% endif %}/>Niedziela</label></div></th>
+		<th><div class="checkbox"><label><input  type="checkbox" id="day0" name="day6" value="1" {% if day6 == '1' %}checked{% endif %}/>Niedziela</label></div></th>
 		<th><input type="time" autocomplete="on" name="shour6" value="{% if actionType == 'edit' %}{{shour6}}:00{% else %}08:00{% endif %}" step='3600'/> </th>
 		<th><input type="time" autocomplete="on" name="ehour6" value="{% if actionType == 'edit' %}{{ehour6}}:00{% else %}16:00{% endif %}" step='3600'/> </th>		
 	</tr>
@@ -126,7 +126,7 @@
 	<tr>
 		<td><div><input type="submit" value="{% if actionType == 'add' %}Dodaj plan{% else %}Edytuj plan{% endif %}" class="btn btn-primary" formaction="/manage/schedule/{{actionType}}{% if actionType == 'edit' %}/{{edit_id}}{% endif %}"/></div></td>
 		{% if actionType == 'edit' %}
-		<td><div><a href="/manage/schedule/delete/{{edit_id}}" class="btn btn-primary" data-toggle="tooltip"  title="Usuń plan"/></div></td>
+		<td><div><a href="/manage/schedule/delete/{{edit_id}}" class="btn btn-primary" data-toggle="tooltip">Usuń plan</a></div></td>
 		{% endif %}
 	</tr>
 	</table>
