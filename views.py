@@ -252,16 +252,20 @@ def schedule_add(request):
 				h=request.POST.get('shour'+str(i), '08')[:2]
 				if(h==''):
 					if(contents['day'+str(i)]!=False):
-						noneHour=True;		
+						noneHour=True;
+					else:
+						contents['shour'+str(i)]=8				
 				else:
 					contents['shour'+str(i)]=int(h)
 			for i in range(7):
 				h=request.POST.get('ehour'+str(i), '08')[:2]
 				if(h==''):
 					if(contents['day'+str(i)]!=False):
-						noneHour=True;		
+						noneHour=True;
+					else:
+						contents['ehour'+str(i)]=16
 				else:
-					contents['shour'+str(i)]=int(h)
+					contents['ehour'+str(i)]=int(h)
 			contents['desc']=request.POST.get('description', '')
 		
 		affecting=request.POST.get('affecting', False)
@@ -426,16 +430,20 @@ def schedule_edit(request, edit_id):
 				h=request.POST.get('shour'+str(i), '08')[:2]
 				if(h==''):
 					if(contents['day'+str(i)]!=False):
-						noneHour=True;		
+						noneHour=True;
+					else:
+						contents['shour'+str(i)]=8
 				else:
 					contents['shour'+str(i)]=int(h)
 			for i in range(7):
 				h=request.POST.get('ehour'+str(i), '08')[:2]
 				if(h==''):
 					if(contents['day'+str(i)]!=False):
-						noneHour=True;		
+						noneHour=True;
+					else:
+						contents['ehour'+str(i)]=16							
 				else:
-					contents['shour'+str(i)]=int(h)
+					contents['ehour'+str(i)]=int(h)
 			
 			contents['desc']=request.POST.get('description', '');
 			
