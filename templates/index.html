@@ -39,15 +39,11 @@
 	</script>
 </head>
 
-<body class="col-sm-12">
-    <div class="container">
-		<div class="jumbotron">
-			<h1>NAGŁÓWEK</h1>
-			<p>index.html</p> 
-		</div>
+<body class="col-sm-12 main">
+    <div class="logo_header">
 	</div>
-    <div id="sidebar">
-        {% block sidebar %}
+    <div id="navbar">
+        {% block navbar %}
         <ul class="nav nav-pills menu">
             <li><a href="/">Home</a></li>
             <li><a href="/manage">Manage</a></li>
@@ -66,5 +62,7 @@
 		{% endblock %}
 		<!-- KONIEC TREŚCI STRONY -->
 	</div>
+	
+	<div id="footer" class="footer col-xs-12"><div class="col-xs-12 footer_content">Copyright</div></div>
 </body>
 </html>

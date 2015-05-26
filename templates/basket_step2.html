@@ -21,7 +21,7 @@
 	{% else %}
 		<input type="hidden" name="basket_products_ingredients" value="0">
 	{% endif %}
-	{% for keycat, maincat in categories.iteritems %}
+	{% for keycat, maincat in categories.items %}
 	<div class="input-group ">
 	<label  class="control-label">{{keycat}}:</label>
 		<select class="form-control" name="selections">

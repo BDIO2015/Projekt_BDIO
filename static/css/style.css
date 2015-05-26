@@ -13,7 +13,28 @@ width: 100% !important;
 }
 .menu {
 margin-bottom: 10px;
+margin-top: 10px;
 }
+
+.footer{
+background-color:#FFA41A;
+font-size: 18px;
+float:left;
+height: 80px;
+}
+.main, .footer{
+padding-right: 0px !important;
+padding-left: 0px;
+}
+
+.footer{
+margin-top: 20px;
+}
+
+.footer_content{
+padding-top:15px;
+}
+
 .category_title{
 font-size:30px;
 font-weight: bold;

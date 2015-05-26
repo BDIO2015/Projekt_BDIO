@@ -3,7 +3,6 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-
 {% for row in content %}
  <div class="category_title collapsed " data-target="#{{row.name}}" data-toggle="collapse" aria-expanded="false"><div class="col-xs-12 category_header"><div class="col-xs-10 col-lg-11 col-md-11" >{{row.name}}</div><div class="col-xs-2 col-lg-1 col-md-1"><span class="glyphicon glyphicon-plus expand_icon"></span></div></div></div>
  <div id="{{row.name}}" class="collapse">

@@ -9,6 +9,7 @@ import time
 import os
 from itertools import *
 import platform
+from django.shortcuts import redirect
 
 # URL do zarzadzania planem
 #url(r'^manage/schedule_type/(?P<type_id>[0-9]+)', 'bdio.views.schedule_type', name='schedule_type'),
@@ -850,9 +851,21 @@ def display_product_category():
 	return contents	
 	
 def product_category(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not check['canManage'] == True:
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+	
 	return render(request, 'manage_product_category.html', display_product_category())
 
 def product_category_add(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not check['canManage'] == True:
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		
 	#zabezpieczyc zeby nie dawca nizej niz 3 poziom
 	product_categories = Product_Category.objects.all()
 	toDisp = []
@@ -921,6 +934,12 @@ def product_category_add(request):
 	return render(request, 'manage_product_category_addedit.html', contents)
 
 def product_category_edit(request, edit_id):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not check['canManage'] == True:
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		
 	#zabezpieczyc zeby nie dawac kategorii nizej niz 3 poziom drzewa
 	#contents = display_product_category()
 	try:
@@ -955,8 +974,9 @@ def product_category_edit(request, edit_id):
 				cpar = curRow.parent.cat_id
 			else:
 				cpar = 0
-			row = {'name':curRow.name, 'id':curRow.cat_id, 'parent': cpar}
-			toDisp.append(row)
+			if(curRow.cat_id != editid):
+				row = {'name':curRow.name, 'id':curRow.cat_id, 'parent': cpar}
+				toDisp.append(row)
 			contents['count']=product_categories.count()
 			contents['parents']=toDisp
 			
@@ -1012,7 +1032,8 @@ def product_category_edit(request, edit_id):
 		editCat.name = cname
 		editCat.description = cdesc
 		editCat.additional_price = cadd_price
-		editCat.parent = cparent
+		if(cparent != editCat.cat_id):
+			editCat.parent = cparent
 		editCat.type = ctype
 		editCat.demand_ingredients = cdemand
 		if(cparent != None and cparent.type == '3'):
@@ -1035,6 +1056,12 @@ def product_category_edit(request, edit_id):
 	return render(request, 'manage_product_category_addedit.html', contents)
 
 def product_category_delete(request, del_id):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not check['canManage'] == True:
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		
 	contents = display_product_category()
 	try:
 		delete = int(del_id)
@@ -1189,10 +1216,10 @@ def user_type_edit(request, edit_id):
 	
 def magazine(request):
 	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})		
 	
 	ingredients = Ingredient.objects.all()
 	
@@ -1201,10 +1228,10 @@ def magazine(request):
 	
 def magazine_add(request):
 	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})		
 		
 	ingredients = Ingredient.objects.all()
 	if(request.POST.get('sent')):		
@@ -1269,10 +1296,10 @@ def magazine_add(request):
 
 def magazine_edit(request, edit_id):
 	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
 	
 	try:
 		eid = int(edit_id)
@@ -1353,10 +1380,10 @@ def magazine_edit(request, edit_id):
 	
 def magazine_delete(request, del_id):
 	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)		
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})		
 	
 	ingredients = Ingredient.objects.all()	
 	try:
@@ -1894,12 +1921,14 @@ def display_product_front(request):
 								disc = 1
 							elif(timeFormat[0] == 'Sat' and isDay[5] != 0):
 								disc = 1
+							else:
+								disc = 0
 						else:
 							disc = 0
+					inDisp = []
 					#get all ingredients for current product
 					if(curRow.demand_ingredients == 1):
 						ingredients = Ingredient_Product.objects.filter(product=prodRow)
-						inDisp = []
 						if(ingredients.count() > 0):
 							for inRow in ingredients:
 								in_row = {'name' : inRow.ingredient.name}
@@ -1912,9 +1941,21 @@ def display_product_front(request):
 	return render(request,"order.html",contents)
 	
 def product(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not check['canManage'] == True:
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		
 	return render(request,'manage_product.html',display_product())
 	
 def product_add(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not check['canManage'] == True:
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		
 	contents = {'title':'Produkty', 'content':'', 'type': 'add'}
 	toDisp = []
 	### Wyswietlanie formularza ###
@@ -2036,6 +2077,12 @@ def product_add(request):
 	return render(request,'manage_product_addedit.html',contents)
 
 def product_edit(request,edit_id):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not check['canManage'] == True:
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		
 	contents = {'title':'Produkty', 'content':'', 'type': 'edit'}
 	try:
 		edit_id = int(edit_id)
@@ -2220,6 +2267,12 @@ def product_edit(request,edit_id):
 	return render(request,'manage_product_addedit.html',contents)
 	
 def product_delete(request, del_id):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not check['canManage'] == True:
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		
 	contents = display_product()
 	try:
 		del_id = int(del_id)
@@ -2304,10 +2357,10 @@ def payment_types_add(request):
 
 def user_management_edit(request, edit_id):
 	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)	
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
 		
 	try:
 		eid = int(edit_id)
@@ -2405,10 +2458,10 @@ def user_management_edit(request, edit_id):
 	
 def user_management(request):
 	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)	
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
 
 	user_types = User_Type.objects.all()
 	users = User.objects.all()
@@ -2424,10 +2477,10 @@ def user_management(request):
 	
 def user_management_delete(request, del_id):
 	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)	
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
 		
 	user_types = User_Type.objects.all()
 	users = User.objects.all()
@@ -2463,10 +2516,10 @@ def user_management_delete(request, del_id):
 	
 def management_panel(request):
 	check = user_check(request)
-	if ('messageType' in check and check['messageType'] == 'danger'):
-		return render(request, 'user_login.html', check)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
 	elif not check['canManage'] == True:
-		return render(request, 'index.html', check)	
+		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
 		
 	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
 	
