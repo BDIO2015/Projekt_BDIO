@@ -1547,7 +1547,7 @@ def basket(request):
 					badIngs.append(ing)
 					continue
 				prodIngsNamed.append(checkIng.name)
-				prodPrice += checkIng.price
+				prodPrice += checkIng.price*checkIng.default_quantity
 			for badCat in badCats:
 				if(len(badCat)>0):
 					prodCats.remove(badCat)
@@ -1713,7 +1713,8 @@ def basket_order(request):
 							checkIng = Ingredient.objects.get(id=int(ing))
 						except Ingredient.DoesNotExist:
 							continue
-						prodPrice += checkIng.price
+						TWOPLACES = Decimal(10) ** -2
+						prodPrice += (checkIng.price*checkIng.default_quantity).quantize(TWOPLACES)
 						uIng = Order_Ingredients(product_order=op, ingredient=checkIng)
 						uIng.save()
 					prodPrice *= prodNum
@@ -1871,7 +1872,8 @@ def basket_add(request, product_id):
 		if(availableIn.count() > 0):
 			allIngreds = []
 			for ingredient in availableIn:
-				row = {'name':ingredient.name, 'id':ingredient.id, 'price':ingredient.price}
+				TWOPLACES = Decimal(10) ** -2
+				row = {'name':ingredient.name, 'id':ingredient.id, 'price':(ingredient.price*ingredient.default_quantity).quantize(TWOPLACES)}
 				allIngreds.append(row)
 			contents['ingredients'] = allIngreds
 			contents['count'] = availableIn.count()
