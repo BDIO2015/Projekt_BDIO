@@ -1777,14 +1777,18 @@ def basket_add(request, product_id):
 		contents['messageType'] = 'success'
 		contents['message'] = 'Dodano wybrany produkt do koszyka'
 		return render(request, 'basket.html', contents)
-	availableIn = Ingredient.objects.filter(quantity__gt=0)
-	if(availableIn.count() > 0):
-		allIngreds = []
-		for ingredient in availableIn:
-			row = {'name':ingredient.name, 'id':ingredient.id, 'price':ingredient.price}
-			allIngreds.append(row)
-		contents['ingredients'] = allIngreds
-		contents['count'] = availableIn.count()
+	getIngcheck = Product_Category.objects.get(cat_id = check.category.cat_id)
+	if(getIngcheck.demand_ingredients == 1):
+		availableIn = Ingredient.objects.filter(quantity__gt=0)
+		if(availableIn.count() > 0):
+			allIngreds = []
+			for ingredient in availableIn:
+				row = {'name':ingredient.name, 'id':ingredient.id, 'price':ingredient.price}
+				allIngreds.append(row)
+			contents['ingredients'] = allIngreds
+			contents['count'] = availableIn.count()
+	else:
+		contents['count'] = 0
 	contents['name'] = check.product_name
 	contents['categories'] = subcategories
 	contents['id'] = product_id
