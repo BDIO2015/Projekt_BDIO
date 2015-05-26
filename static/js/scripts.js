@@ -66,7 +66,6 @@ jQuery(document).ready(function(){
 			jQuery(".product_row").each(function(){
 				jQuery(this).children().each(function(){
 					var prod_box = parseInt(jQuery(this).attr("id")) + 1;
-					console.log(prod_box);
 					if(prod_box % elements == 0)
 						jQuery(this).after('<div class="col-xs-12 empty-div"></div>');
 				});
@@ -76,5 +75,12 @@ jQuery(document).ready(function(){
 	make_space();
 	jQuery(window).resize(function(){
 		make_space();
+	});
+	
+	jQuery(".category_title").click(function(){
+		if(jQuery(this).attr("aria-expanded") == "false")
+			jQuery(this).find(".expand_icon").addClass("glyphicon-minus").removeClass("glyphicon-plus");
+		else
+			jQuery(this).find(".expand_icon").addClass("glyphicon-plus").removeClass("glyphicon-minus");
 	});
 });
