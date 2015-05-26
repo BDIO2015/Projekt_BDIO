@@ -1,0 +1,18 @@
+{% block login %}
+<div class="login_form">
+  <form action="/user/login" method="POST" class="form-horizontal">
+  {% csrf_token %}
+
+<div class="input-group ">
+<label  class="control-label">Nazwa użytkownika:</label><input class="form-control" type="text" maxlength="64" name="username" />
+</div>
+<div class="input-group ">
+<label  class="control-label">Hasło:</label><input class="form-control" type="password" maxlength="64" name="password" />
+</div>
+<div class="input-group ">
+ <input type="hidden" name="sent" value="1" /><input  type="submit"  value="Zaloguj" class="btn btn-primary col-xs-6" /><a href="/user/register" class="btn btn-default col-xs-6">Zarejestruj się</a></td> 
+</div>
+ </form>
+</div>
+
+{% endblock %}

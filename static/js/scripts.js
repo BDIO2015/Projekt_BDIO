@@ -83,4 +83,5 @@ jQuery(document).ready(function(){
 		else
 			jQuery(this).find(".expand_icon").addClass("glyphicon-plus").removeClass("glyphicon-minus");
 	});
+
 });

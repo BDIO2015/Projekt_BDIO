@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import re, hashlib
 # Create your views here.
 from django.http import HttpResponse
@@ -9,7 +9,6 @@ import time
 import os
 from itertools import *
 import platform
-from django.shortcuts import redirect
 
 # URL do zarzadzania planem
 #url(r'^manage/schedule_type/(?P<type_id>[0-9]+)', 'bdio.views.schedule_type', name='schedule_type'),
@@ -111,6 +110,11 @@ def display_schedule_user(request, user_id):
 
 
 def schedule_user(request, user_id):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	return render(request, 'manage_schedule.html', display_schedule_user(request, user_id))
 	
 	
@@ -139,9 +143,19 @@ def display_schedule_type(request, type_id):
 
 
 def	schedule_type(request, type_id):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	return render(request, 'manage_schedule.html', display_schedule_type(request, type_id))
 	
 def schedule(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	isSent = request.POST.get('sent', False);
 	contents={}
 	if(isSent):
@@ -235,6 +249,11 @@ def schedule(request):
 
 
 def schedule_add(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	isSent = request.POST.get('sent', False);
 	showing = request.POST.get('showing', False);
 	
@@ -402,7 +421,7 @@ def user_logout(request):
 	if('login_check' in request.session):
 		del request.session['login_check']
 		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
-	return render(request, 'index.html', contents)
+	return display_product_front(request)
 
 def user_check(request):
 	users = User.objects.all()
@@ -422,11 +441,11 @@ def user_check(request):
 		return contents
 
 def index(request):
-	contents = {'title':'Testujemy', 'question':'test'}
+	contents = {'title':'Strona główna'}
 	return render(request, 'index.html', contents)
 	
 def manage(request):
-	contents = {'title':'Testujemy2', 'question':'test2'}
+	contents = {'title':'Zarządzaj'}
 	return render(request, 'manage.html', contents)
 
 def display_discount():
@@ -505,9 +524,19 @@ def display_discount():
 	return contents
 	
 def discount(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	return render(request, 'manage_discount.html', display_discount())
 
 def discount_delete(request, del_id):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	try:
 		did = int(del_id)
 	except ValueError:
@@ -531,6 +560,11 @@ def discount_delete(request, del_id):
 	return render(request, 'manage_discount.html', contents)
 
 def discount_edit(request, edit_id):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	try:
 		eid = int(edit_id)
 	except ValueError:
@@ -677,6 +711,11 @@ def discount_edit(request, edit_id):
 	return render(request, 'manage_discountaddedit.html', contents)
 
 def discount_add(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	#TODO dodac sprawdzenie czy zalogowany i ma uprawnienia
 	isSent = request.POST.get('sent', False);
 	mainContent = '';
@@ -782,6 +821,14 @@ def discount_add(request):
 def user_register(request):
 	mainContent = '';
 	contents = {'title':'Rejestracja', 'name':'', 'second_name':'', 'password':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
+	contents["user"] = user_check(request)
+	#get user info
+	if(contents["user"] != False):
+		if(User.objects.filter(user_id=contents["user"]["user_id"]).count()>0):
+			user = User.objects.get(user_id=contents["user"]["user_id"])
+			row = {'name': user.name, 'surname': user.second_name }
+			contents["user"]["data"] = row
+	user = contents["user"]
 	if(request.POST.get('sent')):
 		reg_username = request.POST.get('username')
 		reg_name = request.POST.get('name')
@@ -792,43 +839,43 @@ def user_register(request):
 		reg_city = request.POST.get('city')
 		reg_second_name = request.POST.get('second_name')
 		if(not(request.POST.get('agg0')) or not(request.POST.get('agg1'))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Zgody muszą być zaznaczone!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Zgody muszą być zaznaczone!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username), 'user': user}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_name))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username), 'user': user}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_second_name))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username) }
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username), 'user': user }
 			return render(request,'user_register.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address),   'phone_number':str(reg_phone_number), 'username':str(reg_username), 'user': user}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[0-9]{5,5}',str(reg_postal_code))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number), 'username':str(reg_username), 'user': user}
 			return render(request,'user_register.html',contents)
 		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'username':str(reg_username), 'user': user}
 			return render(request,'user_register.html',contents)
 		if (not(re.match('.{6,64}',str(reg_password)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username), 'user': user}
 				return render(request,'user_register.html',contents)
 		if (not(re.match('.{6,64}',str(reg_username)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username), 'user': user}
 				return render(request,'user_register.html',contents)
 		if (not(re.match('.{1,64}',str(reg_address)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username), 'user': user}
 				return render(request,'user_register.html',contents)
 		users = User.objects.all()
 		for user in users:
 			if(user.username == str(reg_username)):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika zajęta!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':''}	
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Nazwa użytkownika zajęta!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':'', 'user': user}	
 				return render(request,'user_register.html',contents)	
 		good=1
 		if good:
 			reg_password=hashlib.sha256(reg_password.encode()).hexdigest()
 			newUser = User(name=reg_name, second_name=reg_second_name, username=reg_username, password=reg_password, postal_code=reg_postal_code, phone_number=reg_phone_number, city=reg_city, address=reg_address)
 			newUser.save()
-			contents = {'messageType':'success', 'message':'Użytkownik zarejestrowany','name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':''}
+			contents = {'messageType':'success', 'message':'Użytkownik zarejestrowany','name':'', 'second_name':'', 'address':'', 'city':'', 'postal_code':'', 'phone_number':'', 'username':'', 'user': user}
 	return render(request, 'user_register.html', contents)
 
 def display_product_category():
@@ -853,18 +900,18 @@ def display_product_category():
 def product_category(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 	
 	return render(request, 'manage_product_category.html', display_product_category())
 
 def product_category_add(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	#zabezpieczyc zeby nie dawca nizej niz 3 poziom
 	product_categories = Product_Category.objects.all()
@@ -936,9 +983,9 @@ def product_category_add(request):
 def product_category_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	#zabezpieczyc zeby nie dawac kategorii nizej niz 3 poziom drzewa
 	#contents = display_product_category()
@@ -1058,9 +1105,9 @@ def product_category_edit(request, edit_id):
 def product_category_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	contents = display_product_category()
 	try:
@@ -1111,9 +1158,19 @@ def display_user_type():
 	return contents
 
 def user_type(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	return render(request, 'manage_user_type.html', display_user_type())
 	
 def user_type_add(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	contents = {'title':'Typy użytkowników', 'type':'add'}
 	if(request.POST.get('sent', False)):
 		name = request.POST.get('name', False)
@@ -1139,6 +1196,11 @@ def user_type_add(request):
 	return render(request, 'manage_user_type_addedit.html', contents)
 	
 def user_type_delete(request, del_id):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	contents = display_user_type()
 	try:
 		delete = int(del_id)
@@ -1159,6 +1221,11 @@ def user_type_delete(request, del_id):
 	return render(request, 'manage_user_type.html', contents)
 
 def user_type_edit(request, edit_id):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	contents = display_user_type()
 	try:
 		editid = int(edit_id)
@@ -1217,9 +1284,9 @@ def user_type_edit(request, edit_id):
 def magazine(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})		
+		return management_panel(request)	
 	
 	ingredients = Ingredient.objects.all()
 	
@@ -1229,9 +1296,9 @@ def magazine(request):
 def magazine_add(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})		
+		return management_panel(request)	
 		
 	ingredients = Ingredient.objects.all()
 	if(request.POST.get('sent')):		
@@ -1297,9 +1364,9 @@ def magazine_add(request):
 def magazine_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 	
 	try:
 		eid = int(edit_id)
@@ -1381,9 +1448,9 @@ def magazine_edit(request, edit_id):
 def magazine_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})		
+		return management_panel(request)	
 	
 	ingredients = Ingredient.objects.all()	
 	try:
@@ -1431,6 +1498,13 @@ def xor_crypt_string(data):
 	
 def basket(request):
 	contents = {'title':'Koszyk'}
+	contents["user"] = user_check(request)
+	#get user info
+	if(contents["user"] != False):
+		if(User.objects.filter(user_id=contents["user"]["user_id"]).count()>0):
+			user = User.objects.get(user_id=contents["user"]["user_id"])
+			row = {'name': user.name, 'surname': user.second_name }
+			contents["user"]["data"] = row
 	if('basket_products' in request.session):
 		products = request.session['basket_products'].split(';')
 		prodCount = 0
@@ -1545,6 +1619,13 @@ def basket(request):
 def basket_order(request):
 	action = request.POST.get('act', False)
 	contents = {'title':'Koszyk'}
+	contents["user"] = user_check(request)
+	#get user info
+	if(contents["user"] != False):
+		if(User.objects.filter(user_id=contents["user"]["user_id"]).count()>0):
+			user = User.objects.get(user_id=contents["user"]["user_id"])
+			row = {'name': user.name, 'surname': user.second_name }
+			contents["user"]["data"] = row
 	if(action == 'Aktualizuj'):
 		newproducts = ''
 		products = request.session['basket_products'].split(';')
@@ -1717,6 +1798,13 @@ def basket_order(request):
 	
 def basket_add(request, product_id):
 	contents = {'title':'Dodaj do koszyka'}
+	contents["user"] = user_check(request)
+	#get user info
+	if(contents["user"] != False):
+		if(User.objects.filter(user_id=contents["user"]["user_id"]).count()>0):
+			user = User.objects.get(user_id=contents["user"]["user_id"])
+			row = {'name': user.name, 'surname': user.second_name }
+			contents["user"]["data"] = row
 	product_id = int(product_id)
 	try:
 		check = Product.objects.get(product_code=product_id)
@@ -1791,6 +1879,13 @@ def basket_add(request, product_id):
 	return render(request, 'basket_step2.html', contents)
 def basket_remove(request, product_id):
 	contents = {'title':'Usuń z koszyka'}
+	contents["user"] = user_check(request)
+	#get user info
+	if(contents["user"] != False):
+		if(User.objects.filter(user_id=contents["user"]["user_id"]).count()>0):
+			user = User.objects.get(user_id=contents["user"]["user_id"])
+			row = {'name': user.name, 'surname': user.second_name }
+			contents["user"]["data"] = row
 	if('basket_products' in request.session):
 		products = request.session['basket_products'].split(';')
 		for curProd in products:
@@ -1813,6 +1908,13 @@ def basket_remove(request, product_id):
 
 def basket_clear(request):
 	contents = {'title':'Wyczyść koszyk'}
+	contents["user"] = user_check(request)
+	#get user info
+	if(contents["user"] != False):
+		if(User.objects.filter(user_id=contents["user"]["user_id"]).count()>0):
+			user = User.objects.get(user_id=contents["user"]["user_id"])
+			row = {'name': user.name, 'surname': user.second_name }
+			contents["user"]["data"] = row
 	if('basket_products' in request.session):
 		del request.session['basket_products']
 	contents['messageType'] = 'success'
@@ -1871,6 +1973,13 @@ def display_product():
 def display_product_front(request):
 	#get main categories
 	contents = {'title':'Produkty', 'content':''}
+	contents["user"] = user_check(request)
+	#get user info
+	if(contents["user"] != False):
+		if(User.objects.filter(user_id=contents["user"]["user_id"]).count()>0):
+			user = User.objects.get(user_id=contents["user"]["user_id"])
+			row = {'name': user.name, 'surname': user.second_name }
+			contents["user"]["data"] = row
 	categories = Product_Category.objects.filter(parent=None)
 	toDisp = []
 	if(categories.count() > 0):
@@ -1938,23 +2047,25 @@ def display_product_front(request):
 			row = {'name': curRow.name, 'products' : prodDisp}
 			toDisp.append(row)
 		contents["content"] = toDisp
+
+
 	return render(request,"order.html",contents)
 	
 def product(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	return render(request,'manage_product.html',display_product())
 	
 def product_add(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	contents = {'title':'Produkty', 'content':'', 'type': 'add'}
 	toDisp = []
@@ -2079,9 +2190,9 @@ def product_add(request):
 def product_edit(request,edit_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	contents = {'title':'Produkty', 'content':'', 'type': 'edit'}
 	try:
@@ -2269,9 +2380,9 @@ def product_edit(request,edit_id):
 def product_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	contents = display_product()
 	try:
@@ -2311,12 +2422,22 @@ def user_login(request):
 	return render(request, 'user_login.html', contents)
 
 def payment_types(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	payments = Payment_Type.objects.all()
 
 	contents = {'title':'Płatności','messageType':'none', 'payments': payments}
 	return render(request, 'manage_payment_types.html', contents)
 	
 def payment_types_delete(request, del_id):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	try:
 		did = int(del_id)
 	except ValueError:
@@ -2335,6 +2456,11 @@ def payment_types_delete(request, del_id):
 	return render(request, 'manage_payment_types.html', contents)
 	
 def payment_types_add(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not check['canManage'] == True:
+		return management_panel(request)
 	payments = Payment_Type.objects.all()
 	payment_namex = request.POST.get('payment_name', False)
 	
@@ -2358,9 +2484,9 @@ def payment_types_add(request):
 def user_management_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	try:
 		eid = int(edit_id)
@@ -2459,9 +2585,9 @@ def user_management_edit(request, edit_id):
 def user_management(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 
 	user_types = User_Type.objects.all()
 	users = User.objects.all()
@@ -2478,9 +2604,9 @@ def user_management(request):
 def user_management_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	user_types = User_Type.objects.all()
 	users = User.objects.all()
@@ -2517,9 +2643,9 @@ def user_management_delete(request, del_id):
 def management_panel(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return display_product_front(request)
 	elif not check['canManage'] == True:
-		return render(request, 'manage.html', {'messageType':'danger','message':'Nie posiadasz odpowiednich uprawnień'})	
+		return management_panel(request)
 		
 	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
 	
@@ -2531,3 +2657,5 @@ def management_panel(request):
 			return render(request, 'manage_management_panel.html', contents)
 	
 	return render(request, 'manage_management_panel.html', contents)
+
+	
