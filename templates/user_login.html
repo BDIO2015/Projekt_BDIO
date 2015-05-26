@@ -1,19 +1,13 @@
-
-
 {% extends "index.html" %}
 
 {% block title %}{{title}}{% endblock %}
 
+
 {% block content %}
-
 {% if messageType == "danger" or messageType == "success" %}
-
 <div class="alert alert-{{messageType}}">
-
   {{message}}
-
 </div>
-
 {% endif %}
 
 <form action="/user/login" method="POST">

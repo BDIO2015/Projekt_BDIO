@@ -1,7 +1,9 @@
 
 
 {% extends "index.html" %}
+
 {% block title %}{{title}}{% endblock %}
+
 {% block content %}
 {% if messageType == "danger" or messageType == "success" %}
 <div class="alert alert-{{messageType}}">
@@ -57,10 +59,10 @@
       </td>
       <td>
         <div class="col-lg-5">
-          <input type="text" size="2" maxlength="2" name="postal_code1" value="{{postal_code}}"  class="form-control" required/>
+          <input type="text" size="2" maxlength="2" name="postal_code1" value="{{postal_code1}}"  class="form-control" required/>
         </div>
         <div class="col-lg-5">
-          <input type="text" size="3" maxlength="3" name="postal_code2" value="{{postal_code}}"  class="form-control" required/>
+          <input type="text" size="3" maxlength="3" name="postal_code2" value="{{postal_code2}}"  class="form-control" required/>
         </div>
       </td>
     </tr>
