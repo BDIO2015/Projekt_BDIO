@@ -25,6 +25,7 @@ def schedule_get_packed(schedule_id, affectedUsers, type_ids):
 		groupsCount.update({typeID.id:(User.objects.filter(type=typeID.id).count())})
 		usersCount+=groupsCount[typeID.id]
 	userWithSchedule = User.objects.filter(scheduled=schedule_id)
+	userWithSchedule= userWithSchedule.filter(user_id__in=affectedUsers)
 	if(len(userWithSchedule)==0):
 		schedule_id.delete();
 		return {}	
@@ -56,7 +57,7 @@ def display_schedule(request, affectedUsers):
 	validScheds=0;
 	timetable = [[{} for col in range(7)] for row in range(24)]
 	types=User_Type.objects.all()
-	contents = {'title':'Rozkład', 'types':[], 'typeFor':'0', 'typeForAll':types.count(), 'typeForUsers':types.count()+1, 'canManage':'true', 'affecting':'false', 'userNames':'', 'edit_id':0, 'viewType':'show'}
+	contents = {'title':'Rozkład', 'types':[], 'typeFor':'0', 'typeForAll':types.count(), 'typeForUsers':types.count()+1, 'canManage':'true', 'affecting':'false', 'userNames':'', 'edit_id':0, 'viewType':'show', 'usersAffected':0, 'usersShowed':0}
 	for type in types:
 		contents['types'].append(type.type_name);
 	edit_id=0;
@@ -69,6 +70,12 @@ def display_schedule(request, affectedUsers):
 				if(sched.day[i]=='1'):
 					for j in range(int(sched.time_start[(2*i):((2*i)+2)]), int(sched.time_end[(2*i):((2*i)+2)])):
 						timetable[j][i].update(compactRes)
+	usersWithSameSchedule = []
+	for user in affectedUsers:
+		if(user.scheduled!=None):
+			usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
+	contents['usersAffected']=len(usersWithSameSchedule)
+	contents['usersShowed']=len(affectedUsers)
 	contents['timetable']=timetable
 	contents['scheduleCount']=validScheds;
 	contents['edit_id']=edit_id;
@@ -95,7 +102,7 @@ def display_schedule_user(request, user_id):
 	contents=display_schedule(request, affectedUsers);
 	contents['typeFor']=contents['typeForUsers'];
 	contents['userNames']=affectedUsers[0].username;
-	if(contents['scheduleCount']==1 and User.objects.filter(scheduled=affectedUsers[0].scheduled).count()==1):
+	if(contents['scheduleCount']==1 and contents['usersAffected']==contents['usersShowed']):
 		contents['actionType']='edit';
 	else:
 		contents['actionType']="add";
@@ -123,7 +130,7 @@ def display_schedule_type(request, type_id):
 	contents=display_schedule(request, affectedUsers);
 	contents['typeFor']=tid;
 	contents['userNames']=''
-	if(contents['scheduleCount']==1):
+	if(contents['scheduleCount']==1 and contents['usersAffected']==contents['usersShowed']):
 		contents['actionType']='edit';
 	else:
 		contents['actionType']="add";
@@ -197,7 +204,8 @@ def schedule(request):
 			if(affecting):
 				usersWithSameSchedule = []
 				for user in affectedUsers:
-					usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
+					if(user.scheduled!=None):
+						usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
 				affectedUsers=usersWithSameSchedule;
 			elif(group==typeCount+1):
 				if(len(affectedUsers)==1):
@@ -206,7 +214,7 @@ def schedule(request):
 				return render(request, 'manage_schedule.html', display_schedule_type(request, group))
 			contents=display_schedule(request, affectedUsers);
 			contents['typeFor']=contents['typeForUsers']
-			if(contents['scheduleCount']>1 or contents['scheduleCount']==0):
+			if(contents['scheduleCount']>1 or contents['scheduleCount']==0 or contents['usersAffected']!=contents['usersShowed']):
 				contents['actionType']='add';
 			else:
 				contents['actionType']="edit";
@@ -314,7 +322,8 @@ def schedule_add(request):
 			if(affecting):
 				usersWithSameSchedule = []
 				for user in affectedUsers:
-					usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
+					if(user.scheduled!=None):
+						usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
 				affectedUsers=usersWithSameSchedule;
 				contents['typeFor']=contents['typeForUsers']
 			if(contents['typeFor']==contents['typeForUsers']):
@@ -1383,7 +1392,7 @@ def get_subcategories(maincat):
 				subcategories[categories.name] = []
 			subcategories[categories.name].append([subcat.cat_id, subcat.name])
 	todel = []
-	for key, each in subcategories.iteritems():
+	for key, each in subcategories.items():
 		if(len(each) == 0):
 			todel.append(key)
 	for k in todel:
