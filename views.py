@@ -2779,8 +2779,8 @@ def management_panel(request):
 	check = user_check(request)
 	if (check == False):
 		return display_product_front(request)
-	elif not check['canManage'] == True:
-		return management_panel(request)
+	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
+		return display_product_front(request)
 		
 	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
 	
