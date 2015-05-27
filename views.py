@@ -45,9 +45,9 @@ def schedule_get_packed(schedule_id, affectedUsers, type_ids):
 		return {0:'Wszyscy'}
 	result = {}
 	userWithSchedule=list(userWithSchedule)
-	for typeID in type_ids:
+	for idx, typeID in enumerate(type_ids):
 		if(groupsCountCopy[typeID.id]==0 and groupsCount[typeID.id]>0):
-			result.update({typeID.id:(typeID.type_name+'-')})
+			result.update({idx:(typeID.type_name+'-')})
 			for user in userWithSchedule[:]:
 				if(user.type==typeID):
 					userWithSchedule.remove(user)
@@ -124,10 +124,21 @@ def display_schedule_user(request, user_id):
 
 
 def schedule_user(request, user_id):
-	return render(request, 'manage_schedule.html', display_schedule_user(request, user_id))
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
+		return display_product_front(request)
+	contents = display_schedule_user(request, user_id)
+	if(check['canManage']==True):
+		contents['canManage']='true'
+	else:
+		contents['canManage']='false'
+	return render(request, 'manage_schedule.html', contents)
 	
 	
 def display_schedule_type(request, type_id):
+	
 	try:
 		tid=int(type_id);
 		types = User_Type.objects.all()
@@ -144,6 +155,10 @@ def display_schedule_type(request, type_id):
 	contents=display_schedule(request, affectedUsers)
 	contents['typeFor']=tid
 	contents['userNames']=''
+	if(check['canManage']==True):
+		contents['canManage']='true'
+	else:
+		contents['canManage']='false'
 	if(contents['scheduleCount']==1 and contents['usersAffected']==contents['usersShowed']):
 		contents['actionType']='edit'
 	else:
@@ -152,9 +167,24 @@ def display_schedule_type(request, type_id):
 
 
 def	schedule_type(request, type_id):
-	return render(request, 'manage_schedule.html', display_schedule_type(request, type_id))
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
+		return display_product_front(request)
+	contents = display_schedule_type(request, type_id)
+	if(check['canManage']==True):
+		contents['canManage']='true'
+	else:
+		contents['canManage']='false'
+	return render(request, 'manage_schedule.html', contents)
 	
 def schedule(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
+		return display_product_front(request)
 	isSent = request.POST.get('sent', False);
 	contents={}
 	if(isSent):
@@ -219,10 +249,24 @@ def schedule(request):
 				affectedUsers=User.objects.filter(scheduled__in=[user.scheduled for user in affectedUsers])
 			elif(group==typeCount+1):
 				if(len(affectedUsers)==1):
-					return render(request, 'manage_schedule.html', display_schedule_user(request, affectedUsers[0].user_id))
+					contents = display_schedule_user(request, affectedUsers[0].user_id)
+					if(check['canManage']==True):
+						contents['canManage']='true'
+					else:
+						contents['canManage']='false'
+					return render(request, 'manage_schedule.html', contents)
 			else:
-				return render(request, 'manage_schedule.html', display_schedule_type(request, group))
+				contents = display_schedule_type(request, group)
+				if(check['canManage']==True):
+					contents['canManage']='true'
+				else:
+					contents['canManage']='false'
+				return render(request, 'manage_schedule.html', contents)
 			contents=display_schedule(request, affectedUsers);
+			if(check['canManage']==True):
+				contents['canManage']='true'
+			else:
+				contents['canManage']='false'
 			contents['typeFor']=contents['typeForUsers']
 			if(contents['scheduleCount']>1 or contents['scheduleCount']==0 or contents['usersAffected']!=contents['usersShowed']):
 				contents['actionType']='add';
@@ -235,6 +279,10 @@ def schedule(request):
 			return render(request, 'manage_schedule.html', contents)
 	affectedUsers = User.objects.all();
 	contents=display_schedule(request, affectedUsers);
+	if(check['canManage']==True):
+		contents['canManage']='true'
+	else:
+		contents['canManage']='false'
 	contents['typeFor']=contents['typeForAll']
 	if(contents['scheduleCount']>1 or contents['scheduleCount']==0 or contents['usersAffected']!=contents['usersShowed']):
 		contents['actionType']='add';
@@ -244,6 +292,10 @@ def schedule(request):
 
 
 def schedule_add(request):
+	check = user_check(request)
+	if (check == False or check['canManage'] == False):
+		return display_product_front(request)
+	
 	isSent = request.POST.get('sent', False);
 	showing = request.POST.get('showing', False);
 
@@ -339,7 +391,6 @@ def schedule_add(request):
 				contents['userNames']=contents['userNames'][:-1]
 			contents['affecting']==affecting
 		if(showing):
-			
 			day='';
 			shour='';
 			ehour='';
@@ -383,6 +434,10 @@ def schedule_add(request):
 
 
 def schedule_edit(request, schedule_id):
+	check = user_check(request)
+	if (check == False or check['canManage'] == False):
+		return display_product_front(request)
+		
 	isSent = request.POST.get('sent', False);
 	showing = request.POST.get('showing', False);
 	try:
@@ -475,6 +530,9 @@ def schedule_edit(request, schedule_id):
 	return render(request, 'manage_schedule_addedit.html', contents)
 	
 def schedule_delete(request, schedule_id):
+	check = user_check(request)
+	if (check == False or check['canManage'] == False):
+		return display_product_front(request)
 	try:
 		schedule = Schedule.objects.get(id=schedule_id)
 	except Schedule.DoesNotExist:
@@ -498,6 +556,9 @@ def schedule_delete(request, schedule_id):
 	return render(request, 'manage_schedule_addedit.html', contents)
 	
 def schedule_list(request):
+	check = user_check(request)
+	if (check == False or check['canManage'] == False):
+		return display_product_front(request)
 	users=User.objects.all();
 	schedules = Schedule.objects.all();
 	validScheds=0;
