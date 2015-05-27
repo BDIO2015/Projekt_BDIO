@@ -39,9 +39,9 @@
 					{% if name == "Wszyscy" and id == 0 %}
 					<a href="/manage/schedule/">Wszyscy</a>
 					{% elif name|last == "-" %}
-					<a href="/manage/schedule_type/{{key}}">{{name|slice:"-1"}}</a>
+					<a href="/manage/schedule_type/{{id}}">{{name|slice:"-1"}}</a>
 					{% else %}
-					<a href="/manage/schedule_user/{{key}}">{{name}}</a>
+					<a href="/manage/schedule_user/{{id}}">{{name}}</a>
 					{% endif %}
 					{% if not forloop.last %}
 					, 
