@@ -1,0 +1,37 @@
+<html>
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<!--<a href="/manage/order_status/">Powrót</a><br /><br />-->
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+<!--	<a href="/manage/order_status/">Powrót</a><br /><br />-->
+	
+<form action="/manage/order_status/change/{{content.code}}" method="POST">
+	
+	{% csrf_token %}
+	
+	<div style="border:1px solid black; width:500;height:120;padding: 10px;position: relative;top: 10px; ">
+	<p> Zmień status zamówienia: </p>
+	{{content.order_note}}
+	<select name="sel">
+		<option value="0" {% if content.status == "0"%}selected{% endif %}>Anulowane</option>
+		<option value="1"{% if content.status == "1"%}selected{% endif %}>Przyjęte</option>
+		<option value="2"{% if content.status == "2"%}selected{% endif %}>Przygotowane</option>
+		<option value="3"{% if content.status == "3"%}selected{% endif %}>Oczekujące</option>		
+	</select><br>	
+	<br>
+	<div>
+	<input align="right" type="submit" name="sent" value="Zapisz" />  	{{ result }}
+	</div>
+
+</form>
+
+
+
+{% endblock %}

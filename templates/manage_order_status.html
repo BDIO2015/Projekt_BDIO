@@ -1,0 +1,72 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<a href="/manage/order_status/">Powrót</a><br /><br />
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	
+	
+	<table class="table table-hover table-responsive">
+	<tr>
+	<td style="min-width: 150px;" align="center">
+	Status
+	</td>
+	<td style="min-width:80px;" align="center">
+	Produkt
+	</td>
+	<td style="min-width: 70px;" align="center">
+	Dodatki
+	</td>
+	<td style="min-width: 70px;" align="center">
+	Opis
+	</td>
+	
+
+	<td style="min-width: 70px;" align="center">
+	-
+	</td>
+	</tr>
+	
+	
+	
+	{% for element in content %}
+	<tr>
+	
+	<td>
+	{{ element.status }}
+	</td>
+	
+	<td>
+	{% for product in element.products %}
+	{{product.product_name}}<br/>
+	{% endfor %}
+	</td>
+
+	<td>
+	{% for ing in element.ingrad %}
+	{{ing.ing_name}}<br/>
+	{% endfor %}
+	</td>
+	
+	<td>
+	{{ element.order_note }}
+	</td>
+	
+	<td align="right" >
+	
+	<a href="/manage/order_status/change/{{ element.code }}/" >[Zmień status]</a>&nbsp;
+	<a href="/manage/order_status/edit/{{ element.code }}/" >[Edytuj]</a>&nbsp;
+	<a href="/manage/order_status/delete/{{ element.code }}/" class="delete_button" >[Usuń]</a>&nbsp;
+	
+	</td>
+	
+	</tr>
+	{% endfor %}
+	</table>
+	
+{% endblock %}

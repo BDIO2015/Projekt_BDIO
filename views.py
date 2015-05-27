@@ -2941,3 +2941,87 @@ def user_edit(request):
 				else:
 					contents = {'messageType':'alert', 'message':'Wprowadź prawidłowe hasło!', 'title':'Edytuj', 'name':str(s_name), 'second_name':str(s_second_name), 'address':str(s_address), 'city':str(s_city),   'phone_number':str(s_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
 	return render(request, 'user_edit.html', contents)
+	
+def display_order_status():
+	orders = Order.objects.all()
+	o_p = Order_Product.objects.all()
+	o_i = Order_Ingredients.objects.all()
+	toIng = []
+	toProd = []
+	
+	contents = {'title':'Zamówienia', 'content':''}
+	if(orders.count() > 0):
+		toDisp = []
+		for curRow in orders:
+			if(o_p.count()>0):
+				toProd = []
+				for curProd in o_p:
+					if(curRow.order_code == curProd.order.order_code):
+						prod = Product.objects.get(product_code=curProd.product.product_code)
+						if(prod):
+							productList = {'product_code':prod.product_code ,'product_quantity': curProd.quantity , 'product_name':prod.product_name}
+							toProd.append(productList)
+						
+						if(o_i.count()>0):
+							toIng = []
+							for curIng in o_i:
+								if(curIng.product_order.order == curProd.order ):
+									ing = Ingredient.objects.get(id = curIng.ingredient.id)
+									if(ing):
+										ingList = {'ing_id':ing.id, 'ing_quantity':ing.quantity,'ing_name':ing.name}
+										
+										toIng.append(ingList)
+						
+				row = {'code':curRow.order_code, 'status':curRow.get_status_display() , 'order_note':curRow.order_notes, 'products':toProd, 'ingrad':toIng}
+				toDisp.append(row)
+				contents = {'title':'Zamówienia','count':orders.count(), 'content':toDisp}
+
+	else:
+		contents = {'title':'Zamówienia', 'content':'Brak zamówień', 'count':0}
+	return contents
+	
+def order_status(request):
+	return render(request, 'manage_order_status.html', display_order_status())
+	
+def order_status_change(request, chg_id):
+	try:
+		id = int(chg_id)
+	except ValueError:
+		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
+		return render(request, 'manage_order_status.html', contents)
+	
+	toEdit = Order.objects.get(order_code=chg_id)
+	if(toEdit):
+		contents = {'title':'Zamówienia', 'type':'none'}
+		row = {'code' : toEdit.order_code, 'status' : toEdit.status, 'order_note' : toEdit.order_notes }
+		
+		if(request.POST.get('sent')):
+			order_statusx = request.POST.get('sel', False)
+			toEdit.status = order_statusx
+			toEdit.save()
+			return order_status(request)
+
+	else:
+		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
+		
+		
+	contents = {'title':'Zamówienia','messageType':'none','content':row}
+	return render(request, 'manage_order_status_change.html', contents)
+	
+def order_status_delete(request, del_id):
+	try:
+		did = int(del_id)
+	except ValueError:
+		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Taki element nie instnieje!'}
+		return render(request, 'manage_order_status.html', contents)
+		
+	toDel = Order.objects.filter(order_code=did)
+	if(toDel.count() == 1):
+		toDel[0].delete()
+		return order_status(request)
+	elif(toDel.count() > 1):
+		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Nieznany błąd'}
+	else:
+		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Taki element nie instnieje!'}
+
+	return render(request, 'manage_order_status.html', contents)
