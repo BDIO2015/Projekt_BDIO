@@ -2953,24 +2953,25 @@ def display_order_status():
 	if(orders.count() > 0):
 		toDisp = []
 		for curRow in orders:
-			if(o_p.count()>0):
-				toProd = []
-				for curProd in o_p:
-					if(curRow.order_code == curProd.order.order_code):
-						prod = Product.objects.get(product_code=curProd.product.product_code)
-						if(prod):
-							productList = {'product_code':prod.product_code ,'product_quantity': curProd.quantity , 'product_name':prod.product_name}
-							toProd.append(productList)
-						
-						if(o_i.count()>0):
-							toIng = []
-							for curIng in o_i:
-								if(curIng.product_order.order == curProd.order ):
-									ing = Ingredient.objects.get(id = curIng.ingredient.id)
-									if(ing):
-										ingList = {'ing_id':ing.id, 'ing_quantity':ing.quantity,'ing_name':ing.name}
-										
-										toIng.append(ingList)
+			if(curRow.status == '1' or curRow.status == '2' or curRow.status == '3'):
+				if(o_p.count()>0):
+					toProd = []
+					for curProd in o_p:
+						if(curRow.order_code == curProd.order.order_code):
+							prod = Product.objects.get(product_code=curProd.product.product_code)
+							if(prod):
+								productList = {'product_code':prod.product_code ,'product_quantity': curProd.quantity , 'product_name':prod.product_name}
+								toProd.append(productList)
+							
+							if(o_i.count()>0):
+								toIng = []
+								for curIng in o_i:
+									if(curIng.product_order.order == curProd.order ):
+										ing = Ingredient.objects.get(id = curIng.ingredient.id)
+										if(ing):
+											ingList = {'ing_id':ing.id, 'ing_quantity':ing.quantity,'ing_name':ing.name}
+											
+											toIng.append(ingList)
 						
 				row = {'code':curRow.order_code, 'status':curRow.get_status_display() , 'order_note':curRow.order_notes, 'products':toProd, 'ingrad':toIng}
 				toDisp.append(row)
@@ -2989,24 +2990,25 @@ def order_status_change(request, chg_id):
 	except ValueError:
 		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
 		return render(request, 'manage_order_status.html', contents)
-	
-	toEdit = Order.objects.get(order_code=chg_id)
-	if(toEdit):
-		contents = {'title':'Zamówienia', 'type':'none'}
-		row = {'code' : toEdit.order_code, 'status' : toEdit.status, 'order_note' : toEdit.order_notes }
 		
-		if(request.POST.get('sent')):
-			order_statusx = request.POST.get('sel', False)
-			toEdit.status = order_statusx
-			toEdit.save()
-			return order_status(request)
+	toEdit = Order.objects.get(order_code=chg_id)
+	
+	if(toEdit):
+		if (toEdit.status == '1'):
+			toEdit.status = '2'
+		elif toEdit.status == '2':
+			toEdit.status = '3'
+		elif toEdit.status == '3':
+			toEdit.status = '4'
+		else:
+			contents = {'title':'Zamówienia','messageType':'danger', 'message':'Błędny status!'}
+		toEdit.save()
+		return order_status(request)
 
 	else:
 		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
 		
-		
-	contents = {'title':'Zamówienia','messageType':'none','content':row}
-	return render(request, 'manage_order_status_change.html', contents)
+	return render(request, 'manage_order_status.html', contents)
 	
 def order_status_delete(request, del_id):
 	try:
@@ -3015,12 +3017,11 @@ def order_status_delete(request, del_id):
 		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Taki element nie instnieje!'}
 		return render(request, 'manage_order_status.html', contents)
 		
-	toDel = Order.objects.filter(order_code=did)
-	if(toDel.count() == 1):
-		toDel[0].delete()
+	toCnnl = Order.objects.get(order_code=did)
+	if(toCnnl):
+		toCnnl.status = '0'
+		toCnnl.save()
 		return order_status(request)
-	elif(toDel.count() > 1):
-		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Nieznany błąd'}
 	else:
 		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Taki element nie instnieje!'}
 

@@ -12,41 +12,25 @@
 	
 	
 	<table class="table table-hover table-responsive">
-	<tr>
-	<td style="min-width: 150px;" align="center">
-	Status
-	</td>
-	<td style="min-width:80px;" align="center">
-	Produkt
-	</td>
-	<td style="min-width: 70px;" align="center">
-	Dodatki
-	</td>
-	<td style="min-width: 70px;" align="center">
-	Opis
-	</td>
-	
-
-	<td style="min-width: 70px;" align="center">
-	-
-	</td>
-	</tr>
-	
-	
-	
+	<tr><th>Status</th><th>Przejście</th><th>Produkt</th><th>Ilość produktów</th><th>Dodatki</th><th>Opis</th><th> </th></tr>
 	{% for element in content %}
-	<tr>
-	
 	<td>
-	{{ element.status }}
-	</td>
 	
+	{{ element.status }} </td><td> <a  href="/manage/order_status/change/{{ element.code }}/" class="btn btn-primary">Następny etap</a>
+	
+	</td>
 	<td>
 	{% for product in element.products %}
 	{{product.product_name}}<br/>
 	{% endfor %}
 	</td>
-
+	
+	<td>
+	{% for product in element.products %}
+	{{product.product_quantity}}<br/>
+	{% endfor %}
+	</td>
+	
 	<td>
 	{% for ing in element.ingrad %}
 	{{ing.ing_name}}<br/>
@@ -57,11 +41,10 @@
 	{{ element.order_note }}
 	</td>
 	
-	<td align="right" >
+	<td align="centre" >
 	
-	<a href="/manage/order_status/change/{{ element.code }}/" >[Zmień status]</a>&nbsp;
-	<a href="/manage/order_status/edit/{{ element.code }}/" >[Edytuj]</a>&nbsp;
-	<a href="/manage/order_status/delete/{{ element.code }}/" class="delete_button" >[Usuń]</a>&nbsp;
+	<a href="/manage/order_status/edit/{{ element.code }}/"  class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span></a>&nbsp;
+	<a href="/manage/order_status/delete/{{ element.code }}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a>
 	
 	</td>
 	
