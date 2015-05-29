@@ -87,4 +87,12 @@ jQuery(document).ready(function(){
 	jQuery(".delete-button").click(function(){
 		return confirm("Czy na pewno chcesz usunąć ten element?");
 	});
+	
+	jQuery(".change-order-status-button").click(function(){
+		return confirm("Czy na pewno chcesz zmienić status zamówienia?");
+	});
+	
+	jQuery(".cancel-order-button").click(function(){
+		return confirm("Czy na pewno chcesz anulować zamówienie?");
+	});
 });
