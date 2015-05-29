@@ -2414,31 +2414,36 @@ def product_edit(request,edit_id):
 			contents["ingredients_count"] = ingredients.count()
 	#pobierz zniżki
 	contents["discounts"] = display_discount()
-	for curRow in contents["discounts"]["content"]:
-		if(curRow["days"]!= ""):
-			days = curRow["days"].split(', ');
-			curRow["days"] = ""
-			for r in days:
-				if(r == "Poniedziałek"):
-					curRow["days"] += "Pn"
-				elif(r == "Wtorek"):
-					curRow["days"] += "-"
-					curRow["days"] += "Wt"
-				elif(r == "Środa"):
-					curRow["days"] += "-"
-					curRow["days"] += "Śr"
-				elif(r == "Czwartek"):
-					curRow["days"] += "-"
-					curRow["days"] += "Cz"
-				elif(r == "Piątek"):
-					curRow["days"] += "-"
-					curRow["days"] += "Pt"
-				elif(r == "Sobota"):
-					curRow["days"] += "-"
-					curRow["days"] += "Sb"
-				else:
-					curRow["days"] += "-"
-					curRow["days"] += "Nd"
+	try:
+		contents["discounts"]["content"]["days"]
+	except:
+		contents["discounts"]["content"] = []
+	else:
+		for curRow in contents["discounts"]["content"]:
+			if(curRow["days"]!= ""):
+				days = curRow["days"].split(', ');
+				curRow["days"] = ""
+				for r in days:
+					if(r == "Poniedziałek"):
+						curRow["days"] += "Pn"
+					elif(r == "Wtorek"):
+						curRow["days"] += "-"
+						curRow["days"] += "Wt"
+					elif(r == "Środa"):
+						curRow["days"] += "-"
+						curRow["days"] += "Śr"
+					elif(r == "Czwartek"):
+						curRow["days"] += "-"
+						curRow["days"] += "Cz"
+					elif(r == "Piątek"):
+						curRow["days"] += "-"
+						curRow["days"] += "Pt"
+					elif(r == "Sobota"):
+						curRow["days"] += "-"
+						curRow["days"] += "Sb"
+					else:
+						curRow["days"] += "-"
+						curRow["days"] += "Nd"
 	###Wczytywanie danych ###
 	if(request.POST.get('sent')):
 		pname = request.POST.get('name')
