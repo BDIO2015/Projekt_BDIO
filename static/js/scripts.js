@@ -95,4 +95,21 @@ jQuery(document).ready(function(){
 	jQuery(".cancel-order-button").click(function(){
 		return confirm("Czy na pewno chcesz anulować zamówienie?");
 	});
+	
+		
+// set active menu button
+	var l = window.location;
+		jQuery("ul.menu li").each(function(){
+			var str = l.toString();
+			console.log(l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
+			if(l == l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
+			{
+				jQuery(this).addClass("active");
+			}
+			else
+			{
+				if(str.substr(0,str.length-1) == l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
+					jQuery(this).addClass("active");
+			}
+		});
 });

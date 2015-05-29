@@ -17,26 +17,7 @@
 	<link rel="stylesheet" href="{% static 'css/style.css' %}">
 	<!-- Own scripts -->
 	<script src="{% static 'js/scripts.js' %}"></script>
-	
-	<script>
-	// set active menu button
-		jQuery(document).ready(function(){
-			var l = window.location;
-			jQuery("ul.menu li").each(function(){
-				var str = l.toString();
-				console.log(l == l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
-				if(l == l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
-				{
-					jQuery(this).addClass("active");
-				}
-				else
-				{
-					if(str.substr(0,str.length-1) == l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
-						jQuery(this).addClass("active");
-				}
-			});
-		});
-	</script>
+
 </head>
 
 <body class="col-sm-12 main">
@@ -46,12 +27,12 @@
         <ul class="nav nav-pills menu">
 		
             <li><a href="/"><span class="glyphicon glyphicon-home lg"></span> Home</a></li>
-			<li><a href="/user/register">Register</a><li>
-			<li><a href="/basket"><span class="glyphicon glyphicon-shopping-cart"></span> Koszyk</a><li>
+			<li><a href="/user/register">Register</a></li>
+			<li><a href="/basket"><span class="glyphicon glyphicon-shopping-cart"></span> Koszyk</a></li>
 			{% if user != False %}
-			{% if canEdit != 0 or canManage != 0 or canDelete != 0 or canCreate != 0 or canDeliver != 0 %}
-			<li><a href="/manage">Manage</a></li>
-			{% endif %}
+				{% if canEdit != 0 or canManage != 0 or canDelete != 0 or canCreate != 0 or canDeliver != 0 %}
+				<li><a href="/manage">Manage</a></li>
+				{% endif %}
 			{% endif %}
 			{% if user == False %}
 			<li><a class="btn btn-success" data-toggle="modal" data-target="#myModal"><span class="glyphicon glyphicon-log-in"></span> Zaloguj</a></li>
