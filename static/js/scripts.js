@@ -84,4 +84,7 @@ jQuery(document).ready(function(){
 			jQuery(this).find(".expand_icon").addClass("glyphicon-plus").removeClass("glyphicon-minus");
 	});
 
+	jQuery(".delete-button").click(function(){
+		return confirm("Czy na pewno chcesz usunąć ten element?");
+	});
 });

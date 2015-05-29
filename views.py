@@ -385,7 +385,7 @@ def schedule_add(request):
 				contents['affecting']==0
 				contents['actionType']='edit';
 				contents['edit_id']=schedule.id
-				contents['affectedUsers']=schedule_get_packed(sched, affectedUsers, types)
+				contents['affectedUsers']=schedule_get_packed(schedule, affectedUsers, types)
 			return render(request, 'manage_schedule_addedit.html', contents)	
 	else:
 		contents['typeFor']=contents['typeForAll']
