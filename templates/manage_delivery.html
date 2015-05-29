@@ -1,0 +1,77 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+
+	{% if messageType == "danger" or messageType == "success" %}
+
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	
+	{% endif %}
+	
+	<a href="/manage/courier_product/" class="btn btn-primary">Powrót</a>
+	
+	{% if type == 'display' %}
+		<a href="/manage/delivery/main" class="btn btn-primary">Moje zamówienia</a><br /><br />
+	{% else %} 
+		<a href="/manage/delivery" class="btn btn-primary">Wszystkie zamówienia</a><br /><br />	
+	{% endif %}
+	
+	{% if type == 'display' %}
+		<label>Wybierz zamówienia</label>
+	{% endif %}
+	
+	<table class="table table-hovered table-responsive">
+	
+	<tr> 
+	{% if type != 'display' %}
+		<th width=120></th>
+	{% endif %}
+		<th>Informacje</th>
+		<th>Adres</th>
+		<th>Status</th>
+		<th></th> 
+	</tr>
+	
+	{% for element in waiting_orders %}
+		<tr>
+		{% if type != 'display' %}
+			<td> 
+			{% if type != 'display' %}
+				<a href="/manage/delivery/deliverychangeorderup/{{element.delivery_id}}" class="btn btn-primary delete-button" data-toggle="tooltip"  title="Przesuń w góre"/><span class="glyphicon glyphicon-arrow-up"></span> </a>
+				<a href="/manage/delivery/deliverychangeorderdown/{{element.delivery_id}}" class="btn btn-primary delete-button" data-toggle="tooltip"  title="Przesuń w dół"/><span class="glyphicon glyphicon-arrow-down"></span> </a>
+			{% endif %}
+			</td>
+		{% endif %}
+	
+		<td>{{element.order_notes}}</td>
+		<td>{{element.order_address}}</td>
+		<td>
+		{% if type == 'display' %} 
+			Oczekujące	
+		{% else %} 
+			Dowóz 
+		{% endif %}
+		</td>
+			
+		<td>
+		{% if type == 'display' %}
+			<a href="/manage/delivery/takeorder/{{element.order_code}}" class="btn btn-primary delete-button" data-toggle="tooltip"  title="Weż zamówienie"/><span class="glyphicon glyphicon-briefcase"></span> </a>
+		{% endif %}
+		
+		{% if type != 'display' %}
+			<a href="/manage/delivery/changestatus/{{element.order_code}}" class="btn btn-primary delete-button" data-toggle="tooltip"  title="Zrealizowane"/><span class="glyphicon glyphicon-briefcase"></span> </a>
+		{% endif %}
+		</td>
+		</tr>
+		
+	</div>
+	
+	{% endfor %}
+	
+	</table>
+	
+{% endblock %}
