@@ -5,21 +5,20 @@
 
 {% block content %}
 	{% if messageType == "danger" or messageType == "success" %}
-	<a href="/manage/discount/">Powrót</a><br /><br />
 	<div class="alert alert-{{messageType}}">
 	  {{message}}
 	</div>
 	{% endif %}
-	<a href="/manage/payment/">Powrót</a><br /><br />
-<form action="/manage/payment/add/" method="POST">
+	<a href="/manage/payment/" class="btn btn-primary">Powrót</a><br /><br />
+<form action="/manage/payment/add/" method="POST" class="form-horizontal">
 	
 	{% csrf_token %}
-	<div style="border:1px solid black; width:500;height:120;padding: 10px;position: relative;top: 10px; ">
-	<p> Dodaj nową płatność: </p>
-	<input type="text" name="payment_name" value="Nazwa płatności" maxlength="20"  style="width:150px;" onblur="if(this.value=='')this.value='Nazwa płatności';" onfocus="if(this.value=='Nazwa płatności')this.value='';"/>
+	<div class="group-input">
+	<label class="control-label">Dodaj nową płatność: </label>
+	<input type="text" class="form-control" name="payment_name" value="Nazwa płatności" maxlength="20" onblur="if(this.value=='')this.value='Nazwa płatności';" onfocus="if(this.value=='Nazwa płatności')this.value='';"/>
 	
 	<br>
-	<input align="right" type="submit" name="sent" value="Zapisz" />  	{{ result }}
+	<input class="btn btn-primary" type="submit" name="sent" value="Zapisz" />  	{{ result }}
 	</div>
 
 </form>

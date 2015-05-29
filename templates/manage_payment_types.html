@@ -4,26 +4,29 @@
 
 {% block content %}
 	{% if messageType == "danger" or messageType == "success" %}
-	<a href="/manage/payment/">Powrót</a><br /><br />
 	<div class="alert alert-{{messageType}}">
 	  {{message}}
 	</div>
 	{% endif %}
-	<a href="/manage/payment/add/">Dodaj nowy typ płatności</a><br /><br />
+	<a href="/manage" class="btn btn-primary">Powrót</a></br></br>
+	<a href="/manage/payment/add/" class="btn btn-primary">Dodaj nowy typ płatności</a><br /><br />
 
-	<table border=1 cellpadding="2">
+	<table class="table table-hover table-responsive">
 	<tr>
-	<td style="min-width: 150px;" align="center">
+	<th>
 	Nazwa płatności
-	</td>
+	</th>
+	<th>
+	Zarządzaj
+	</th>
 	</tr>
 	{% for element in payments %}
 	<tr>
 	<td>
 	{{ element.payment_name }}
 	</td>
-	<td align="right" >
-	<a href="/manage/payment/delete/{{ element.id }}/" class="delete_button" >[Usuń]</a>
+	<td>
+	<a href="/manage/payment/delete/{{ element.id }}/" class="btn btn-primary delete-button" ><span class="glyphicon glyphicon-trash"></span> </a>
 	</td>
 	</tr>
 	{% endfor %}
