@@ -1,0 +1,55 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<a href="/manage/order_status/">Powrót</a><br /><br />
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	
+	
+	<table class="table table-hover table-responsive">
+	<tr><th>Status</th><th>Przejście</th><th>Produkt</th><th>Ilość produktów</th><th>Dodatki</th><th>Opis</th><th> </th></tr>
+	{% for element in content %}
+	<td>
+	
+	{{ element.status }} </td><td> <a  href="/manage/order_status/change/{{ element.code }}/" class="btn btn-primary">Następny etap</a>
+	
+	</td>
+	<td>
+	{% for product in element.products %}
+	{{product.product_name}}<br/>
+	{% endfor %}
+	</td>
+	
+	<td>
+	{% for product in element.products %}
+	{{product.product_quantity}}<br/>
+	{% endfor %}
+	</td>
+	
+	<td>
+	{% for ing in element.ingrad %}
+	{{ing.ing_name}}<br/>
+	{% endfor %}
+	</td>
+	
+	<td>
+	{{ element.order_note }}
+	</td>
+	
+	<td align="centre" >
+	
+	<a href="/manage/order_status/edit/{{ element.code }}/"  class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span></a>&nbsp;
+	<a href="/manage/order_status/delete/{{ element.code }}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a>
+	
+	</td>
+	
+	</tr>
+	{% endfor %}
+	</table>
+	
+{% endblock %}

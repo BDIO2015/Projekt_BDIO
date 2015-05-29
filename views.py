@@ -14,41 +14,43 @@ import platform
 #url(r'^manage/schedule_type/(?P<type_id>[0-9]+)', 'bdio.views.schedule_type', name='schedule_type'),
 #	url(r'^manage/schedule_user/(?P<user_id>[0-9]+)', 'bdio.views.schedule_user', name='schedule_user'),  
 #	url(r'^manage/schedule/add', 'bdio.views.schedule_add', name='schedule_add'),	
-#	url(r'^manage/schedule/edit/(?P<schedule_id>[0-2]+)', 'bdio.views.schedule_edit', name='schedule_edit'),
-#	url(r'^manage/schedule/delete/', 'bdio.views.schedule_delete', name='schedule_delete'),	
+#	url(r'^manage/schedule/edit/(?P<schedule_id>[0-9]+)', 'bdio.views.schedule_edit', name='schedule_edit'),
+#	url(r'^manage/schedule/delete/(?P<schedule_id>[0-9]+)', 'bdio.views.schedule_delete', name='schedule_delete'),	
 #	url(r'^manage/schedule/list', 'bdio.views.schedule_list', name='schedule_list'), 
 #	url(r'^manage/schedule', 'bdio.views.schedule', name='schedule'), 
 
 def schedule_get_packed(schedule_id, affectedUsers, type_ids):
 	usersCount=0;
 	groupsCount={}
+	
 	for typeID in type_ids:
-		groupsCount.update({typeID.id:(User.objects.filter(type=typeID.id).count())})
+		groupsCount.update({typeID.id:(User.objects.filter(type=typeID).count())})
 		usersCount+=groupsCount[typeID.id]
+
 	userWithSchedule = User.objects.filter(scheduled=schedule_id)
-	userWithSchedule= userWithSchedule.filter(user_id__in=affectedUsers)
 	if(len(userWithSchedule)==0):
 		schedule_id.delete();
-		return {}	
-	if(usersCount==0):
+		return {}
+	userWithSchedule= userWithSchedule.filter(user_id__in=affectedUsers)
+	if(len(userWithSchedule)==0 or usersCount==0):
 		return {};
 
-	groupsCountCopy=groupsCount;
+	groupsCountCopy=dict(groupsCount);
 	usersCountCopy=usersCount
-	
+
 	for user in userWithSchedule:
 		groupsCountCopy[user.type.id]-=1;
 		usersCountCopy-=1;
 	if(usersCountCopy==0 and usersCount>0):
 		return {0:'Wszyscy'}
 	result = {}
-
-	for typeID in type_ids:
+	userWithSchedule=list(userWithSchedule)
+	for idx, typeID in enumerate(type_ids):
 		if(groupsCountCopy[typeID.id]==0 and groupsCount[typeID.id]>0):
-			result.update({type_ids.id:(type_ids.type_name+'-')})
-			for user in userWithSchedule:
-				if(user.type==typeID.id):
-					userWithSchedule.remove(user);
+			result.update({idx:(typeID.type_name+'-')})
+			for user in userWithSchedule[:]:
+				if(user.type==typeID):
+					userWithSchedule.remove(user)
 	for user in userWithSchedule:
 		result.update({user.user_id:user.username})
 	return result;
@@ -60,7 +62,7 @@ def display_schedule(request, affectedUsers):
 	types=User_Type.objects.all()
 	contents = {'title':'Rozkład', 'types':[], 'typeFor':'0', 'typeForAll':types.count(), 'typeForUsers':types.count()+1, 'canManage':'true', 'affecting':'false', 'userNames':'', 'edit_id':0, 'usersAffected':0, 'usersShowed':0}
 	for type in types:
-		contents['types'].append(type.type_name);
+		contents['types'].append(type.type_name)
 	edit_id=0;
 	for sched in schedList:
 		compactRes=schedule_get_packed(sched, affectedUsers, types)
@@ -69,12 +71,20 @@ def display_schedule(request, affectedUsers):
 			edit_id=sched.id
 			for i in range(7):
 				if(sched.day[i]=='1'):
-					for j in range(int(sched.time_start[(2*i):((2*i)+2)]), int(sched.time_end[(2*i):((2*i)+2)])):
-						timetable[j][i].update(compactRes)
-	usersWithSameSchedule = []
-	for user in affectedUsers:
-		if(user.scheduled!=None):
-			usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
+					start=int(sched.time_start[(2*i):((2*i)+2)])
+					end=int(sched.time_end[(2*i):((2*i)+2)])
+					if(start>end):
+						for j in range(start, 24):
+							timetable[j][i].update(compactRes)
+						for j in range(0, end+1):
+							timetable[j][i].update(compactRes)
+					elif(start<end):
+						for j in range(start, end):
+							timetable[j][i].update(compactRes)
+					else:
+						for j in range(24):
+							timetable[j][i].update(compactRes)
+	usersWithSameSchedule=User.objects.filter(scheduled__in=[user.scheduled for user in affectedUsers])
 	contents['usersAffected']=len(usersWithSameSchedule)
 	contents['usersShowed']=len(affectedUsers)
 	contents['timetable']=timetable
@@ -84,6 +94,7 @@ def display_schedule(request, affectedUsers):
 	
 	
 def display_schedule_user(request, user_id):
+	contents = {'title':'Rozkład'}
 	try:
 		uid=int(user_id);
 		affectedUsers = User.objects.filter(user_id=uid)
@@ -95,11 +106,13 @@ def display_schedule_user(request, user_id):
 			else:
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Podany użytkownik nie istnieje'
-			return render(request, 'manage_schedule.html', contents);
+			return contents
+		
 	except ValueError:
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Podano niepoprawny numer użytkownika'
-		return render(request, 'manage_schedule.html', contents);
+		return contents
+
 	contents=display_schedule(request, affectedUsers);
 	contents['typeFor']=contents['typeForUsers'];
 	contents['userNames']=affectedUsers[0].username;
@@ -111,37 +124,67 @@ def display_schedule_user(request, user_id):
 
 
 def schedule_user(request, user_id):
-	return render(request, 'manage_schedule.html', display_schedule_user(request, user_id))
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
+		return display_product_front(request)
+	contents = display_schedule_user(request, user_id)
+	if(check['canManage']==True):
+		contents['canManage']='true'
+	else:
+		contents['canManage']='false'
+	return render(request, 'manage_schedule.html', contents)
 	
 	
 def display_schedule_type(request, type_id):
+	
 	try:
 		tid=int(type_id);
 		types = User_Type.objects.all()
 		if(types.count() <= tid):
 			contents = {'title':'Rozkład'}
 			contents['messageType'] = 'danger'
-			contents['message'] = 'Podany typ użytkowników nie istnieje'+' '+str(types.count())
+			contents['message'] = 'Podany typ użytkowników nie istnieje'
 			return contents;
 		affectedUsers = User.objects.filter(type=types[tid])
 	except ValueError:
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Podano niepoprawny typ użytkowników'
 		return contents;
-	contents=display_schedule(request, affectedUsers);
-	contents['typeFor']=tid;
+	contents=display_schedule(request, affectedUsers)
+	contents['typeFor']=tid
 	contents['userNames']=''
-	if(contents['scheduleCount']==1 and contents['usersAffected']==contents['usersShowed']):
-		contents['actionType']='edit';
+	if(check['canManage']==True):
+		contents['canManage']='true'
 	else:
-		contents['actionType']="add";
+		contents['canManage']='false'
+	if(contents['scheduleCount']==1 and contents['usersAffected']==contents['usersShowed']):
+		contents['actionType']='edit'
+	else:
+		contents['actionType']="add"
 	return contents
 
 
 def	schedule_type(request, type_id):
-	return render(request, 'manage_schedule.html', display_schedule_type(request, type_id))
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
+		return display_product_front(request)
+	contents = display_schedule_type(request, type_id)
+	if(check['canManage']==True):
+		contents['canManage']='true'
+	else:
+		contents['canManage']='false'
+	return render(request, 'manage_schedule.html', contents)
 	
 def schedule(request):
+	check = user_check(request)
+	if (check == False):
+		return display_product_front(request)
+	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
+		return display_product_front(request)
 	isSent = request.POST.get('sent', False);
 	contents={}
 	if(isSent):
@@ -189,7 +232,7 @@ def schedule(request):
 						contents['messageType'] = 'danger'
 						contents['message'] = 'Podany użytkownik nie istnieje ('+str(name)+')'
 						return render(request, 'manage_schedule.html', contents)
-			
+				affectedUsers=User.objects.filter(user_id__in=[user.user_id for user in affectedUsers])
 			else:
 				try:
 					types= User_Type.objects.all();
@@ -203,17 +246,27 @@ def schedule(request):
 					contents['message'] = 'Wybrano nieprawidłowy typ użytkowników'
 					return render(request, 'manage_schedule.html', contents)
 			if(affecting):
-				usersWithSameSchedule = []
-				for user in affectedUsers:
-					if(user.scheduled!=None):
-						usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
-				affectedUsers=usersWithSameSchedule;
+				affectedUsers=User.objects.filter(scheduled__in=[user.scheduled for user in affectedUsers])
 			elif(group==typeCount+1):
 				if(len(affectedUsers)==1):
-					return render(request, 'manage_schedule.html', display_schedule_user(request, affectedUsers[0].user_id))
+					contents = display_schedule_user(request, affectedUsers[0].user_id)
+					if(check['canManage']==True):
+						contents['canManage']='true'
+					else:
+						contents['canManage']='false'
+					return render(request, 'manage_schedule.html', contents)
 			else:
-				return render(request, 'manage_schedule.html', display_schedule_type(request, group))
+				contents = display_schedule_type(request, group)
+				if(check['canManage']==True):
+					contents['canManage']='true'
+				else:
+					contents['canManage']='false'
+				return render(request, 'manage_schedule.html', contents)
 			contents=display_schedule(request, affectedUsers);
+			if(check['canManage']==True):
+				contents['canManage']='true'
+			else:
+				contents['canManage']='false'
 			contents['typeFor']=contents['typeForUsers']
 			if(contents['scheduleCount']>1 or contents['scheduleCount']==0 or contents['usersAffected']!=contents['usersShowed']):
 				contents['actionType']='add';
@@ -226,6 +279,10 @@ def schedule(request):
 			return render(request, 'manage_schedule.html', contents)
 	affectedUsers = User.objects.all();
 	contents=display_schedule(request, affectedUsers);
+	if(check['canManage']==True):
+		contents['canManage']='true'
+	else:
+		contents['canManage']='false'
 	contents['typeFor']=contents['typeForAll']
 	if(contents['scheduleCount']>1 or contents['scheduleCount']==0 or contents['usersAffected']!=contents['usersShowed']):
 		contents['actionType']='add';
@@ -235,6 +292,10 @@ def schedule(request):
 
 
 def schedule_add(request):
+	check = user_check(request)
+	if (check == False or check['canManage'] == False):
+		return display_product_front(request)
+	
 	isSent = request.POST.get('sent', False);
 	showing = request.POST.get('showing', False);
 
@@ -249,24 +310,19 @@ def schedule_add(request):
 			for i in range(7):
 				contents['day'+str(i)]=request.POST.get('day'+str(i), False);
 			for i in range(7):
-				h=request.POST.get('shour'+str(i), '08')[:2]
-				if(h==''):
+				contents['shour'+str(i)]=request.POST.get('shour'+str(i), '08')[:2]
+				contents['ehour'+str(i)]=request.POST.get('ehour'+str(i), '08')[:2]
+				if(contents['shour'+str(i)]==''):
 					if(contents['day'+str(i)]!=False):
 						noneHour=True;
 					else:
-						contents['shour'+str(i)]=8				
-				else:
-					contents['shour'+str(i)]=int(h)
-			for i in range(7):
-				h=request.POST.get('ehour'+str(i), '08')[:2]
-				if(h==''):
+						contents['shour'+str(i)]='08'
+				if(contents['ehour'+str(i)]==''):
 					if(contents['day'+str(i)]!=False):
 						noneHour=True;
 					else:
-						contents['ehour'+str(i)]=16
-				else:
-					contents['ehour'+str(i)]=int(h)
-			contents['desc']=request.POST.get('description', '')
+						contents['ehour'+str(i)]='16'
+			contents['desc']=request.POST.get('description', '').strip()
 		
 		affecting=request.POST.get('affecting', False)
 		typeCount=User_Type.objects.all().count();
@@ -296,28 +352,27 @@ def schedule_add(request):
 		else:
 			if(group==(typeCount+1)):
 				userNames=[];
-				pos=0
-				while True:
-					pos2=users.find(',')
-					if(pos!=-1):
-						userNames.append(users[pos:].strip());
+				while len(users)>0:
+					pos=users.find(',')
+					if(pos==-1):
+						userNames.append(users.strip())
 						break
 					else:
-						userNames.append(users[pos:pos2].strip());
-					pos=pos2+1;
-					users=users[pos2:]
+						userNames.append(users[:pos].strip())
+					users=users[(pos+1):].strip()
 				for name in userNames:
 					try:
 						user = User.objects.get(username=name)
 						if(user.type==None):
 							contents['messageType'] = 'danger'
 							contents['message'] = 'Użytkownikowi ('+str(name)+') nie można przypisać planu'
-						return render(request, 'manage_schedule_addedit.html', contents)
+							return render(request, 'manage_schedule_addedit.html', contents)
 						affectedUsers.append(user)
 					except User.DoesNotExist:
 						contents['messageType'] = 'danger'
 						contents['message'] = 'Podany użytkownik nie istnieje ('+str(name)+')'
 						return render(request, 'manage_schedule_addedit.html', contents)
+				affectedUsers=User.objects.filter(user_id__in=[user.user_id for user in affectedUsers])
 				contents['typeFor']=contents['typeForUsers']
 			else:
 				if(types.count()<group):
@@ -328,11 +383,7 @@ def schedule_add(request):
 				contents['typeFor']=group;
 				affectedUsers= User.objects.filter(type=type)		
 			if(affecting):
-				usersWithSameSchedule = []
-				for user in affectedUsers:
-					if(user.scheduled!=None):
-						usersWithSameSchedule+=User.objects.filter(scheduled=user.scheduled)
-				affectedUsers=usersWithSameSchedule;
+				affectedUsers=User.objects.filter(scheduled__in=[user.scheduled for user in affectedUsers])
 				contents['typeFor']=contents['typeForUsers']
 			if(contents['typeFor']==contents['typeForUsers']):
 				for user in affectedUsers:
@@ -345,20 +396,9 @@ def schedule_add(request):
 			ehour='';
 			for i in range(7):
 				if(contents['day'+str(i)]!=False):
-					if(contents['shour'+str(i)]>=contents['ehour'+str(i)]):
-						contents['messageType'] = 'danger'
-						contents['message'] = 'Wpisano nieprawidłową godzine rozpoczęcia lub zakończenia'
-						return render(request, 'manage_schedule_addedit.html', contents);
-					else:
-						if(contents['shour'+str(i)]<10):
-							shour+='0'+str(contents['shour'+str(i)])
-						else:
-							shour+=str(contents['shour'+str(i)])
-						if(contents['ehour'+str(i)]<10):
-							ehour+='0'+str(contents['ehour'+str(i)])
-						else:
-							ehour+=str(contents['ehour'+str(i)])
-						day+='1'
+					shour+=contents['shour'+str(i)]
+					ehour+=contents['ehour'+str(i)]
+					day+='1'
 				else:
 					day+='0'
 					shour+='00'
@@ -367,6 +407,7 @@ def schedule_add(request):
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Należy zaznaczyć conajmniej jeden dzień'
 				return render(request, 'manage_schedule_addedit.html', contents);
+			
 			schedule = Schedule(description=contents['desc'],day=day,time_start=shour,time_end=ehour)
 			schedule.save();
 			i=0;
@@ -392,60 +433,57 @@ def schedule_add(request):
 	return render(request, 'manage_schedule_addedit.html', contents)
 
 
-def schedule_edit(request, edit_id):
+def schedule_edit(request, schedule_id):
+	check = user_check(request)
+	if (check == False or check['canManage'] == False):
+		return display_product_front(request)
+		
 	isSent = request.POST.get('sent', False);
 	showing = request.POST.get('showing', False);
-	
 	try:
-		schedule = Schedule.objects.get(id=edit_id)
-	except Schedule.DoesNotExists:
+		schedule = Schedule.objects.get(id=schedule_id)
+	except Schedule.DoesNotExist:
 		contents = {'title':'Rozkład'}
 		contents['messageType'] = 'danger'
-		contents['message'] = 'Podany plan nie istnieje'
+		contents['message'] = 'Podany plan nie istnieje'+str(schedule_id)
 		return render(request, 'manage_schedule_addedit.html', contents);
-	types=User_Type.objects.all()	
-	contents = {'title':'Rozkład', 'types':[], 'canManage':'true', 'affectedUsers':{}, 'actionType':'edit', 'edit_id':edit_id, 'actionType':'edit'}
+	
+	contents = {'title':'Rozkład', 'canManage':'true', 'affectedUsers':{}, 'actionType':'edit', 'edit_id':schedule_id, 'actionType':'edit'}
 	
 	for i in range(7):
-		contents['day'+str(i)]=schedule.day[i]
-		if(contents['day'+str(i)]=='1'):
-			contents['shour'+str(i)]=int(schedule.time_start[(2*i):((2*i)+2)])
-			contents['ehour'+str(i)]=int(schedule.time_end[(2*i):((2*i)+2)])
-			contents['day'+str(i)]=int(schedule.day[i])
+		if(schedule.day[i]=='1'):
+			contents['shour'+str(i)]=schedule.time_start[(2*i):((2*i)+2)]
+			contents['ehour'+str(i)]=schedule.time_end[(2*i):((2*i)+2)]
+			contents['day'+str(i)]=schedule.day[i]
 		else:
-			contents['shour'+str(i)]=8
-			contents['ehour'+str(i)]=16
-			contents['day'+str(i)]=0
-	contents['desc']=schedule.desc;
+			contents['shour'+str(i)]='08'
+			contents['ehour'+str(i)]='16'
+			contents['day'+str(i)]='0'
+	contents['desc']=schedule.description.strip();
 	
 	affectedUsers = User.objects.filter(scheduled=schedule)
-	contents['affectedUsers']=schedule_get_packed(sched, affectedUsers, types)
+	contents['affectedUsers']=schedule_get_packed(schedule, affectedUsers, User_Type.objects.all())
 	
 	if(isSent):
 		if(showing):
 			for i in range(7):
 				contents['day'+str(i)]=request.POST.get('day'+str(i), False);
-			noneHour=False;
+			noneHour=False
 			for i in range(7):
-				h=request.POST.get('shour'+str(i), '08')[:2]
-				if(h==''):
+				contents['shour'+str(i)]=request.POST.get('shour'+str(i), '08')[:2]
+				contents['ehour'+str(i)]=request.POST.get('ehour'+str(i), '08')[:2]
+				if(contents['shour'+str(i)]==''):
 					if(contents['day'+str(i)]!=False):
 						noneHour=True;
 					else:
-						contents['shour'+str(i)]=8
-				else:
-					contents['shour'+str(i)]=int(h)
-			for i in range(7):
-				h=request.POST.get('ehour'+str(i), '08')[:2]
-				if(h==''):
+						contents['shour'+str(i)]='08'
+				if(contents['ehour'+str(i)]==''):
 					if(contents['day'+str(i)]!=False):
 						noneHour=True;
 					else:
-						contents['ehour'+str(i)]=16							
-				else:
-					contents['ehour'+str(i)]=int(h)
+						contents['ehour'+str(i)]='16'
 			
-			contents['desc']=request.POST.get('description', '');
+			contents['desc']=request.POST.get('description', '').strip();
 			
 			if(noneHour):
 				contents['messageType'] = 'danger'
@@ -458,20 +496,9 @@ def schedule_edit(request, edit_id):
 			
 			for i in range(7):
 				if(contents['day'+str(i)]!=False):
-					if(contents['shour'+str(i)]>=contents['ehour'+str(i)]):
-						contents['messageType'] = 'danger'
-						contents['message'] = 'Wpisano nieprawidłową godzine rozpoczęcia lub zakończenia'
-						return render(request, 'manage_schedule_addedit.html', contents);
-					else:
-						if(contents['shour'+str(i)]<10):
-							shour+='0'+str(contents['shour'+str(i)])
-						else:
-							shour+=str(contents['shour'+str(i)])
-						if(contents['ehour'+str(i)]<10):
-							ehour+='0'+str(contents['ehour'+str(i)])
-						else:
-							ehour+=str(contents['ehour'+str(i)])
-						day+='1'
+					shour+=str(contents['shour'+str(i)])
+					ehour+=str(contents['ehour'+str(i)])
+					day+='1'
 				else:
 					day+='0'
 					shour+='00'
@@ -480,8 +507,10 @@ def schedule_edit(request, edit_id):
 				contents['messageType'] = 'danger'
 				contents['message'] = 'Należy zaznaczyć conajmniej jeden dzień'
 				return render(request, 'manage_schedule_addedit.html', contents);
-			schedule = Schedule(description=contents['desc'],day=day,time_start=shour,time_end=ehour)
-			schedule.desc=contents['desc']
+			schedule.description=contents['desc']
+			schedule.day=day
+			schedule.time_start=shour
+			schedule.time_end=ehour
 			schedule.save();
 			i=0;
 			for user in affectedUsers:
@@ -501,30 +530,35 @@ def schedule_edit(request, edit_id):
 	return render(request, 'manage_schedule_addedit.html', contents)
 	
 def schedule_delete(request, schedule_id):
+	check = user_check(request)
+	if (check == False or check['canManage'] == False):
+		return display_product_front(request)
 	try:
-		schedule = Schedule.objects.get(id=edit_id)
-	except Schedule.DoesNotExists:
+		schedule = Schedule.objects.get(id=schedule_id)
+	except Schedule.DoesNotExist:
 		contents = {'title':'Rozkład'}
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Podany plan nie istnieje'
 		return render(request, 'manage_schedule_addedit.html', contents);
-	types=User_Type.objects.all()	
-	contents = {'title':'Rozkład', 'types':[], 'canManage':'true', 'affectedUsers':{}, 'actionType':'edit', 'edit_id':edit_id, 'actionType':'delete'}
+	contents = {'title':'Rozkład', 'canManage':'true', 'affectedUsers':{}, 'actionType':'delete', 'actionType':'delete'}
 	affectedUsers = User.objects.filter(scheduled=schedule)
-	users=schedule_get_packed(sched, affectedUsers, types)
+	users=schedule_get_packed(schedule, affectedUsers, User_Type.objects.all())
 	for user in affectedUsers:
 		user.scheduled=None
-		user.save();
+		user.save()
 	schedule.delete()
 	contents['messageType'] = 'success'
 	usernames=''
 	for user in users:
 		usernames+=users[user]+', '
 	usernames=usernames[:-2]
-	contents['message'] = 'Plan dla użytkowników ['+usernames+'] został usunięty'
+	contents['message'] = 'Plan dla użytkowników ['+str(usernames)+'] został usunięty'
 	return render(request, 'manage_schedule_addedit.html', contents)
 	
 def schedule_list(request):
+	check = user_check(request)
+	if (check == False or check['canManage'] == False):
+		return display_product_front(request)
 	users=User.objects.all();
 	schedules = Schedule.objects.all();
 	validScheds=0;
@@ -538,7 +572,7 @@ def schedule_list(request):
 		compactRes=schedule_get_packed(sched, users, types)
 		if(len(compactRes)>0):
 			validScheds+=1;
-			schedules.update({sched.id:{'desc':sched.description, 'users':compactRes}})
+			schedList.update({sched.id:{'desc':sched.description, 'users':compactRes}})
 	contents['scheduleList']=schedList
 	contents['scheduleCount']=validScheds;
 	return render(request, 'manage_schedule_list.html', contents)
@@ -557,6 +591,7 @@ def user_check(request):
 	types = User_Type.objects.all()
 	if(not users or not types):
 		contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
+		return False
 	if not('login_check' in request.session):
 		return False
 	else:
@@ -2801,4 +2836,341 @@ def management_panel(request):
 	
 	return render(request, 'manage_management_panel.html', contents)
 
+def user_dash(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	users = User.objects.all()
+	types = User_Type.objects.all()
+	id=str(request.session['login_check'])
+	url='/manage/schedule_user/'
+	url+=id
+	for l_user in users:
+			if(l_user.user_id==int(request.session['login_check']) and l_user.type_id==None):
+				contents =  {'type':'Wyświetl zamówienia','url':url}
+			else:
+				contents =  {'type':'Wyświetl rozkład','url':url}
+	return render(request,'user_dash.html',contents)
+
+def user_delete(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	contents = {'title':'Logowanie', 'username':'', 'password':'', 'messageType':'danger', 'message':'Potwierdź swoją tożsamość!'} 
+	c_username=request.POST.get('username')
+	c_password=request.POST.get('password')
+	users = User.objects.all()
+	if(request.POST.get('sent')):
+		c_password=hashlib.sha256(c_password.encode()).hexdigest()
+		for c_user in users:
+			if((c_user.username==str(c_username)) and (c_password==c_user.password)):
+				Del = User.objects.filter(user_id=c_user.user_id)
+				iterator = -1
+				if(Del.count() == 1):
+					Del[0].delete()					
+					users = User.objects.all()
+					contents = {'messageType':'success', 'message':'Konto usunięte!'}
+					del request.session['login_check']
+					return render(request,'index.html',contents)
+			else:
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Podaj poprawną nazwę użytkownika i/lub hasło!', 'username':'', 'password':''}
+	return render(request,'user_delete.html',contents)
+
+def user_edit(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	users = User.objects.all()
+	for l_user in users:
+			if(l_user.user_id==int(request.session['login_check'])):
+				s_name = l_user.name
+				s_postal_code = l_user.postal_code
+				s_postal_code1 = (str(s_postal_code))[:2]
+				s_postal_code2 = (str(s_postal_code))[-3:]
+				s_phone_number = l_user.phone_number
+				s_address = l_user.address
+				s_city = l_user.city
+				s_second_name = l_user.second_name
+	mainContent = '';
+	contents = {'title':'Edytuj', 'name':str(s_name), 'second_name':str(s_second_name), 'address':str(s_address), 'city':str(s_city),   'phone_number':str(s_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
+	if(request.POST.get('sent')):
+		reg_name = request.POST.get('name')
+		reg_password = request.POST.get('password')
+		reg_postal_code = request.POST.get('postal_code1')+request.POST.get('postal_code2')
+		reg_phone_number = request.POST.get('phone_number')
+		reg_address = request.POST.get('address')
+		reg_city = request.POST.get('city')
+		reg_old_pass = request.POST.get('password_old')
+		reg_second_name = request.POST.get('second_name')
+		reg_old_pass=hashlib.sha256(reg_old_pass.encode()).hexdigest()
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_name))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_edit.html',contents)
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_second_name))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username) }
+			return render(request,'user_edit.html',contents)
+		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_edit.html',contents)
+		if not(re.match('[0-9]{5,5}',str(reg_postal_code))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			return render(request,'user_edit.html',contents)
+		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'username':str(reg_username)}
+			return render(request,'user_edit.html',contents)
+		if (not(re.match('.{6,64}',str(reg_password)))):
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				return render(request,'user_edit.html',contents)
+		if (not(re.match('.{1,64}',str(reg_address)))):
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				return render(request,'user_edit.html',contents)
+		good=1
+		if good:
+			for c_user in users:
+				if(c_user.user_id==int(request.session['login_check']) and (reg_old_pass==c_user.password)):
+					reg_password=hashlib.sha256(reg_password.encode()).hexdigest()
+					l_user.name = str(reg_name)
+					l_user.second_name = str(reg_second_name)
+					l_user.password = str(reg_password)
+					l_user.phone_number = str(reg_phone_number)
+					l_user.address = str(reg_address)
+					l_user.postal_code = str(reg_postal_code)
+					l_user.city = str(reg_city)
+					l_user.save()
+					contents = {'messageType':'success', 'message':'Zmiany zapisane!'}
+				else:
+					contents = {'messageType':'alert', 'message':'Wprowadź prawidłowe hasło!', 'title':'Edytuj', 'name':str(s_name), 'second_name':str(s_second_name), 'address':str(s_address), 'city':str(s_city),   'phone_number':str(s_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
+	return render(request, 'user_edit.html', contents)
 	
+def display_order_status():
+	
+	orders = Order.objects.all()
+	o_p = Order_Product.objects.all()
+	o_i = Order_Ingredients.objects.all()
+	toIng = []
+	toProd = []
+	
+	contents = {'title':'Zamówienia', 'content':''}
+	if(orders.count() > 0):
+		toDisp = []
+		for curRow in orders:
+			if(curRow.status == '1' or curRow.status == '2' or curRow.status == '3'):
+				if(o_p.count()>0):
+					toProd = []
+					for curProd in o_p:
+						if(curRow.order_code == curProd.order.order_code):
+							prod = Product.objects.get(product_code=curProd.product.product_code)
+							if(prod):
+								productList = {'product_code':prod.product_code ,'product_quantity': curProd.quantity , 'product_name':prod.product_name}
+								toProd.append(productList)
+							
+							if(o_i.count()>0):
+								toIng = []
+								for curIng in o_i:
+									if(curIng.product_order.order == curProd.order ):
+										ing = Ingredient.objects.get(id = curIng.ingredient.id)
+										if(ing):
+											ingList = {'ing_id':ing.id, 'ing_quantity':ing.quantity,'ing_name':ing.name}
+											
+											toIng.append(ingList)
+						
+				row = {'code':curRow.order_code, 'status':curRow.get_status_display() , 'order_note':curRow.order_notes, 'products':toProd, 'ingrad':toIng}
+				toDisp.append(row)
+				contents = {'title':'Zamówienia','count':orders.count(), 'content':toDisp}
+
+	else:
+		contents = {'title':'Zamówienia', 'content':'Brak zamówień', 'count':0}
+	return contents
+	
+def order_status(request):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return display_product_front(request)
+	return render(request, 'manage_order_status.html', display_order_status())
+	
+def order_status_change(request, chg_id):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return display_product_front(request)
+	try:
+		id = int(chg_id)
+	except ValueError:
+		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
+		return render(request, 'manage_order_status.html', contents)
+		
+	toEdit = Order.objects.get(order_code=chg_id)
+	
+	if(toEdit):
+		if (toEdit.status == '1'):
+			toEdit.status = '2'
+		elif toEdit.status == '2':
+			toEdit.status = '3'
+		elif toEdit.status == '3':
+			toEdit.status = '4'
+		else:
+			contents = {'title':'Zamówienia','messageType':'danger', 'message':'Błędny status!'}
+		toEdit.save()
+		return order_status(request)
+	else:
+		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
+		
+	return render(request, 'manage_order_status.html', contents)
+	
+def order_status_delete(request, del_id):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return display_product_front(request)
+	try:
+		did = int(del_id)
+	except ValueError:
+		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Taki element nie instnieje!'}
+		return render(request, 'manage_order_status.html', contents)
+		
+	toCnnl = Order.objects.get(order_code=did)
+	if(toCnnl):
+		toCnnl.status = '0'
+		toCnnl.save()
+		return order_status(request)
+	else:
+		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Taki element nie instnieje!'}
+
+	return render(request, 'manage_order_status.html', contents)
+	
+def order_status_edit_display(request,chg_id):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return display_product_front(request)
+	try:
+		id = int(chg_id)
+	except ValueError:
+		return render(request, 'manage_order_status.html', contents)
+	o_p = Order_Product.objects.all()
+	o_i = Order_Ingredients.objects.all()
+	toIng = []
+	ingInd = 0
+	toProd = []
+	proInd = 0
+	curRow = Order.objects.get(order_code=chg_id)
+	if(curRow):
+		if(o_p.count()>0):
+				toProd = []
+				for curProd in o_p:
+					if(curRow.order_code == curProd.order.order_code):
+						prod = Product.objects.get(product_code=curProd.product.product_code)
+						if(prod):
+							productList = {'product_index':('p'+str(proInd)),'quantity_index':('q'+str(proInd)),'product_code':prod.product_code ,'product_quantity': curProd.quantity , 'product_name':prod.product_name}
+							toProd.append(productList)
+							proInd = proInd + 1
+						if(o_i.count()>0):
+							toIng = []
+							for curIng in o_i:
+								if(curIng.product_order.order == curProd.order ):
+									ing = Ingredient.objects.get(id = curIng.ingredient.id)
+									if(ing):
+										ingList = {'ing_index':('i'+str(ingInd)) ,'ing_id':ing.id, 'ing_quantity':ing.quantity,'ing_name':ing.name}
+										toIng.append(ingList)
+										ingInd = ingInd + 1
+				row = {'code':curRow.order_code, 'status':curRow.get_status_display() , 'order_note':curRow.order_notes,'order_price':curRow.price, 'products':toProd, 'ingrad':toIng}
+				return row
+	
+def order_status_edit(request, chg_id):
+	check = user_check(request)
+	if (check == False):
+		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return display_product_front(request)
+	try:
+		id = int(chg_id)
+	except ValueError:
+		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
+		return render(request, 'manage_order_status.html', contents)
+	
+	o_p = Order_Product.objects.all()
+	o_i = Order_Ingredients.objects.all()
+	toIng = []
+	ingInd = 0
+	toProd = []
+	proInd = 0
+	curRow = Order.objects.get(order_code=chg_id)
+	if(curRow):
+		if(o_p.count()>0):
+				toProd = []
+				for curProd in o_p:
+					if(curRow.order_code == curProd.order.order_code):
+						prod = Product.objects.get(product_code=curProd.product.product_code)
+						if(prod):
+							productList = {'product_index':('p'+str(proInd)),'quantity_index':('q'+str(proInd)),'product_code':prod.product_code ,'product_quantity': curProd.quantity , 'product_name':prod.product_name}
+							toProd.append(productList)
+							proInd = proInd + 1
+						if(o_i.count()>0):
+							toIng = []
+							for curIng in o_i:
+								if(curIng.product_order.order == curProd.order ):
+									ing = Ingredient.objects.get(id = curIng.ingredient.id)
+									if(ing):
+										ingList = {'ing_index':('i'+str(ingInd)) ,'ing_id':ing.id, 'ing_quantity':ing.quantity,'ing_name':ing.name,'product_code':curIng.product_order.product.product_code}
+										toIng.append(ingList)
+										ingInd = ingInd + 1
+				row = {'code':curRow.order_code, 'status':curRow.get_status_display() , 'order_note':curRow.order_notes,'order_price':curRow.price, 'products':toProd, 'ingrad':toIng}
+				contents = {'title':'Zamówienia', 'content':row}
+	
+		if(request.POST.get('sent')):
+			order_statusx = request.POST.get('note', False)
+			curRow.order_notes = order_statusx
+			curRow.save()
+			pricex =  request.POST.get('new_price', False)
+			if(pricex != curRow.price):
+				curRow.price = pricex
+				curRow.save()
+
+			for i in range(ingInd):
+				ingx = request.POST.get('i'+str(i), False)
+				if(ingx == False):
+					for element in toIng:
+						if(element['ing_index'] == 'i'+str(i)):
+							for ii in o_i:
+								if( int(ii.product_order.order.order_code) == int(chg_id) and int(ii.product_order.product.product_code) == int(element['product_code']) and int(ii.ingredient.id) == int(element['ing_id']) ): 
+									ii.delete()
+									
+			for i in range(proInd):
+				quax = request.POST.get('q'+str(i), False)
+				for element in toProd:
+					if( 'q'+str(i) == element['quantity_index']  and int(element['product_quantity']) !=  int(quax)):
+						for pp in o_p:
+							if(int(pp.order.order_code) == int(chg_id) and int(pp.product.product_code) == int(element['product_code'])):
+								if(quax == 0):
+									for ii in o_i:
+										if( int(ii.product_order.order.order_code) == int(chg_id)  and int(ii.product_order.product.product_code) == int(element['product_code']) ):
+											ii.delete()
+									pp.delete()
+								else:
+									pp.quantity = quax
+									pp.save()
+								
+			for i in range(proInd):
+				prox = request.POST.get('p'+str(i), False)
+				if(prox == False):
+					for element in toProd:
+						if(element['product_index'] == 'p'+str(i)):
+							for pp in o_p:
+								if( int(pp.order.order_code) == int(chg_id)  and int(pp.product.product_code) == int(element['product_code']) ):
+									for ii in o_i:
+										if( int(ii.product_order.order.order_code) == int(chg_id)  and int(ii.product_order.product.product_code) == int(element['product_code']) ):
+											ii.delete()
+									pp.delete()
+								
+			contents = {'title':'Zamówienia','messageType':'success', 'message':'Zmiany zostały zapisane!','content':order_status_edit_display(request,chg_id)}
+			return render(request, 'manage_order_status_edit.html', contents)
+	else:
+		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
+			
+	contents = {'title':'Zamówienia','messageType':'none','content':row}
+	return render(request, 'manage_order_status_edit.html', contents)

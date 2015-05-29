@@ -1,0 +1,39 @@
+
+
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+
+{% if messageType == "danger" or messageType == "success" %}
+
+<div class="alert alert-{{messageType}}">
+
+  {{message}}
+
+</div>
+
+{% endif %}
+
+<form action="/user/dash" method="POST">
+
+  {% csrf_token %}
+
+  <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3">
+    <div>
+    <a href="/user/delete" class="btn btn-primary">Usuń konto</a><br /><br />
+    </div>
+    <div>
+    <a href="/user/edit" class="btn btn-primary">Edytuj konto</a><br /><br />
+    </div>
+    <div>
+    <a href="{{url}}" class="btn btn-primary">{{type}}</a><br /><br />
+    <a href="/">Powrót</a>
+    </div>
+  </div>
+</form>
+
+{% endblock %}
+
+
