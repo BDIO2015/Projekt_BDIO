@@ -3174,3 +3174,177 @@ def order_status_edit(request, chg_id):
 			
 	contents = {'title':'Zamówienia','messageType':'none','content':row}
 	return render(request, 'manage_order_status_edit.html', contents)
+
+def delivery(request):
+	delivery = Delivery.objects.all()
+	orders = Order.objects.all()
+	
+	contents = {'title':'Panel kuriera', 'content':''}
+	waitingOrders = []
+	if( orders.count() > 0 ):
+		for order in orders:
+			if( order.status == '3' ):
+				waitingOrders.append(order)
+						
+						
+	contents['waiting_orders'] = waitingOrders
+	contents['type'] = 'display'
+	
+	return render(request, 'manage_delivery.html', contents)
+
+def delivery_in_progress(request):
+	delivery = Delivery.objects.all().order_by('ord')
+	orders = Order.objects.all()
+
+	check = user_check(request)
+	uid = check['user_id']
+	
+	
+	contents = {'title':'Panel kuriera', 'content':''}
+	waitingOrders = []
+	for deliver in delivery:
+		for order in orders:
+			if( order.status == '4' and uid == deliver.user_id and deliver.delivery_id == order.delivery_id):
+				status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
+				waitingOrders.append(status)
+					
+					
+	contents['waiting_orders'] = waitingOrders
+	contents['type'] = 'main'
+	
+	return render(request, 'manage_delivery.html', contents)
+	
+def delivery_take_order(request, element_id):
+	try:
+		eid = int(element_id)
+	except ValueError:
+		contents = {'title':'Panel kuriera','messageType':'danger', 'message':'Takie zamówienie nie instnieje'}
+		return render(request, 'manage_delivery.html', contents)
+	
+	
+	check = user_check(request)
+	uid = check['user_id']
+	
+	contents = {'title':'Panel kuriera'}
+	delivery = Delivery.objects.all()
+	orders = Order.objects.all()
+	
+	iterator = 1
+	for deliver in delivery:
+		for order in orders:
+			if uid == deliver.user_id :
+				if order.delivery_id == deliver.delivery_id and order.status != '5':
+					iterator += 1
+	
+	toSave = Delivery(ord = iterator, user_id = uid)
+	toSave.save()
+	id = toSave.delivery_id
+	
+				
+	toChan = Order.objects.get(order_code=eid)
+	if(toChan.status == '3'):
+		toChan.status = '4'
+		toChan.delivery_id = id
+		toChan.save()
+		contents = {'title':'Panel kuriera'}
+		contents['messageType'] = 'success'
+		contents['message'] = 'Dodano zamówienie do listy dostarczeń'
+	else:
+		contents = {'messageType':'danger', 'message':'Nieznany błąd'}
+
+	
+	waitingOrders = []
+	delivery = Delivery.objects.all().order_by('ord')
+	orders = Order.objects.all()	
+	if( orders.count() > 0 ):
+		for order in orders:
+			if( order.status == '3' ):
+				waitingOrders.append(order)						
+			
+			
+	contents['waiting_orders'] = waitingOrders
+	contents['type'] = 'display'
+
+	return render(request, 'manage_delivery.html', contents)
+	
+def delivery_change_status(request, element_id):
+	try:
+		eid = int(element_id)
+	except ValueError:
+		contents = {'title':'Panel kuriera','messageType':'danger', 'message':'Takie zamówienie nie instnieje'}
+		return render(request, 'manage_delivery.html', contents)
+	
+	
+	check = user_check(request)
+	uid = check['user_id']
+	
+	contents = {'title':'Panel kuriera'}
+	delivery = Delivery.objects.all()
+	orders = Order.objects.all()
+				
+	toChan = Order.objects.get(order_code=eid)
+	if(toChan.status == '4'):
+		toChan.status = '5'
+		toChan.save()
+		contents = {'title':'Panel kuriera'}
+		contents['messageType'] = 'success'
+		contents['message'] = 'Zmieniono status zamówienia'
+	else:
+		contents = {'messageType':'danger', 'message':'Nieznany błąd'}
+
+	
+	waitingOrders = []
+	delivery = Delivery.objects.all().order_by('ord')
+	orders = Order.objects.all()	
+	if( orders.count() > 0 ):
+		for order in orders:
+			if( order.status == '4' ):
+				waitingOrders.append(order)						
+				
+				
+	contents['waiting_orders'] = waitingOrders
+	contents['type'] = 'main'
+
+	return render(request, 'manage_delivery.html', contents)
+	
+def delivery_change_order_up(request, element_id):
+	try:
+		eid = int(element_id)
+	except ValueError:
+		contents = {'title':'Panel kuriera','messageType':'danger', 'message':'Takie zamówienie nie instnieje'}
+		return render(request, 'manage_delivery.html', contents)
+
+		
+	contents = {'title':'Panel kuriera'}
+	
+	toChan = Delivery.objects.get(delivery_id=eid)
+	if toChan.ord != 1 :
+		toChan2 = Delivery.objects.get(ord = toChan.ord-1)
+		toChan.ord = toChan.ord-1
+		toChan2.ord = toChan2.ord+1
+		toChan.save()	
+		toChan2.save()		
+		
+	return delivery_in_progress(request)
+	
+def delivery_change_order_down(request, element_id):
+	try:
+		eid = int(element_id)
+	except ValueError:
+		contents = {'title':'Panel kuriera','messageType':'danger', 'message':'Takie zamówienie nie instnieje'}
+		return render(request, 'manage_delivery.html', contents)
+
+		
+	contents = {'title':'Panel kuriera'}
+	
+	toChan = Delivery.objects.get(delivery_id=eid)	
+	toChan2 = Delivery.objects.filter(ord = toChan.ord+1)
+	
+	if toChan2.count() > 0 :
+		toChan2 = Delivery.objects.get(ord = toChan.ord+1)
+		toChan.ord = toChan.ord+1
+		toChan2.ord = toChan2.ord-1
+		toChan.save()	
+		toChan2.save()		
+		
+	return delivery_in_progress(request)
