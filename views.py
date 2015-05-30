@@ -2861,7 +2861,7 @@ def user_dash(request):
 	check = user_check(request)
 	if (check == False):
 		#return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
-		message.error(request, "Nie jesteś zalogowany")
+		messages.error(request, "Nie jesteś zalogowany")
 		return HttpResponseRedirect('/')
 	users = User.objects.all()
 	types = User_Type.objects.all()
@@ -2878,7 +2878,7 @@ def user_dash(request):
 def user_delete(request):
 	check = user_check(request)
 	if (check == False):
-		message.error(request, "Nie jesteś zalogowany")
+		messages.error(request, "Nie jesteś zalogowany")
 		return HttpResponseRedirect('/')
 	contents = {'title':'Logowanie', 'username':'', 'password':'', 'messageType':'danger', 'message':'Potwierdź swoją tożsamość!'} 
 	c_username=request.POST.get('username')
@@ -2903,7 +2903,7 @@ def user_delete(request):
 def user_edit(request):
 	check = user_check(request)
 	if (check == False):
-		message.error(request, "Nie jesteś zalogowany")
+		messages.error(request, "Nie jesteś zalogowany")
 		return HttpResponseRedirect('/')
 	users = User.objects.all()
 	for l_user in users:
