@@ -9,7 +9,8 @@ import time
 import os
 from itertools import *
 import platform
-
+from django.http import HttpResponseRedirect
+from django.contrib import messages
 # URL do zarzadzania planem
 #url(r'^manage/schedule_type/(?P<type_id>[0-9]+)', 'bdio.views.schedule_type', name='schedule_type'),
 #	url(r'^manage/schedule_user/(?P<user_id>[0-9]+)', 'bdio.views.schedule_user', name='schedule_user'),  
@@ -126,9 +127,9 @@ def display_schedule_user(request, user_id):
 def schedule_user(request, user_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
-		return display_product_front(request)
+		return HttpResponseRedirect('/manage')
 	contents = display_schedule_user(request, user_id)
 	if(check['canManage']==True):
 		contents['canManage']='true'
@@ -169,9 +170,9 @@ def display_schedule_type(request, type_id):
 def	schedule_type(request, type_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
-		return display_product_front(request)
+		return HttpResponseRedirect('/manage')
 	contents = display_schedule_type(request, type_id)
 	if(check['canManage']==True):
 		contents['canManage']='true'
@@ -182,9 +183,9 @@ def	schedule_type(request, type_id):
 def schedule(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
-		return display_product_front(request)
+		return HttpResponseRedirect('/manage')
 	isSent = request.POST.get('sent', False);
 	contents={}
 	if(isSent):
@@ -293,8 +294,10 @@ def schedule(request):
 
 def schedule_add(request):
 	check = user_check(request)
-	if (check == False or check['canManage'] == False):
-		return display_product_front(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not check['canManage'] == True:
+		return HttpResponseRedirect('/manage')
 	
 	isSent = request.POST.get('sent', False);
 	showing = request.POST.get('showing', False);
@@ -435,8 +438,10 @@ def schedule_add(request):
 
 def schedule_edit(request, schedule_id):
 	check = user_check(request)
-	if (check == False or check['canManage'] == False):
-		return display_product_front(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not check['canManage'] == True:
+		return HttpResponseRedirect('/manage')
 		
 	isSent = request.POST.get('sent', False);
 	showing = request.POST.get('showing', False);
@@ -531,8 +536,10 @@ def schedule_edit(request, schedule_id):
 	
 def schedule_delete(request, schedule_id):
 	check = user_check(request)
-	if (check == False or check['canManage'] == False):
-		return display_product_front(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not check['canManage'] == True:
+		return HttpResponseRedirect('/manage')
 	try:
 		schedule = Schedule.objects.get(id=schedule_id)
 	except Schedule.DoesNotExist:
@@ -557,8 +564,10 @@ def schedule_delete(request, schedule_id):
 	
 def schedule_list(request):
 	check = user_check(request)
-	if (check == False or check['canManage'] == False):
-		return display_product_front(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not check['canManage'] == True:
+		return HttpResponseRedirect('/manage')
 	users=User.objects.all();
 	schedules = Schedule.objects.all();
 	validScheds=0;
@@ -580,11 +589,14 @@ def schedule_list(request):
 
 
 def user_logout(request):
-	contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
+	#contents = {'title':'Błąd!', 'messageType':'danger', 'message':'Nieoczekiwany błąd!'}
 	if('login_check' in request.session):
 		del request.session['login_check']
 		contents = {'title':'Wylogowano', 'messageType':'success', 'message':'Wylogowano poprawnie!'}
-	return display_product_front(request, contents)
+		messages.success(request, 'Wylogowano poprawnie!')
+	else:
+		messages.error(request, 'Nieoczekiwany błąd!')
+	return HttpResponseRedirect("/")
 
 def user_check(request):
 	users = User.objects.all()
@@ -690,17 +702,17 @@ def display_discount():
 def discount(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	return render(request, 'manage_discount.html', display_discount())
 
 def discount_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	try:
 		did = int(del_id)
 	except ValueError:
@@ -726,9 +738,9 @@ def discount_delete(request, del_id):
 def discount_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	try:
 		eid = int(edit_id)
 	except ValueError:
@@ -877,9 +889,9 @@ def discount_edit(request, edit_id):
 def discount_add(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	#TODO dodac sprawdzenie czy zalogowany i ma uprawnienia
 	isSent = request.POST.get('sent', False);
 	mainContent = '';
@@ -1064,18 +1076,18 @@ def display_product_category():
 def product_category(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	
 	return render(request, 'manage_product_category.html', display_product_category())
 
 def product_category_add(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 		
 	#zabezpieczyc zeby nie dawca nizej niz 3 poziom
 	product_categories = Product_Category.objects.all()
@@ -1147,9 +1159,9 @@ def product_category_add(request):
 def product_category_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 		
 	#zabezpieczyc zeby nie dawac kategorii nizej niz 3 poziom drzewa
 	#contents = display_product_category()
@@ -1269,9 +1281,9 @@ def product_category_edit(request, edit_id):
 def product_category_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 		
 	contents = display_product_category()
 	try:
@@ -1324,17 +1336,17 @@ def display_user_type():
 def user_type(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	return render(request, 'manage_user_type.html', display_user_type())
 	
 def user_type_add(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	contents = {'title':'Typy użytkowników', 'type':'add'}
 	if(request.POST.get('sent', False)):
 		name = request.POST.get('name', False)
@@ -1362,9 +1374,9 @@ def user_type_add(request):
 def user_type_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	contents = display_user_type()
 	try:
 		delete = int(del_id)
@@ -1387,9 +1399,9 @@ def user_type_delete(request, del_id):
 def user_type_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	contents = display_user_type()
 	try:
 		editid = int(edit_id)
@@ -1448,9 +1460,9 @@ def user_type_edit(request, edit_id):
 def magazine(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)	
+		return HttpResponseRedirect('/manage')
 	
 	ingredients = Ingredient.objects.all()
 	
@@ -1460,9 +1472,9 @@ def magazine(request):
 def magazine_add(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)	
+		return HttpResponseRedirect('/manage')	
 		
 	ingredients = Ingredient.objects.all()
 	if(request.POST.get('sent')):		
@@ -1528,9 +1540,9 @@ def magazine_add(request):
 def magazine_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	
 	try:
 		eid = int(edit_id)
@@ -1612,9 +1624,9 @@ def magazine_edit(request, edit_id):
 def magazine_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)	
+		return HttpResponseRedirect('/manage')	
 	
 	ingredients = Ingredient.objects.all()	
 	try:
@@ -2224,18 +2236,18 @@ def display_product_front(request, content=[]):
 def product(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 		
 	return render(request,'manage_product.html',display_product())
 	
 def product_add(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 		
 	contents = {'title':'Produkty', 'content':'', 'type': 'add'}
 	toDisp = []
@@ -2360,9 +2372,9 @@ def product_add(request):
 def product_edit(request,edit_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 		
 	contents = {'title':'Produkty', 'content':'', 'type': 'edit'}
 	try:
@@ -2555,9 +2567,9 @@ def product_edit(request,edit_id):
 def product_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 		
 	contents = display_product()
 	try:
@@ -2597,19 +2609,23 @@ def user_login(request):
 		c_password=hashlib.sha256(c_password.encode()).hexdigest()
 		for c_user in users:
 			if((c_user.username==str(c_username)) and (c_password==c_user.password)):
-				contents = {'messageType':'success', 'message':'Zalogowano poprawnie!', 'user':user}
+				#contents = {'messageType':'success', 'message':'Zalogowano poprawnie!', 'user':user}
+				messages.add_message(request, messages.SUCCESS, 'Zalogowano poprawnie')
 				request.session['login_check']=c_user.user_id
-				return display_product_front(request,contents)
+				return HttpResponseRedirect('/')
 			else:
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Podaj poprawną nazwę użytkownika i/lub hasło!', 'username':'', 'password':'','user':user}
-	return display_product_front(request, contents)
+				#contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Podaj poprawną nazwę użytkownika i/lub hasło!', 'username':'', 'password':'','user':user}
+				error = True
+		if(error):
+			messages.error(request,'Podaj poprawną nazwę użytkownika i/lub hasło!')
+	return HttpResponseRedirect('/')
 
 def payment_types(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	payments = Payment_Type.objects.all()
 
 	contents = {'title':'Płatności','messageType':'none', 'payments': payments}
@@ -2618,9 +2634,9 @@ def payment_types(request):
 def payment_types_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	try:
 		did = int(del_id)
 	except ValueError:
@@ -2641,9 +2657,9 @@ def payment_types_delete(request, del_id):
 def payment_types_add(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 	payments = Payment_Type.objects.all()
 	payment_namex = request.POST.get('payment_name', False)
 	
@@ -2667,9 +2683,9 @@ def payment_types_add(request):
 def user_management_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 		
 	try:
 		eid = int(edit_id)
@@ -2768,9 +2784,9 @@ def user_management_edit(request, edit_id):
 def user_management(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 
 	user_types = User_Type.objects.all()
 	users = User.objects.all()
@@ -2787,9 +2803,9 @@ def user_management(request):
 def user_management_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not check['canManage'] == True:
-		return management_panel(request)
+		return HttpResponseRedirect('/manage')
 		
 	user_types = User_Type.objects.all()
 	users = User.objects.all()
@@ -2826,9 +2842,9 @@ def user_management_delete(request, del_id):
 def management_panel(request):
 	check = user_check(request)
 	if (check == False):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
-		return display_product_front(request)
+		return HttpResponseRedirect('/')
 		
 	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
 	
@@ -2844,7 +2860,9 @@ def management_panel(request):
 def user_dash(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		#return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		message.error(request, "Nie jesteś zalogowany")
+		return HttpResponseRedirect('/')
 	users = User.objects.all()
 	types = User_Type.objects.all()
 	id=str(request.session['login_check'])
@@ -2860,7 +2878,8 @@ def user_dash(request):
 def user_delete(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		message.error(request, "Nie jesteś zalogowany")
+		return HttpResponseRedirect('/')
 	contents = {'title':'Logowanie', 'username':'', 'password':'', 'messageType':'danger', 'message':'Potwierdź swoją tożsamość!'} 
 	c_username=request.POST.get('username')
 	c_password=request.POST.get('password')
@@ -2884,7 +2903,8 @@ def user_delete(request):
 def user_edit(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		message.error(request, "Nie jesteś zalogowany")
+		return HttpResponseRedirect('/')
 	users = User.objects.all()
 	for l_user in users:
 			if(l_user.user_id==int(request.session['login_check'])):
@@ -2998,9 +3018,9 @@ def order_status(request):
 def order_status_change(request, chg_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
-		return display_product_front(request)
+		return HttpResponseRedirect('/manage')
 	try:
 		id = int(chg_id)
 	except ValueError:
@@ -3028,9 +3048,9 @@ def order_status_change(request, chg_id):
 def order_status_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
-		return display_product_front(request)
+		return HttpResponseRedirect('/manage')
 	try:
 		did = int(del_id)
 	except ValueError:
@@ -3050,9 +3070,9 @@ def order_status_delete(request, del_id):
 def order_status_edit_display(request,chg_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
-		return display_product_front(request)
+		return HttpResponseRedirect('/manage')
 	try:
 		id = int(chg_id)
 	except ValueError:
@@ -3089,9 +3109,9 @@ def order_status_edit_display(request,chg_id):
 def order_status_edit(request, chg_id):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
-		return display_product_front(request)
+		return HttpResponseRedirect('/manage')
 	try:
 		id = int(chg_id)
 	except ValueError:
@@ -3181,6 +3201,11 @@ def order_status_edit(request, chg_id):
 	return render(request, 'manage_order_status_edit.html', contents)
 
 def delivery(request):
+	check = user_check(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return HttpResponseRedirect('/manage')
 	delivery = Delivery.objects.all()
 	orders = Order.objects.all()
 	
@@ -3198,6 +3223,11 @@ def delivery(request):
 	return render(request, 'manage_delivery.html', contents)
 
 def delivery_in_progress(request):
+	check = user_check(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return HttpResponseRedirect('/manage')
 	delivery = Delivery.objects.all().order_by('ord')
 	orders = Order.objects.all()
 
@@ -3220,6 +3250,11 @@ def delivery_in_progress(request):
 	return render(request, 'manage_delivery.html', contents)
 	
 def delivery_take_order(request, element_id):
+	check = user_check(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return HttpResponseRedirect('/manage')
 	try:
 		eid = int(element_id)
 	except ValueError:
@@ -3273,6 +3308,11 @@ def delivery_take_order(request, element_id):
 	return render(request, 'manage_delivery.html', contents)
 	
 def delivery_change_status(request, element_id):
+	check = user_check(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return HttpResponseRedirect('/manage')
 	try:
 		eid = int(element_id)
 	except ValueError:
@@ -3313,6 +3353,11 @@ def delivery_change_status(request, element_id):
 	return render(request, 'manage_delivery.html', contents)
 	
 def delivery_change_order_up(request, element_id):
+	check = user_check(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return HttpResponseRedirect('/manage')
 	try:
 		eid = int(element_id)
 	except ValueError:
@@ -3333,6 +3378,11 @@ def delivery_change_order_up(request, element_id):
 	return delivery_in_progress(request)
 	
 def delivery_change_order_down(request, element_id):
+	check = user_check(request)
+	if (check == False):
+		return HttpResponseRedirect('/')
+	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
+		return HttpResponseRedirect('/manage')
 	try:
 		eid = int(element_id)
 	except ValueError:
