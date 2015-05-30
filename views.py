@@ -2959,7 +2959,7 @@ def display_order_status():
 	if(orders.count() > 0):
 		toDisp = []
 		for curRow in orders:
-			if(curRow.status == '1' or curRow.status == '2' or curRow.status == '3'):
+			if(curRow.status == '1' or curRow.status == '2'):
 				if(o_p.count()>0):
 					toProd = []
 					for curProd in o_p:
@@ -2979,7 +2979,7 @@ def display_order_status():
 											
 											toIng.append(ingList)
 						
-				row = {'code':curRow.order_code, 'status':curRow.get_status_display() , 'order_note':curRow.order_notes, 'products':toProd, 'ingrad':toIng}
+				row = {'code':curRow.order_code, 'status':curRow.get_status_display() ,'si':curRow.status, 'order_note':curRow.order_notes, 'products':toProd, 'ingrad':toIng}
 				toDisp.append(row)
 				contents = {'title':'Zamówienia','count':orders.count(), 'content':toDisp}
 
