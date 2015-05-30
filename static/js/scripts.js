@@ -101,8 +101,12 @@ jQuery(document).ready(function(){
 	var l = window.location;
 		jQuery("ul.menu li").each(function(){
 			var str = l.toString();
-			console.log(l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
+			var link = jQuery(this).find("a").attr("href") + "/"
 			if(l == l.origin + '/' + jQuery(this).find("a").attr("href").substr(1))
+			{
+				jQuery(this).addClass("active");
+			}
+			else if(link.length > 2 && str.indexOf(link) >= 0 )
 			{
 				jQuery(this).addClass("active");
 			}

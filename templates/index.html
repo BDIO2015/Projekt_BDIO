@@ -27,14 +27,14 @@
         <ul class="nav nav-pills menu">
 		
             <li><a href="/"><span class="glyphicon glyphicon-home lg"></span> Home</a></li>
-			<li><a href="/user/register">Register</a></li>
 			<li><a href="/basket"><span class="glyphicon glyphicon-shopping-cart"></span> Koszyk</a></li>
 			{% if user != False %}
 				{% if canEdit != 0 or canManage != 0 or canDelete != 0 or canCreate != 0 or canDeliver != 0 %}
-				<li><a href="/manage">Manage</a></li>
+				<li><a href="/manage"><span class="glyphicon glyphicon-tasks"></span> Manage</a></li>
 				{% endif %}
 			{% endif %}
 			{% if user == False %}
+			<li><a href="/user/register"><span class="glyphicon glyphicon-plus"></span> Zarejestruj</a></li>
 			<li><a class="btn btn-success" data-toggle="modal" data-target="#myModal"><span class="glyphicon glyphicon-log-in"></span> Zaloguj</a></li>
 			<!-- Modal -->
 			<div id="myModal" class="modal fade" role="dialog">
