@@ -9,13 +9,14 @@
 	</div>
 	{% endif %}
 	<a class="btn btn-primary" href="/manage/">Powrót</a><br /><br />
+	
 	{% if count > 0 %}
 	<table class="table table-hover table-responsive">
-	<tr><th>Status</th><th>Przejście w</th><th>Produkt</th><th>Ilość produktów</th><th>Dodatki</th><th>Opis</th><th> </th></tr>
+	<tr><th>Status</th><th>Przejście w</th><th>Produkt</th><th>Ilość produktów</th><th>Dodatki</th><th>Opis</th><th>Zarządzaj</th></tr>
 	{% for element in content %}
 	<td>
 	
-	{{ element.status }} </td><td> <a  href="/manage/order_status/change/{{ element.code }}/" class="change-order-status-button"> {% if element.si == '1' %} Przygotowywane {% else %} Oczekujące {% endif %}</a>
+	{{ element.status }} </td><td> <a  href="/manage/order_status/change/{{ element.code }}/" class="change-order-status-button btn btn-primary"> {% if element.si == '1' %} Przygotowywane {% elif element.si == '6' %} Przyjęte {% else %} Oczekujące {% endif %}</a>
 	
 	</td>
 	<td>
@@ -43,7 +44,7 @@
 	<td align="centre" >
 	
 	<a href="/manage/order_status/edit/{{ element.code }}/"  class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span></a>&nbsp;
-	<a href="/manage/order_status/delete/{{ element.code }}/" class="cancel-order-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-remove"></span> </a>
+	<a href="/manage/order_status/delete/{{ element.code }}/" class="cancel-order-button btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-remove"></span> </a>
 	
 	</td>
 	

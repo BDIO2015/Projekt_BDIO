@@ -2979,10 +2979,11 @@ def display_order_status():
 	toProd = []
 	
 	contents = {'title':'Zamówienia', 'content':''}
-	if(orders.count() > 0):
+	if(orders.count() > 0):	
 		toDisp = []
 		for curRow in orders:
-			if(curRow.status == '1' or curRow.status == '2'):
+			print(curRow.status)
+			if(curRow.status == '1' or curRow.status == '2' or curRow.status == '6'):
 				if(o_p.count()>0):
 					toProd = []
 					for curProd in o_p:
@@ -3008,6 +3009,7 @@ def display_order_status():
 
 	else:
 		contents = {'title':'Zamówienia', 'content':'Brak zamówień', 'count':0}
+	print(contents)
 	return contents
 	
 def order_status(request):
@@ -3039,6 +3041,8 @@ def order_status_change(request, chg_id):
 			toEdit.status = '3'
 		elif toEdit.status == '3':
 			toEdit.status = '4'
+		elif toEdit.status == '6':
+			toEdit.status = '1'
 		else:
 			contents = {'title':'Zamówienia','messageType':'danger', 'message':'Błędny status!'}
 		toEdit.save()
@@ -3064,7 +3068,8 @@ def order_status_delete(request, del_id):
 	if(toCnnl):
 		toCnnl.status = '0'
 		toCnnl.save()
-		return order_status(request)
+		messages.success(request,"Zamówienie zostało anulowane")
+		return HttpResponseRedirect('/manage/orders/')
 	else:
 		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Taki element nie instnieje!'}
 
