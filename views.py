@@ -1848,7 +1848,7 @@ def basket_order(request):
 						contents['message'] = 'Musisz podać imię, nazwisko oraz adres'
 						contents['messageType'] = 'danger'
 						return render(request, 'basket.html', contents)
-					uOrder = Order(status='6', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=None, payment_type=paymentType)
+					uOrder = Order(status='6', order_notes=oRemarks, order_address=nlAddress, price=0.00, payment_name='systemplatnosci', payment_status=False, user=None, payment_type=paymentType)
 					uOrder.save()
 				products = request.session['basket_products'].split(';')
 				orderPrice = 0
