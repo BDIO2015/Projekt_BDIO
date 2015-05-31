@@ -12,6 +12,7 @@ from itertools import *
 import platform
 from django.http import HttpResponseRedirect
 from django.contrib import messages
+import base64
 
 def schedule_get_packed(schedule_id, affectedUsers, type_ids):
 	usersCount=0;
@@ -1661,14 +1662,6 @@ def get_subcategories(maincat):
 	for k in todel:
 		del subcategories[k]
 	return subcategories
-
-def xor_crypt_string(data):
-	toReturn = ''
-	try:
-		toReturn = ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(data, cycle('somethig123Bsd')))
-	except NameError:
-		toReturn = ''.join(chr(ord(x) ^ ord(y)) for (x,y) in zip(data, cycle('somethig123Bsd')))
-	return toReturn
 	
 def basket(request):
 	contents = {'title':'Koszyk'}
@@ -1948,10 +1941,9 @@ def basket_order(request):
 				uOrder.save()
 				contents['messageType'] = 'success'
 				toHash = str(uOrder.order_code) + '-zamowienie'
-				try:
-					hashCode = codecs.encode(xor_crypt_string(toHash), 'hex_codec')
-				except TypeError:
-					hashCode = codecs.encode(bytes(xor_crypt_string(toHash), 'UTF-8'), 'hex_codec')
+				toHash = toHash.encode('ASCII')
+				toHash = base64.b64encode(toHash)
+				hashCode = toHash.decode('ASCII')
 				del request.session['basket_products']
 				contents['message'] = 'Zamówienie zostało złożone.'
 				contents['displayLink'] = True
@@ -2114,16 +2106,9 @@ def basket_clear(request):
 
 def order_check(request, order_id):
 	contents = {'title':'Status zamówienia'}
-	decoded = ''
-	try:
-		decoded = xor_crypt_string(codecs.decode(order_id, 'hex_codec'))
-	except TypeError:
-		try:
-			decoded = xor_crypt_string(codecs.decode(bytes(order_id, 'UTF-8'), 'hex_codec'))
-		except TypeError:
-			contents['messageType'] = 'danger'
-			contents['message'] = 'Twój link jest niepoprawny'
-			return render(request, 'order_check.html', contents)
+	decoded = order_id.encode('ASCII')
+	decoded = base64.b64decode(decoded)
+	decoded = decoded.decode('ASCII')
 	decoded = decoded.split('-')[0]
 	try:
 		decoded = int(decoded)
