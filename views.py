@@ -1948,7 +1948,10 @@ def basket_order(request):
 				uOrder.save()
 				contents['messageType'] = 'success'
 				toHash = str(uOrder.order_code) + '-zamowienie'
-				hashCode = codecs.encode(xor_crypt_string(toHash), 'hex_codec')
+				try:
+					hashCode = codecs.encode(xor_crypt_string(toHash), 'hex_codec')
+				except TypeError:
+					hashCode = codecs.encode(bytes(xor_crypt_string(toHash), 'UTF-8'), 'hex_codec')
 				del request.session['basket_products']
 				contents['message'] = 'Zamówienie zostało złożone.'
 				contents['displayLink'] = True
@@ -2111,7 +2114,16 @@ def basket_clear(request):
 
 def order_check(request, order_id):
 	contents = {'title':'Status zamówienia'}
-	decoded = xor_crypt_string(codecs.decode(order_id, 'hex_codec'))
+	decoded = ''
+	try:
+		decoded = xor_crypt_string(codecs.decode(order_id, 'hex_codec'))
+	except TypeError:
+		try:
+			decoded = xor_crypt_string(codecs.decode(order_id.decode('UTF-8'), 'hex_codec'))
+		except TypeError:
+			contents['messageType'] = 'danger'
+			contents['message'] = 'Twój link jest niepoprawny'
+			return render(request, 'order_check.html', contents)
 	decoded = decoded.split('-')[0]
 	try:
 		decoded = int(decoded)
