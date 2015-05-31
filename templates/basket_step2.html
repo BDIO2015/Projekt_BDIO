@@ -3,7 +3,7 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-	<a href="/" class="btn btn-primary">Powrót</a><br /><br />
+	<a href="/basket" class="btn btn-primary">Powrót</a><br /><br />
 	{% if messageType == "danger" or messageType == "success" %}
 	<div class="alert alert-{{messageType}}">
 	  {{message}}
@@ -15,7 +15,7 @@
 	{% if count > 0 %}
 		<div class="input-group"><label>Dodatkowe składniki: </label>
 			{% for ing in ingredients %}
-				<div class="checkbox"><label><input  type="checkbox" name="basket_products_ingredients" value="{{ing.id}}">{{ing.name}} ({{ing.price}} zł)</label></div>
+				<div class="checkbox"><label><input  type="checkbox" name="basket_products_ingredients" value="{{ing.id}}">{{ing.name}} ({{ing.price|floatformat:2}} zł)</label></div>
 			{% endfor %}
 		</div>
 	{% else %}

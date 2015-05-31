@@ -7,18 +7,11 @@ from .models import *
 from decimal import *
 import time
 import os
+import codecs
 from itertools import *
 import platform
 from django.http import HttpResponseRedirect
 from django.contrib import messages
-# URL do zarzadzania planem
-#url(r'^manage/schedule_type/(?P<type_id>[0-9]+)', 'bdio.views.schedule_type', name='schedule_type'),
-#	url(r'^manage/schedule_user/(?P<user_id>[0-9]+)', 'bdio.views.schedule_user', name='schedule_user'),  
-#	url(r'^manage/schedule/add', 'bdio.views.schedule_add', name='schedule_add'),	
-#	url(r'^manage/schedule/edit/(?P<schedule_id>[0-9]+)', 'bdio.views.schedule_edit', name='schedule_edit'),
-#	url(r'^manage/schedule/delete/(?P<schedule_id>[0-9]+)', 'bdio.views.schedule_delete', name='schedule_delete'),	
-#	url(r'^manage/schedule/list', 'bdio.views.schedule_list', name='schedule_list'), 
-#	url(r'^manage/schedule', 'bdio.views.schedule', name='schedule'), 
 
 def schedule_get_packed(schedule_id, affectedUsers, type_ids):
 	usersCount=0;
@@ -1670,7 +1663,12 @@ def get_subcategories(maincat):
 	return subcategories
 
 def xor_crypt_string(data):
-    return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(data, cycle('somethig123Bsd')))
+	toReturn = ''
+	try:
+		toReturn = ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(data, cycle('somethig123Bsd')))
+	except NameError:
+		toReturn = ''.join(chr(ord(x) ^ ord(y)) for (x,y) in zip(data, cycle('somethig123Bsd')))
+	return toReturn
 	
 def basket(request):
 	contents = {'title':'Koszyk'}
@@ -1831,8 +1829,10 @@ def basket_order(request):
 			request.session['basket_products'] = newproducts
 		else:
 			del request.session['basket_products']
-		contents['messageType'] = 'success'
-		contents['message'] = 'Koszyk został zaktalizowany'
+		#contents['messageType'] = 'success'
+		#contents['message'] = 'Koszyk został zaktalizowany'
+		messages.success(request, 'Koszyk został zaktalizowany')
+		return HttpResponseRedirect("/basket")
 	elif(not action == False):
 		if('basket_products' in request.session):
 			getCheck = user_check(request)
@@ -1842,7 +1842,7 @@ def basket_order(request):
 				paymentType = request.POST.get('payment')
 				paymentType = Payment_Type.objects.get(id=int(paymentType))
 				uOrder = None
-				if(not 'messageType' in getCheck):
+				if(not getCheck==False):
 					oUser = User.objects.get(user_id=getCheck['user_id'])
 					uOrder = Order(status='6', order_notes=oRemarks, price=0.00, payment_name='systemplatnosci', payment_status=False, user=oUser, payment_type=paymentType)
 					uOrder.save()
@@ -1948,7 +1948,7 @@ def basket_order(request):
 				uOrder.save()
 				contents['messageType'] = 'success'
 				toHash = str(uOrder.order_code) + '-zamowienie'
-				hashCode = xor_crypt_string(toHash).encode("hex")
+				hashCode = codecs.encode(xor_crypt_string(toHash), 'hex_codec')
 				del request.session['basket_products']
 				contents['message'] = 'Zamówienie zostało złożone.'
 				contents['displayLink'] = True
@@ -1956,7 +1956,7 @@ def basket_order(request):
 				return render(request, 'basket_order.html', contents)
 			else:
 				isLogged = True
-				if('messageType' in getCheck):
+				if(getCheck==False):
 					isLogged = False
 				contents['isLogged'] = isLogged
 				payments = Payment_Type.objects.all()
@@ -1986,9 +1986,11 @@ def basket_add(request, product_id):
 	try:
 		check = Product.objects.get(product_code=product_id)
 	except Product.DoesNotExist:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Wybranego produktu nie ma w bazie'
-		return render(request, 'basket.html', contents)
+		#contents['messageType'] = 'danger'
+		#contents['message'] = 'Wybranego produktu nie ma w bazie'
+		#return render(request, 'basket.html', contents)
+		messages.error(request, 'Wybranego produktu nie ma w bazie')
+		return HttpResponseRedirect("/")
 	subcategories = get_subcategories(check.category)
 
 	if(request.POST.get('sent', False)):
@@ -2023,7 +2025,9 @@ def basket_add(request, product_id):
 						request.session['basket_products'] = ';'.join(products)
 						contents['messageType'] = 'success'
 						contents['message'] = 'Dodano wybrany produkt do koszyka'
-						return render(request, 'basket.html', contents)
+						#return render(request, 'basket.html', contents)
+						messages.success(request, 'Dodano wybrany produkt do koszyka')
+						return HttpResponseRedirect("/basket")
 			forStr = ';' + str(product_id) + ':1' + ':' + premarks + ':'
 			if(len(selections) > 0):
 				forStr += '-'.join(selections)
@@ -2041,7 +2045,9 @@ def basket_add(request, product_id):
 			request.session['basket_products'] = forStr
 		contents['messageType'] = 'success'
 		contents['message'] = 'Dodano wybrany produkt do koszyka'
-		return render(request, 'basket.html', contents)
+		#return render(request, 'basket.html', contents)
+		messages.success(request, 'Dodano wybrany produkt do koszyka')
+		return HttpResponseRedirect("/basket")
 	getIngcheck = Product_Category.objects.get(cat_id = check.category.cat_id)
 	if(getIngcheck.demand_ingredients == 1):
 		availableIn = Ingredient.objects.filter(quantity__gt=0)
@@ -2105,7 +2111,7 @@ def basket_clear(request):
 
 def order_check(request, order_id):
 	contents = {'title':'Status zamówienia'}
-	decoded = xor_crypt_string(order_id.decode("hex"))
+	decoded = xor_crypt_string(codecs.decode(order_id, 'hex_codec'))
 	decoded = decoded.split('-')[0]
 	try:
 		decoded = int(decoded)
