@@ -2865,6 +2865,13 @@ def management_panel(request):
 	
 	return render(request, 'manage_management_panel.html', contents)
 
+def user_orders(request):
+	orders=Order.objects.filter(user_id = request.session['login_check'])
+	contents = {'orders': orders, 'title': "Zamówienia", 'messageType':'None'}
+	if not(orders):
+			contents = {'orders': orders, 'title': "Zamówienia", 'messageType':'danger', 'message':'Brak zamówień w bazie'}
+	return render(request,'user_orders.html',contents)
+
 def user_dash(request):
 	check = user_check(request)
 	if (check == False):
@@ -2881,6 +2888,7 @@ def user_dash(request):
 				contents =  {'type':'Wyświetl zamówienia','url':url}
 			else:
 				contents =  {'type':'Wyświetl rozkład','url':url}
+				url='/user/orders'
 	return render(request,'user_dash.html',contents)
 
 def user_delete(request):
@@ -2924,7 +2932,6 @@ def user_edit(request):
 				s_address = l_user.address
 				s_city = l_user.city
 				s_second_name = l_user.second_name
-	mainContent = '';
 	contents = {'title':'Edytuj', 'name':str(s_name), 'second_name':str(s_second_name), 'address':str(s_address), 'city':str(s_city),   'phone_number':str(s_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
 	if(request.POST.get('sent')):
 		reg_name = request.POST.get('name')
@@ -2937,25 +2944,25 @@ def user_edit(request):
 		reg_second_name = request.POST.get('second_name')
 		reg_old_pass=hashlib.sha256(reg_old_pass.encode()).hexdigest()
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_name))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne imię!', 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
 			return render(request,'user_edit.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_second_name))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username) }
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne nazwisko!', 'name':str(reg_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
 			return render(request,'user_edit.html',contents)
 		if not(re.match('[a-zA-ZćśźżńłóąęĆŚŹŻŃŁÓĄĘ]+$',str(reg_city))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawne miasto!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address),   'phone_number':str(reg_phone_number),  'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
 			return render(request,'user_edit.html',contents)
 		if not(re.match('[0-9]{5,5}',str(reg_postal_code))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny kod pocztowy!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city), 'phone_number':str(reg_phone_number) }
 			return render(request,'user_edit.html',contents)
 		if not(re.match('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]',str(reg_phone_number))):
-			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'username':str(reg_username)}
+			contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Niepoprawny numer telefonu!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),  'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
 			return render(request,'user_edit.html',contents)
 		if (not(re.match('.{6,64}',str(reg_password)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Hasło musi mieć min 6 znaków i max 64 znaków!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2 }
 				return render(request,'user_edit.html',contents)
 		if (not(re.match('.{1,64}',str(reg_address)))):
-				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number), 'username':str(reg_username)}
+				contents = {'title':'Błąd!!!', 'messageType':'danger', 'message':'Adres nie może być pusty!', 'name':str(reg_name), 'second_name':str(reg_second_name), 'address':str(reg_address), 'city':str(reg_city),   'phone_number':str(reg_phone_number),  'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2 }
 				return render(request,'user_edit.html',contents)
 		good=1
 		if good:
@@ -2972,7 +2979,7 @@ def user_edit(request):
 					l_user.save()
 					contents = {'messageType':'success', 'message':'Zmiany zapisane!'}
 				else:
-					contents = {'messageType':'alert', 'message':'Wprowadź prawidłowe hasło!', 'title':'Edytuj', 'name':str(s_name), 'second_name':str(s_second_name), 'address':str(s_address), 'city':str(s_city),   'phone_number':str(s_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
+					contents = {'messageType':'danger', 'message':'Wprowadź prawidłowe hasło!', 'title':'Edytuj', 'name':str(s_name), 'second_name':str(s_second_name), 'address':str(s_address), 'city':str(s_city),   'phone_number':str(s_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2}
 	return render(request, 'user_edit.html', contents)
 	
 def display_order_status():

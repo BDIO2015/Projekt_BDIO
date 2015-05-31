@@ -1,0 +1,95 @@
+{% extends "index.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% if messageType == "danger" or messageType == "success" %}
+	<div class="alert alert-{{messageType}}">
+	  {{message}}
+	</div>
+	{% endif %}
+	<table class="table table-hover table-responsive">
+	<tr>
+	<th align="center">
+	Kod zamówienia
+	</th>
+	<th align="center" colspan="2">
+	Notatki
+	</th>
+	<th align="center" colspan="2">
+	Adres
+	</th>
+	<th align="center" colspan="2">
+	Typ płatności
+	</th>
+	<th align="center" colspan="2">
+	Stan płatności
+	</th>
+	<th align="center" colspan="2">
+	Cena
+	</th>
+	<th align="center" colspan="2">
+	Status
+	</th>
+	</tr>
+	{% for element in orders %}
+	<td>
+		{{element.order_code}}
+	</td>
+	<td>
+		{{element.order_notes}}
+	</td>
+	<td>
+	</td>
+	<td>
+		{{element.order_address}}
+	</td>
+	<td>
+	</td>
+	<td>
+		{{element.payment_name}}
+	</td>
+	<td>
+	</td>
+	<td>
+		{% if element.payment_status == 1  %}
+		Ok
+		{% else %}
+		NIE ZREALIZOWANO!
+		{% endif %}
+	</td>
+	<td>
+	</td>
+	<td>
+		{{element.price}}
+	</td>
+	<td>
+	</td>
+	<td>
+		{% if element.status == "0" %}
+		Anulowane
+		{% endif %}
+		{% if element.status == "1" %}
+		Przyjęte
+		{% endif %}
+		{% if element.status == "2" %}
+		Przygotowywane
+		{% endif %}
+		{% if element.status == "3" %}
+		Oczekujące
+		{% endif %}
+		{% if element.status == "4" %}
+		Dowóz
+		{% endif %}
+		{% if element.status == "5" %}
+		Zrealizwoane
+		{% endif %}
+		{% if element.status == "6" %}
+		Transfer
+		{% endif %}
+	</td>
+	{% endfor %}
+	</table>
+	<a href="/user/dash">Powrót</a>
+	
+{% endblock %}
