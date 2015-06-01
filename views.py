@@ -720,14 +720,14 @@ def discount_delete(request, del_id):
 		toDel[0].delete()
 		contents = display_discount()
 		contents['messageType'] = 'success'
-		contents['message'] = 'Poprawnie usunięto wybraną zniżkę'
+		messages.success(request,"Poprawnie usunięto wybraną zniżkę")
 	elif(toDel.count() > 1):
 		contents['messageType'] = 'danger'
-		contents['message'] = 'Nieznany błąd'
+		messages.error(request, "Wystąpił nieoczekiwany błąd")
 	else:
 		contents['messageType'] = 'danger'
-		contents['message'] = 'Podano niepoprawny numer'
-	return render(request, 'manage_discount.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+	return HttpResponseRedirect('/manage/discount/')
 
 def discount_edit(request, edit_id):
 	check = user_check(request)
@@ -738,8 +738,8 @@ def discount_edit(request, edit_id):
 	try:
 		eid = int(edit_id)
 	except ValueError:
-		contents = {'title':'Zniżki', 'type':'danger', 'message':'Podano niepoprawny numer'}
-		return render(request, 'manage_discount.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/discount/')
 	mainContent = ''
 	contents = {'title':'Zniżki', 'type':'edit', 'content':mainContent}
 	toEdit = Discount.objects.filter(id=eid)
@@ -873,11 +873,11 @@ def discount_edit(request, edit_id):
 			contents['messageType'] = 'success'
 			contents['message'] = 'Zapisano poprawnie'
 	elif(toEdit.count() > 1):
-		contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Nieznany błąd'}
-		return render(request, 'manage_discount.html', contents)
+		messages.error(request, "Wystąpił nieoczekiwany błąd")
+		return HttpResponseRedirect('/manage/discount/')
 	else:
-		contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Podano niepoprawny numer'}
-		return render(request, 'manage_discount.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/discount/')
 	return render(request, 'manage_discountaddedit.html', contents)
 
 def discount_add(request):
@@ -982,8 +982,8 @@ def discount_add(request):
 			typeFormat += str(disc)
 			newDisc = Discount(type=typeFormat, value=disc)
 			newDisc.save()
-			contents = {'title':'Zniżki', 'messageType':'success', 'message':'Dodano nową zniżkę', 'type':'add'}
-			return render(request, 'manage_discountaddedit.html', contents)
+			messages.success(request, "Dodano nową zniżkę")
+			return HttpResponseRedirect('/manage/discount/add')
 		else:
 			contents = {'title':'Zniżki', 'messageType':'danger', 'message':'Nie wybrano żadnego dnia', 'type':'add'}
 	return render(request, 'manage_discountaddedit.html', contents)
@@ -1126,9 +1126,8 @@ def product_category_add(request):
 			try:
 				cparent = Product_Category.objects.get(cat_id=cparent)
 			except Product_Category.DoesNotExist:
-				contents['messageType'] = 'danger'
-				contents['message'] = 'Wystąpił nieoczekiwany błąd'
-				return render(request, 'manage_product_category.html', contents)
+				messages.error(request, "Wystąpił nieoczekiwany błąd")
+				return HttpResponseRedirect('/manage/product_category/')
 			cdemand = 0
 		if(cparent != None):	
 			if(cparent.type == '1'):
@@ -1144,8 +1143,8 @@ def product_category_add(request):
 		else:
 			newCategory = Product_Category(name = cname, description = cdesc, additional_price = cadd_price, parent = cparent, type = ctype, demand_ingredients = cdemand)
 			newCategory.save()
-			contents['messageType'] = 'success'
-			contents['message'] = 'Dodano nową kategorię'
+			messages.success(request, "Dodano nową kategorię produktu")
+			return HttpResponseRedirect('/manage/product_category/add')
 	else:
 		contents = {'title':'Kategorie Produktów', 'type': 'add', 'parents':toDisp, 'count':product_categories.count()}
 	return render(request, 'manage_product_category_addedit.html', contents)
@@ -1162,15 +1161,13 @@ def product_category_edit(request, edit_id):
 	try:
 		editid = int(edit_id)
 	except ValueError:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Podano niepoprawny numer kategorii'
-		return render(request, 'manage_product_category.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/product_category/')
 	try:
 		editCat = Product_Category.objects.get(cat_id=edit_id)
 	except Product_Category.DoesNotExist:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Wybrana kategoria nie istnieje'
-		return render(request, 'manage_product_category.html', contents)
+		messages.error(request, "Wybrana kategoria nie istnieje")
+		return HttpResponseRedirect('/manage/product_category/')
 	contents = {'title':'Kategorie Produktów', 'type':'edit'}
 	contents['id']=editCat.cat_id
 	contents['name']=editCat.name
@@ -1202,9 +1199,8 @@ def product_category_edit(request, edit_id):
 		try:
 			cid = int(cid)
 		except:
-			contents['messageType'] = 'danger'
-			contents['message'] = 'Wystąpił nieoczekiwany błąd'
-			return render(request, 'manage_product_category.html', contents)
+			messages.error(request, "Wystąpił nieoczekiwany błąd")
+			return HttpResponseRedirect('/manage/product_category/')
 		cname =  request.POST.get('name', False)
 		cdesc = request.POST.get('description', False)
 		cdemand = request.POST.get('demand_ingredient',False)
@@ -1214,7 +1210,6 @@ def product_category_edit(request, edit_id):
 			cdemand = 0
 		if(cdemand != 1):
 			cdemand = 0
-		print (cdemand)
 		cadd_price = request.POST.get('additional_price', False)
 		try:
 			cadd_price = float(cadd_price)
@@ -1235,9 +1230,8 @@ def product_category_edit(request, edit_id):
 			try:
 				cparent = Product_Category.objects.get(cat_id=cparent)
 			except Product_Category.DoesNotExist:
-				contents['messageType'] = 'danger'
-				contents['message'] = 'Wystąpił nieoczekiwany błąd'
-				return render(request, 'manage_product_category.html', contents)
+				messages.error(request, "Wystąpił nieoczekiwany błąd")
+				return HttpResponseRedirect('/manage/product_category/')
 			cdemand = 0
 		if(cparent != None):	
 			if(cparent.type == '1'):
@@ -1283,20 +1277,17 @@ def product_category_delete(request, del_id):
 	try:
 		delete = int(del_id)
 	except:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Podano niepoprawny numer kategorii'
-		return render(request, 'manage_product_category.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/product_category/')
 	try:
 		delCat = Product_Category.objects.get(cat_id=delete)
 	except Product_Category.DoesNotExist:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Wybrana kategoria nie istnieje'
-		return render(request, 'manage_product_category.html', contents)
+		messages.error(request, "Podana kategoria nie istnieje")
+		return HttpResponseRedirect('/manage/product_category/')
 	delCat.delete()
 	contents = display_product_category()
-	contents['messageType'] = 'success'
-	contents['message'] = 'Poprawnie usunięto wybraną kategorię'
-	return render(request, 'manage_product_category.html', contents)
+	messages.success(request, "Poprawnie usnięto wybraną kategorię")
+	return HttpResponseRedirect('/manage/product_category/')
 
 	
 def display_user_type():
@@ -1358,9 +1349,8 @@ def user_type_add(request):
 		except User_Type.DoesNotExist:
 			toSave = User_Type(type_name=name, canCreate=create, canEdit=edit, canDelete=delete, canDeliver=deliver, canManage=manage)
 			toSave.save()
-			contents['messageType'] = 'success'
-			contents['message'] = 'Dodano nowy typ użytkowników'
-			return render(request, 'manage_user_type_addedit.html', contents)
+			messages.success(request, "Poprawnie dodano nowy typ użytkownika")
+			return HttpResponseRedirect('/manage/user_type/add')
 		contents['messageType'] = 'danger'
 		contents['message'] = 'Nazwa jest już używana'
 	return render(request, 'manage_user_type_addedit.html', contents)
@@ -1375,20 +1365,17 @@ def user_type_delete(request, del_id):
 	try:
 		delete = int(del_id)
 	except ValueError:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Podano niepoprawny numer typu'
-		return render(request, 'manage_user_type.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/user_type/')
 	try:
 		user = User_Type.objects.get(id=delete)
 	except User_Type.DoesNotExist:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Wybrany typ nie istnieje'
-		return render(request, 'manage_user_type.html', contents)
+		messages.error(request, "Wybrany typ nie istnieje")
+		return HttpResponseRedirect('/manage/user_type/')
 	user.delete()
 	contents = display_user_type()
-	contents['messageType'] = 'success'
-	contents['message'] = 'Poprawnie usunięto wybrany typ'
-	return render(request, 'manage_user_type.html', contents)
+	messages.success(request, "Poprawnie usnięto wybrany typ")
+	return HttpResponseRedirect('/manage/user_type/')
 
 def user_type_edit(request, edit_id):
 	check = user_check(request)
@@ -1400,15 +1387,13 @@ def user_type_edit(request, edit_id):
 	try:
 		editid = int(edit_id)
 	except ValueError:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Podano niepoprawny numer typu'
-		return render(request, 'manage_user_type.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/user_type/')
 	try:
 		user = User_Type.objects.get(id=editid)
 	except User_Type.DoesNotExist:
-		contents['messageType'] = 'danger'
-		contents['message'] = 'Wybrany typ nie istnieje'
-		return render(request, 'manage_user_type.html', contents)
+		messages.error(request, "Wybrany typ nie istnieje")
+		return HttpResponseRedirect('/manage/user_type/')
 	contents = {'title':'Typy użytkowników', 'type':'edit'}
 	contents['id']=user.id
 	contents['name']=user.type_name
@@ -1445,9 +1430,8 @@ def user_type_edit(request, edit_id):
 		user.canManage = manage
 		user.save()
 		contents = display_user_type()
-		contents['messageType'] = 'success'
-		contents['message'] = 'Typ został zmieniony'
-		return render(request, 'manage_user_type.html', contents)
+		messages.success(request, "Zapisano poprawnie")
+		return HttpResponseRedirect('/manage/user_type/')
 	return render(request, 'manage_user_type_addedit.html', contents)
 
 	
@@ -1520,9 +1504,9 @@ def magazine_add(request):
 				default_quantityx = 0
 		
 			newIngredient = Ingredient(name=ingredient_name, price=pricex, quantity=quantityx, default_quantity=default_quantityx, units=unitsx, min_quantity=min_quantityx)
-			newIngredient.save()			
-			contents = {'title': "Magazyn", 'messageType':'success', 'message': 'Pomyślnie dodano składnik do bazy!', 'type': 'add'}
-			return render(request, 'manage_magazine_addedit.html', contents)
+			newIngredient.save()		
+			messages.success(request,"Poprawnie dodano nowy składnik")
+			return HttpResponseRedirect('/manage/magazine')
 			
 		else:	
 			contents = {'title': "Magazyn", 'messageType':'danger', 'message': 'Niepoprawna nazwa składnika!', 'type': 'add'}
@@ -1541,10 +1525,14 @@ def magazine_edit(request, edit_id):
 	try:
 		eid = int(edit_id)
 	except ValueError:
-		contents = {'title':'Magazyn', 'type':'danger', 'content':'Podany element nie istnieje!'}
-		return render(request, 'manage_magazine.html', contents)
+		messages.error(request,"Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/magazine')
 	ingredients = Ingredient.objects.all()
-	toEdit = Ingredient.objects.get(id=edit_id)
+	try:
+		toEdit = Ingredient.objects.get(id=edit_id)
+	except:
+		messages.error(request,"Podany składnik nie istnieje")
+		return HttpResponseRedirect('/manage/magazine')
 	if(toEdit):		
 		contents = {'title': "Magazyn", 'messageType':'none', 'type': 'edit', 'toEdit': toEdit}
 		
@@ -1605,8 +1593,8 @@ def magazine_edit(request, edit_id):
 				toEdit.default_quantity = default_quantityx				
 				toEdit.save()	
 				
-				contents = {'title': "Magazyn", 'messageType':'success', 'message': 'Edycja składnika zakończyła się powodzeniem!', 'type': 'add'}
-				return render(request, 'manage_magazine_addedit.html', contents)
+				messages.success(request,"Zapisano poprawnie")
+				return HttpResponseRedirect('/manage/magazine')
 				
 			else:	
 				contents = {'title': "Magazyn", 'messageType':'danger', 'message': 'Niepoprawna nazwa składnika!', 'type': 'edit', 'toEdit': toEdit }
@@ -1626,19 +1614,19 @@ def magazine_delete(request, del_id):
 	try:
 		did = int(del_id)
 	except ValueError:
-		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!','ingredients': ingredients,}
-		return render(request, 'manage_magazine.html', contents)
+		messages.error(request,"Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/magazine')
 	toDel = Ingredient.objects.filter(id=did)
 	if(toDel.count() == 1):
 		toDel[0].delete()		
-		contents = {'title':'Magazyn','messageType':'success', 'message':'Składnik został usunięty!','ingredients': ingredients,}
-		return render(request, 'manage_magazine.html', contents)
+		messages.success(request,"Składnik usunięty poprawnie")
+		return HttpResponseRedirect('/manage/magazine')
 	elif(toDel.count() > 1):
-		contents = {'title':'Magazyn','messageType':'danger', 'message':'Nieznany błąd','ingredients': ingredients}
+		messages.error(request,"Wystąpił nieoczekiwany błąd")
 	else:
-		contents = {'title':'Magazyn','messageType':'danger', 'message':'Taki element nie instnieje!','ingredients': ingredients}
+		messages.error(request,"Taki element nie istnieje")
 	
-	return render(request, 'manage_magazine.html', contents)
+	return HttpResponseRedirect('/manage/magazine')
 
 def get_subcategories(maincat):
 	subcategories = {}
@@ -2270,11 +2258,7 @@ def product_add(request):
 	
 	#pobierz zniżki
 	contents["discounts"] = display_discount()
-	try:
-		contents["discounts"]["content"]["days"]
-	except:
-		contents["discounts"]["content"] = []
-	else:
+	if (contents["discounts"]["count"] > 0):
 		for curRow in contents["discounts"]["content"]:
 			if(curRow["days"]!= ""):
 				days = curRow["days"].split(', ');
@@ -2366,8 +2350,8 @@ def product_add(request):
 				product_ing = Ingredient_Product(quantity=value, ingredient = curRow, product = pproduct)
 				product_ing.save()
 			
-			contents["messageType"] = 'success'
-			contents["message"] = 'Produkt poprawnie dodany '
+		messages.success(request, "Poprawnie dodano nowy produkt")
+		return HttpResponseRedirect('/manage/product/add')
 
 	return render(request,'manage_product_addedit.html',contents)
 
@@ -2382,16 +2366,14 @@ def product_edit(request,edit_id):
 	try:
 		edit_id = int(edit_id)
 	except:
-		contents["messageType"] = 'danger'
-		contents["message"] = 'Podany parametr jest nieprawidłowy'
-		return render(request,"manage_product.html", display_product())
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/product/')
 	###pobierz produkt z bazy ###
 	try:
 		pproduct = Product.objects.get(product_code=edit_id)
 	except Product.DoesNotExist:
-		contents["messageType"] = 'danger'
-		contents["message"] = 'Ten produkt nie istnieje'
-		return render(request,"manage_product.html", display_product())
+		messages.error(request, "Ten produkt nie istnieje")
+		return HttpResponseRedirect('/manage/product/')
 	contents["id"] = pproduct.product_code
 	contents["name"] = pproduct.product_name
 	contents["price"] = pproduct.price
@@ -2428,11 +2410,7 @@ def product_edit(request,edit_id):
 			contents["ingredients_count"] = ingredients.count()
 	#pobierz zniżki
 	contents["discounts"] = display_discount()
-	try:
-		contents["discounts"]["content"]["days"]
-	except:
-		contents["discounts"]["content"] = []
-	else:
+	if (contents["discounts"]["count"] > 0):
 		for curRow in contents["discounts"]["content"]:
 			if(curRow["days"]!= ""):
 				days = curRow["days"].split(', ');
@@ -2577,21 +2555,18 @@ def product_delete(request, del_id):
 	try:
 		del_id = int(del_id)
 	except:
-		contents["messageType"]= 'danger'
-		contents["message"]= 'Nieprawidłowa wartość parametru'
-		return render(request,"manage_product.html", contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/product/')
 	try:
 		delProd = Product.objects.get(product_code=del_id)
 	except Product.DoesNotExist:
-		contents["messageType"]= 'danger'
-		contents["message"]= 'Ten produkt nie istnieje'
-		return render(request,"manage_product.html", contents)
+		messages.error(request, "Wybrany produkt nie istnieje")
+		return HttpResponseRedirect('/manage/product/')
 		
 	delProd.delete()
 	contents = display_product()
-	contents["messageType"]= 'success'
-	contents["message"]= 'Poprawnie usunięto wybrany produkt'
-	return render(request,"manage_product.html", contents)
+	messages.success(request, "Poprawnie usunięto wybrany produkt")
+	return HttpResponseRedirect('/manage/product/')
 	
 	
 def user_login(request):
@@ -2642,19 +2617,20 @@ def payment_types_delete(request, del_id):
 	try:
 		did = int(del_id)
 	except ValueError:
-		contents = {'title':'Płatności','messageType':'danger', 'message':'Taki element nie instnieje!'}
-		return render(request, 'manage_payment_types.html', contents)
+		messages.error(request,'Taki element nie istnieje')
+		return HttpResponseRedirect('/manage/payment/')
 		
 	toDel = Payment_Type.objects.filter(id=did)
 	if(toDel.count() == 1):
 		toDel[0].delete()
-		return payment_types(request)
+		messages.success(request,'Płatność poprawnie usunięta')
+		return HttpResponseRedirect('/manage/payment/')
 	elif(toDel.count() > 1):
-		contents = {'title':'Płatności','messageType':'danger', 'message':'Nieznany błąd'}
+		messages.error(request,'Wystąpił nieoczekiwany błąd')
 	else:
-		contents = {'title':'Płatności','messageType':'danger', 'message':'Taki element nie instnieje!'}
+		messages.error(request,'Taki element nie istnieje')
 
-	return render(request, 'manage_payment_types.html', contents)
+	return HttpResponseRedirect('/manage/payment/')
 	
 def payment_types_add(request):
 	check = user_check(request)
@@ -2672,7 +2648,8 @@ def payment_types_add(request):
 			if(not payment_namex == 'Nazwa płatności'):
 				newPayment = Payment_Type(payment_name=payment_namex)
 				newPayment.save()
-				return payment_types(request)
+				messages.success(request,'Dodano nową płatność')
+				return HttpResponseRedirect('/manage/payment/add/')
 			else:
 				contents = {'title':'Płatności','messageType':'danger', 'message':'Błąd wprowadzania!'}
 		else:
@@ -2692,10 +2669,13 @@ def user_management_edit(request, edit_id):
 	try:
 		eid = int(edit_id)
 	except ValueError:
-		contents = {'title':'Zarządzanie użytkownikami', 'type':'danger', 'content':'Podany użytkownik nie istnieje!'}
-		return render(request, 'manage_magazine.html', contents)
-		
-	toEdit = User.objects.get(user_id=eid)	
+		messages.error(request,"Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/usermanagement')
+	try:
+		toEdit = User.objects.get(user_id=eid)
+	except: 
+		messages.error(request,"Podany użytkownik nie istnieje")
+		return HttpResponseRedirect('/manage/usermanagement')
 	user_types = User_Type.objects.all()
 	if(request.POST.get('sent')):
 		reg_username = request.POST.get('username')
@@ -2820,9 +2800,8 @@ def user_management_delete(request, del_id):
 	try:
 		did = int(del_id)
 	except ValueError:
-		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownikk nie instnieje!', 'users': users}
-		return render(request, 'manage_usermanagement.html', contents)
-		
+		messages.error(request,"Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/usermanagement')
 	toDel = User.objects.filter(user_id=did)
 	iterator = -1
 	if(toDel.count() == 1):
@@ -2832,14 +2811,14 @@ def user_management_delete(request, del_id):
 			for type in user_types:
 				if user.type_id == type.id:
 					user.type_id = type.type_name					
-		contents = {'title':'Zarządzanie użytkownikami','messageType':'success', 'message': 'Użytkownik usunięty poprawnie!', 'users': users}
-		return render(request, 'manage_usermanagement.html', contents)
+		messages.success(request,"Użytkownik poprawnie usunięty")
+		return HttpResponseRedirect('/manage/usermanagement')
 	elif(toDel.count() > 1):
-		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Nieznany błąd', 'users': users}
+		messages.error(request,"Wystąpił nieoczekiwany błąd")
 	else:
-		contents = {'title':'Zarządzanie użytkownikami','messageType':'danger', 'message':'Taki użytkownik nie instnieje!', 'users': users}
+		messages.error(request,"Podany użytkownik nie istnieje")
 	
-	return render(request, 'manage_usermanagement.html', contents)
+	return HttpResponseRedirect('/manage/usermanagement')
 	
 def management_panel(request):
 	check = user_check(request)
@@ -2988,7 +2967,6 @@ def display_order_status():
 	if(orders.count() > 0):	
 		toDisp = []
 		for curRow in orders:
-			print(curRow.status)
 			if(curRow.status == '1' or curRow.status == '2' or curRow.status == '6'):
 				if(o_p.count()>0):
 					toProd = []
@@ -3015,7 +2993,6 @@ def display_order_status():
 
 	else:
 		contents = {'title':'Zamówienia', 'content':'Brak zamówień', 'count':0}
-	print(contents)
 	return contents
 	
 def order_status(request):
@@ -3037,9 +3014,11 @@ def order_status_change(request, chg_id):
 	except ValueError:
 		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
 		return render(request, 'manage_order_status.html', contents)
-		
-	toEdit = Order.objects.get(order_code=chg_id)
-	
+	try:	
+		toEdit = Order.objects.get(order_code=chg_id)
+	except:
+		messages.error(request, "Takie zamówienie nie istnieje")
+		return HttpResponseRedirect('/manage/order_status/')
 	if(toEdit):
 		if (toEdit.status == '1'):
 			toEdit.status = '2'
@@ -3050,13 +3029,13 @@ def order_status_change(request, chg_id):
 		elif toEdit.status == '6':
 			toEdit.status = '1'
 		else:
-			contents = {'title':'Zamówienia','messageType':'danger', 'message':'Błędny status!'}
+			messages.error(request, "Wystąpił nieoczekiwany błąd")
+			return HttpResponseRedirect('/manage/order_status/')
 		toEdit.save()
-		return order_status(request)
-	else:
-		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
-		
-	return render(request, 'manage_order_status.html', contents)
+		messages.success(request, "Poprawnie zmieniono status zamówienia")
+
+	
+	return HttpResponseRedirect('/manage/order_status/')
 	
 def order_status_delete(request, del_id):
 	check = user_check(request)
@@ -3067,17 +3046,18 @@ def order_status_delete(request, del_id):
 	try:
 		did = int(del_id)
 	except ValueError:
-		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Taki element nie instnieje!'}
-		return render(request, 'manage_order_status.html', contents)
-		
-	toCnnl = Order.objects.get(order_code=did)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/order_status/')
+	try:
+		toCnnl = Order.objects.get(order_code=did)
+	except:
+		messages.error(request, "Wybrane zamówienie nie istnieje")
+		return HttpResponseRedirect('/manage/order_status/')
 	if(toCnnl):
 		toCnnl.status = '0'
 		toCnnl.save()
 		messages.success(request,"Zamówienie zostało anulowane")
-		return HttpResponseRedirect('/manage/orders/')
-	else:
-		contents = {'title':'Zamówienie','messageType':'danger', 'message':'Taki element nie instnieje!'}
+		return HttpResponseRedirect('/manage/order_status/')
 
 	return render(request, 'manage_order_status.html', contents)
 	
@@ -3090,7 +3070,8 @@ def order_status_edit_display(request,chg_id):
 	try:
 		id = int(chg_id)
 	except ValueError:
-		return render(request, 'manage_order_status.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/order_status/')
 	o_p = Order_Product.objects.all()
 	o_i = Order_Ingredients.objects.all()
 	toIng = []
@@ -3129,8 +3110,8 @@ def order_status_edit(request, chg_id):
 	try:
 		id = int(chg_id)
 	except ValueError:
-		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
-		return render(request, 'manage_order_status.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/order_status/')
 	
 	o_p = Order_Product.objects.all()
 	o_i = Order_Ingredients.objects.all()
@@ -3138,7 +3119,11 @@ def order_status_edit(request, chg_id):
 	ingInd = 0
 	toProd = []
 	proInd = 0
-	curRow = Order.objects.get(order_code=chg_id)
+	try:
+		curRow = Order.objects.get(order_code=chg_id)
+	except:
+		messages.error(request, "Wybrane zamówienie nie istnieje")
+		return HttpResponseRedirect('/manage/order_status/')
 	if(curRow):
 		if(o_p.count()>0):
 				toProd = []
@@ -3208,8 +3193,6 @@ def order_status_edit(request, chg_id):
 								
 			contents = {'title':'Zamówienia','messageType':'success', 'message':'Zmiany zostały zapisane!','content':order_status_edit_display(request,chg_id)}
 			return render(request, 'manage_order_status_edit.html', contents)
-	else:
-		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
 			
 	contents = {'title':'Zamówienia','messageType':'none','content':row}
 	return render(request, 'manage_order_status_edit.html', contents)

@@ -14,7 +14,7 @@
 		<table class="table table-hover table-responsive">
 		<tr><th>Aktywna</th><th>Dni</th><th>Godziny</th><th>Dla</th><th>Zniżka</th><th>Zarządzaj</th></tr>
 		{% for row in content %}
-			<tr><td>{% if row.active == "Tak" %}<b>{{row.active}}</b>{% else %}{{row.active}}{% endif %}</td><td>{{row.days}}</td><td>{{row.hours}}</td><td>{{row.for}}</td><td>{{row.disc}}</td><td><a href="/manage/discount/edit/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/discount/delete/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
+			<tr><td>{% if row.active == "Tak" %}<b>{{row.active}}</b>{% else %}{{row.active}}{% endif %}</td><td>{{row.days}}</td><td>{{row.hours}}</td><td>{{row.for}}</td><td>{{row.disc}}</td><td><a href="/manage/discount/edit/{{row.id}}/" class="btn btn-primary" data-toggle="tooltip" title="edytuj"/><span class="glyphicon glyphicon-pencil"></span> </a>&nbsp;<a href="/manage/discount/delete/{{row.id}}/" class="btn btn-primary delete-button" data-toggle="tooltip"  title="usuń"/><span class="glyphicon glyphicon-trash"></span> </a></td></tr>
 		{% endfor %}
 		</table>
 	{% else %}

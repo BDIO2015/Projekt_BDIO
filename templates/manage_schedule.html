@@ -4,14 +4,13 @@
 
 
 {% block content %}
-	<a href="/manage/schedule/" class="btn btn-primary">Powrót</a><br /><br />
 	{% if messageType == "danger" or messageType == "success" %}
 	<div class="alert alert-{{messageType}}">
 	  {{message}}
 	</div>
 	{% endif %}
 	{% if messageType != "danger" %}
-	
+	<a href="/manage/" class="btn btn-primary">Powrót</a><br /><br />
 	<form action="/manage/schedule/" method="POST" class="form-horizontal">
 	{% csrf_token %}
 	<script type="text/javascript">

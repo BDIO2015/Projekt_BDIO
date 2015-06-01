@@ -8,6 +8,7 @@
 	  {{message}}
 	</div>
 	{% endif %}
+	<a href="/user/dash" class="btn btn-primary">Powrót</a></br></br>
 	<table class="table table-hover table-responsive">
 	<tr>
 	<th align="center">
@@ -33,6 +34,7 @@
 	</th>
 	</tr>
 	{% for element in orders %}
+	<tr>
 	<td>
 		{{element.order_code}}
 	</td>
@@ -88,8 +90,9 @@
 		Transfer
 		{% endif %}
 	</td>
+	</tr>
 	{% endfor %}
 	</table>
-	<a href="/user/dash">Powrót</a>
+
 	
 {% endblock %}

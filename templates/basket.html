@@ -3,7 +3,7 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-	<a href="/basket" class="btn btn-primary">Powrót</a><p style="text-align: right;"><a href="/basket/clear" class="btn btn-primary">Wyczyść koszyk</a></p>
+	<a href="/" class="btn btn-primary">Powrót</a><p style="text-align: right;"><a href="/basket/clear" class="btn btn-primary">Wyczyść koszyk</a></p>
 	{% if messageType == "danger" or messageType == "success" %}
 	<div class="alert alert-{{messageType}}">
 	  {{message}}

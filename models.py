@@ -29,8 +29,8 @@ class User(models.Model):
 	phone_number = models.CharField(max_length=15)
 	password = models.CharField(max_length=512)
 	username = models.CharField(max_length=64)
-	scheduled = models.ForeignKey(Schedule, null=True)
-	type = models.ForeignKey(User_Type, null=True)
+	scheduled = models.ForeignKey(Schedule, null=True, on_delete=models.SET_NULL)
+	type = models.ForeignKey(User_Type, null=True, on_delete=models.SET_NULL)
 	
 class Delivery(models.Model):
 	delivery_id = models.AutoField(primary_key=True)
@@ -60,8 +60,8 @@ class Order(models.Model):
 	payment_name = models.CharField(max_length=30)
 	payment_status = models.BooleanField(default=0)
 	payment_time_stamp = models.DateTimeField(auto_now_add=True)
-	delivery = models.ForeignKey(Delivery, null=True)
-	user = models.ForeignKey(User, null=True)
+	delivery = models.ForeignKey(Delivery, null=True, on_delete=models.SET_NULL)
+	user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
 	payment_type = models.ForeignKey(Payment_Type)
 	access_hash = models.CharField(max_length=512, blank=True)
 
@@ -75,7 +75,7 @@ class Product(models.Model):
 	product_name = models.CharField(max_length=30)
 	price = models.DecimalField(max_digits=5, decimal_places=2)
 	description = models.TextField()
-	discount = models.ForeignKey(Discount, null=True)
+	discount = models.ForeignKey(Discount, null=True, on_delete=models.SET_NULL)
 	category = models.ForeignKey("Product_Category")
 
 class Ingredient(models.Model):

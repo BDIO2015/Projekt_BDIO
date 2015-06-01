@@ -9,7 +9,6 @@
 </div>
 {% endif %}
 <a href="/manage/user_type/" class="btn btn-primary">Powrót</a><br /><br />
-{{ content }}
 {% if type == "add" or type == "edit" %}
 	<form action="/manage/user_type/{% if type == "edit" %}edit/{{id}}{% elif type == "add" %}add{% endif %}/" method="POST" class="form-horizontal">
 	{% csrf_token %}

@@ -13,13 +13,13 @@
 <form action="/manage/payment/add/" method="POST" class="form-horizontal">
 	
 	{% csrf_token %}
-	<div class="group-input">
+	<div class="input-group">
 	<label class="control-label">Dodaj nową płatność: </label>
 	<input type="text" class="form-control" name="payment_name" value="Nazwa płatności" maxlength="20" onblur="if(this.value=='')this.value='Nazwa płatności';" onfocus="if(this.value=='Nazwa płatności')this.value='';"/>
 	
-	<br>
-	<input class="btn btn-primary" type="submit" name="sent" value="Zapisz" />  	{{ result }}
 	</div>
+	<input class="btn btn-primary" type="submit" name="sent" value="Zapisz" />  	{{ result }}
+
 
 </form>
 

@@ -3,16 +3,16 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-	<a href="/" class="btn btn-primary">Powrót</a>
+
 	{% if messageType == "danger" or messageType == "success" %}
 	<div class="alert alert-{{messageType}}">
 	  {{message}}
 	</div>
 	{% else %}
-	<br />
-	Numer Twojego zamówienia: {{order_id}}<br />
-	Status Twojego zamówienia: {{order_status}}<br /><br />
-	Typ płatności: {{order_type}}<br />
-	Całkowita cena: {{order_price}} zł
+	<a href="/" class="btn btn-primary">Powrót</a><br /></br>
+	<div>Numer Twojego zamówienia: <strong>{{order_id}}</strong></div>
+	<div>Status Twojego zamówienia: <strong>{{order_status}}</strong></div>
+	<div>Typ płatności: {{order_type}}</div></br>
+	<div>Całkowita cena: <span class="product_header_info">{{order_price}} PLN</span></div>
 	{% endif %}
 {% endblock %}
