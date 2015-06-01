@@ -1,39 +1,48 @@
 
 
 {% extends "index.html" %}
-
 {% block title %}{{title}}{% endblock %}
-
 {% block content %}
-
 {% if messageType == "danger" or messageType == "success" %}
-
 <div class="alert alert-{{messageType}}">
-
   {{message}}
-
 </div>
-
 {% endif %}
-
+<a href="/" class="btn btn-primary">Powrót</a></br></br>
 <form action="/user/dash" method="POST">
-
   {% csrf_token %}
-
+  <h3>Dane:</h3>
+  <div class="input-group">
+    <label  class="control-label">Imię:</label>
+    <input type="text" name="name" value="{{name}}" maxlength=64  class="form-control" required readonly/>
+  </div>
+  <div class="input-group">
+    <label  class="control-label">Nazwisko:</label>
+    <input type="text" name="second_name" value="{{second_name}}" maxlength=64  class="form-control" required readonly/>
+  </div>
+  <div class="input-group">
+    <label  class="control-label">Adres:</label>
+    <input type="text" maxlength="64" name="address" value="{{address}}"  class="form-control" require readonly/>
+  </div>
+  <div class="input-group">
+    <label  class="control-label">Miasto:</label>
+    <input type="text" maxlength="64" name="city" value="{{city}}"  class="form-control" required readonly/>
+  </div>
+  <div style="display: inline; margin-bottom: 10px; float:left; width:100%;">
+    <label  class="control-label">Kod pocztowy:</label><br>
+    <input type="text" size="2" maxlength="2" name="postal_code1" value="{{postal_code1}}"  class="form-control" required readonly/ style="display: inline;width: 40px; !important"> - <input type="text" size="3" maxlength="3" name="postal_code2" value="{{postal_code2}}"  class="form-control" required style="display: inline;width: 60px; !important" readonly/>
+  </div>
+  <div class="input-group">
+    <label  class="control-label">Numer telefonu:</label>
+    <input type="text" maxlength="9" name="phone_number" value="{{phone_number}}"  class="form-control" required readonly/>
+  </div>
   <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3">
     <div>
-    <a href="/user/delete" class="btn btn-primary">Usuń konto</a><br /><br />
-    </div>
-    <div>
-    <a href="/user/edit" class="btn btn-primary">Edytuj konto</a><br /><br />
-    </div>
-    <div>
-    <a href="{{url}}" class="btn btn-primary">{{type}}</a><br /><br />
-    <a href="/">Powrót</a>
+      <a href="/user/delete" class="btn btn-primary">Usuń konto</a>
+      <a href="/user/edit" class="btn btn-primary">Edytuj konto</a>
+      <a href="{{url}}" class="btn btn-primary">{{type}}</a>
     </div>
   </div>
 </form>
-
 {% endblock %}
-
 
