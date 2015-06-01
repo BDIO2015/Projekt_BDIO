@@ -41,8 +41,8 @@
 		{% if type != 'display' %}
 			<td> 
 			{% if type != 'display' %}
-				<a href="/manage/delivery/deliverychangeorderup/{{element.delivery_id}}" class="btn btn-primary delete-button" data-toggle="tooltip"  title="Przesuń w góre"/><span class="glyphicon glyphicon-arrow-up"></span> </a>
-				<a href="/manage/delivery/deliverychangeorderdown/{{element.delivery_id}}" class="btn btn-primary delete-button" data-toggle="tooltip"  title="Przesuń w dół"/><span class="glyphicon glyphicon-arrow-down"></span> </a>
+				<a href="/manage/delivery/deliverychangeorderup/{{element.delivery_id}}" class="btn btn-primary" data-toggle="tooltip"  title="Przesuń w góre"/><span class="glyphicon glyphicon-arrow-up"></span> </a>
+				<a href="/manage/delivery/deliverychangeorderdown/{{element.delivery_id}}" class="btn btn-primary" data-toggle="tooltip"  title="Przesuń w dół"/><span class="glyphicon glyphicon-arrow-down"></span> </a>
 			{% endif %}
 			</td>
 		{% endif %}
@@ -59,11 +59,11 @@
 			
 		<td>
 		{% if type == 'display' %}
-			<a href="/manage/delivery/takeorder/{{element.order_code}}" class="btn btn-primary delete-button" data-toggle="tooltip"  title="Weż zamówienie"/><span class="glyphicon glyphicon-briefcase"></span> </a>
+			<a href="/manage/delivery/takeorder/{{element.order_code}}" class="btn btn-primary change-order-status-button" data-toggle="tooltip"  title="Weż zamówienie"/><span class="glyphicon glyphicon-briefcase"></span> </a>
 		{% endif %}
 		
 		{% if type != 'display' %}
-			<a href="/manage/delivery/changestatus/{{element.order_code}}" class="btn btn-primary delete-button" data-toggle="tooltip"  title="Zrealizowane"/><span class="glyphicon glyphicon-briefcase"></span> </a>
+			<a href="/manage/delivery/changestatus/{{element.order_code}}" class="btn btn-primary change-order-status-button" data-toggle="tooltip"  title="Zrealizowane"/><span class="glyphicon glyphicon-briefcase"></span> </a>
 		{% endif %}
 		</td>
 		</tr>

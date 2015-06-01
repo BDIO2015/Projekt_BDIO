@@ -3220,15 +3220,28 @@ def delivery(request):
 		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
 		return HttpResponseRedirect('/manage')
+		
 	delivery = Delivery.objects.all()
 	orders = Order.objects.all()
+	users = User.objects.all()
 	
 	contents = {'title':'Panel kuriera', 'content':''}
 	waitingOrders = []
 	if( orders.count() > 0 ):
 		for order in orders:
 			if( order.status == '3' ):
-				waitingOrders.append(order)
+				if order.order_address:
+					if order.order_notes:
+						waitingOrders.append(order)
+					else:
+						order.order_notes = order.user.name +" "+ order.user.second_name
+				elif order.order_notes:
+					order.order_address = order.user.address
+					waitingOrders.append(order)
+				else:
+					order.order_notes = order.user.name +" "+ order.user.second_name
+					order.order_address = order.user.address
+					waitingOrders.append(order)
 						
 						
 	contents['waiting_orders'] = waitingOrders
@@ -3242,20 +3255,35 @@ def delivery_in_progress(request):
 		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
 		return HttpResponseRedirect('/manage')
+	
 	delivery = Delivery.objects.all().order_by('ord')
 	orders = Order.objects.all()
-
+	users = User.objects.all()
+	
 	check = user_check(request)
 	uid = check['user_id']
 	
 	
 	contents = {'title':'Panel kuriera', 'content':''}
 	waitingOrders = []
-	for deliver in delivery:
-		for order in orders:
+	for order in orders:
+		for deliver in delivery:
 			if( order.status == '4' and uid == deliver.user_id and deliver.delivery_id == order.delivery_id):
-				status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
-				waitingOrders.append(status)
+				if order.order_address:
+					if order.order_notes:
+						status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
+						waitingOrders.append(status)
+					else:
+						order.order_notes = order.user.name +" "+ order.user.second_name
+				elif order.order_notes:
+					order.order_address = order.user.address
+					status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
+					waitingOrders.append(status)
+				else:
+					order.order_notes = order.user.name +" "+ order.user.second_name
+					order.order_address = order.user.address
+					status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
+					waitingOrders.append(status)
 					
 					
 	contents['waiting_orders'] = waitingOrders
@@ -3289,6 +3317,7 @@ def delivery_take_order(request, element_id):
 			if uid == deliver.user_id :
 				if order.delivery_id == deliver.delivery_id and order.status != '5':
 					iterator += 1
+
 	
 	toSave = Delivery(ord = iterator, user_id = uid)
 	toSave.save()
@@ -3305,16 +3334,33 @@ def delivery_take_order(request, element_id):
 		contents['message'] = 'Dodano zamówienie do listy dostarczeń'
 	else:
 		contents = {'messageType':'danger', 'message':'Nieznany błąd'}
-
+		
 	
 	waitingOrders = []
 	delivery = Delivery.objects.all().order_by('ord')
-	orders = Order.objects.all()	
+	orders = Order.objects.all()
+	users = User.objects.all()
+	
 	if( orders.count() > 0 ):
+		
 		for order in orders:
-			if( order.status == '3' ):
-				waitingOrders.append(order)						
-			
+			if( order.status == '3' ):				
+				if order.order_address:
+					if order.order_notes:
+						status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
+						waitingOrders.append(status)
+					else:
+						order.order_notes = order.user.name +" "+ order.user.second_name
+				elif order.order_notes:
+					order.order_address = order.user.address
+					status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
+					waitingOrders.append(status)
+				else:
+					order.order_notes = order.user.name +" "+ order.user.second_name
+					order.order_address = order.user.address
+					status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
+					waitingOrders.append(status)				
+				
 			
 	contents['waiting_orders'] = waitingOrders
 	contents['type'] = 'display'
@@ -3344,6 +3390,7 @@ def delivery_change_status(request, element_id):
 	toChan = Order.objects.get(order_code=eid)
 	if(toChan.status == '4'):
 		toChan.status = '5'
+		toChan.payment_status = 1
 		toChan.save()
 		contents = {'title':'Panel kuriera'}
 		contents['messageType'] = 'success'
@@ -3354,11 +3401,27 @@ def delivery_change_status(request, element_id):
 	
 	waitingOrders = []
 	delivery = Delivery.objects.all().order_by('ord')
-	orders = Order.objects.all()	
+	orders = Order.objects.all()
+	users = User.objects.all()
+	
 	if( orders.count() > 0 ):
 		for order in orders:
-			if( order.status == '4' ):
-				waitingOrders.append(order)						
+			if( order.status == '4' ):		
+				if order.order_address:
+					if order.order_notes:
+						status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
+						waitingOrders.append(status)
+					else:
+						order.order_notes = order.user.name +" "+ order.user.second_name
+				elif order.order_notes:
+					order.order_address = order.user.address
+					status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
+					waitingOrders.append(status)
+				else:
+					order.order_notes = order.user.name +" "+ order.user.second_name
+					order.order_address = order.user.address
+					status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
+					waitingOrders.append(status)					
 				
 				
 	contents['waiting_orders'] = waitingOrders
@@ -3382,6 +3445,7 @@ def delivery_change_order_up(request, element_id):
 	contents = {'title':'Panel kuriera'}
 	
 	toChan = Delivery.objects.get(delivery_id=eid)
+	
 	if toChan.ord != 1 :
 		toChan2 = Delivery.objects.get(ord = toChan.ord-1)
 		toChan.ord = toChan.ord-1
