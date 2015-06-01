@@ -1740,7 +1740,7 @@ def basket(request):
 					os.environ['TZ'] = 'Poland'
 					time.tzset()
 				timeFormat = time.strftime("%a %B %d %H:%M:%S %Y")
-				timeFormat = time.strftime("%c")
+				#timeFormat = time.strftime("%c")
 				timeFormat = timeFormat.split(' ')
 				onlyTime = timeFormat[3].split(':')
 				cHour = int(onlyTime[0])
@@ -1904,7 +1904,7 @@ def basket_order(request):
 							os.environ['TZ'] = 'Poland'
 							time.tzset()
 						timeFormat = time.strftime("%a %B %d %H:%M:%S %Y")
-						timeFormat = time.strftime("%c")
+						#timeFormat = time.strftime("%c")
 						timeFormat = timeFormat.split(' ')
 						onlyTime = timeFormat[3].split(':')
 						cHour = int(onlyTime[0])
@@ -1940,10 +1940,9 @@ def basket_order(request):
 				uOrder.price = orderPrice
 				uOrder.save()
 				contents['messageType'] = 'success'
-				toHash = str(uOrder.order_code) + '-zamowienie'
-				toHash = toHash.encode('ASCII')
-				toHash = base64.b64encode(toHash)
-				hashCode = toHash.decode('ASCII')
+				hashCode = hashlib.sha256(str(uOrder.order_code).encode()).hexdigest()
+				uOrder.access_hash = hashCode
+				uOrder.save()
 				del request.session['basket_products']
 				contents['message'] = 'Zamówienie zostało złożone.'
 				contents['displayLink'] = True
@@ -2106,18 +2105,13 @@ def basket_clear(request):
 
 def order_check(request, order_id):
 	contents = {'title':'Status zamówienia'}
-	decoded = order_id.encode('ASCII')
-	decoded = base64.b64decode(decoded)
-	decoded = decoded.decode('ASCII')
-	decoded = decoded.split('-')[0]
 	try:
-		decoded = int(decoded)
-	except ValueError:
+		orderData = Order.objects.get(access_hash=order_id)
+	except Order.DoesNotExist:
 		contents['messageType'] = 'danger'
-		contents['message'] = 'Twój link jest niepoprawny'
+		contents['message'] = 'Twój link jest nieprawidłowy'
 		return render(request, 'order_check.html', contents)
-	orderData = Order.objects.get(order_code=decoded)
-	contents['order_id'] = str(decoded)
+	contents['order_id'] = str(orderData.order_code)
 	status = 'Anulowane'
 	if(orderData.status == '1'):
 		status = 'przyjęte do realizacji'

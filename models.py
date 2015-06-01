@@ -63,6 +63,7 @@ class Order(models.Model):
 	delivery = models.ForeignKey(Delivery, null=True)
 	user = models.ForeignKey(User, null=True)
 	payment_type = models.ForeignKey(Payment_Type)
+	access_hash = models.CharField(max_length=512, blank=True)
 
 class Discount(models.Model):
 	id = models.AutoField(primary_key=True)

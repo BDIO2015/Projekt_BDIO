@@ -19,7 +19,7 @@
 		{% endfor %}
 		</table>
 		<p style="text-align: right;"><input type="submit" name="act" value="Aktualizuj" class="btn btn-primary"/></p>
-		Łączna cena: {{orderPrice}} zł 
+		Łączna cena: {{orderPrice|floatformat:2}} zł 
 		<br /><br /><input type="submit" name="act" value="Zamów" class="btn btn-primary"/>
 		</form>
 	{% endif %}
