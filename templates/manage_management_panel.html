@@ -14,17 +14,27 @@
 
 	<table class="table table-hover table-responsive">
 		<tr><th>Panel zarządzania:</th></tr>
+			{% if userCheck.canManage == True %}
 			<tr><td><a href="/manage/discount">Zniżki</a></td></tr>
 			<tr><td><a href="/manage/product_category">Kategorie produktów</a></td></tr>
 			<tr><td><a href="/manage/user_type">Typy użytkowników</a></td></tr>
 			<tr><td><a href="/manage/usermanagement">Zarządzaj użytkownikami</a></td></tr>
+			{% endif %}
+			{% if userCheck.canManage == True or userCheck.canEdit == True %}
 			<tr><td>	
 			<a href="/manage/magazine">{% if messageType == "alert" %}<font color=red>			{% endif %}Składniki</font></a>
 			 </td></tr>	
+			 {% endif %}
+			{% if userCheck.canManage == True %}
 			<tr><td><a href="/manage/product">Produkty</a></td></tr>	
-			<tr><td><a href="/manage/order_status">Złożone zamówienia</a></td></tr>
 			<tr><td><a href="/manage/schedule">Plany pracowników</a></td></tr>
 			<tr><td><a href="/manage/payment">Typy płatności</a></td></tr>
+			{% endif %}
+			{% if userCheck.canManage == True or userCheck.canEdit == True %}
+			<tr><td><a href="/manage/order_status">Złożone zamówienia</a></td></tr>
+			{% endif %}
+			{% if userCheck.canManage == True or userCheck.canDeliver == True %}			
 			<tr><td><a href="/manage/delivery">Dowóz zamówień</a></td></tr>
+			{% endif %}			
 		</table>
 {% endblock %}

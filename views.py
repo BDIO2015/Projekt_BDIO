@@ -1439,7 +1439,7 @@ def magazine(request):
 	check = user_check(request)
 	if (check == False):
 		return HttpResponseRedirect('/')
-	elif not check['canManage'] == True:
+	elif not check['canManage'] == True or not check['canEdit'] == True :
 		return HttpResponseRedirect('/manage')
 	
 	ingredients = Ingredient.objects.all()
@@ -1451,7 +1451,7 @@ def magazine_add(request):
 	check = user_check(request)
 	if (check == False):
 		return HttpResponseRedirect('/')
-	elif not check['canManage'] == True:
+	elif not check['canManage'] == True or not check['canEdit'] == True :
 		return HttpResponseRedirect('/manage')	
 		
 	ingredients = Ingredient.objects.all()
@@ -1519,7 +1519,7 @@ def magazine_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
 		return HttpResponseRedirect('/')
-	elif not check['canManage'] == True:
+	elif not check['canManage'] == True or not check['canEdit'] == True :
 		return HttpResponseRedirect('/manage')
 	
 	try:
@@ -1607,7 +1607,7 @@ def magazine_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
 		return HttpResponseRedirect('/')
-	elif not check['canManage'] == True:
+	elif not check['canManage'] == True or not check['canEdit'] == True :
 		return HttpResponseRedirect('/manage')	
 	
 	ingredients = Ingredient.objects.all()	
@@ -2827,13 +2827,13 @@ def management_panel(request):
 	elif not (check['canManage'] == True or check['canDeliver'] == True or check['canCreate'] == True or check['canDelete'] == True or check['canEdit'] == True):
 		return HttpResponseRedirect('/')
 		
-	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none'}	
+	contents = {'title':'Panel zarządzania','messageType':'none', 'message':'none', 'userCheck': check}	
 	
 	ingredients = Ingredient.objects.all()
 	
 	for element in ingredients:
 		if element.quantity > element.min_quantity:
-			contents = {'title':'Panel zarządzania','messageType':'alert', 'message':'none'}	
+			contents = {'title':'Panel zarządzania','messageType':'alert', 'message':'none', 'userCheck': check}	
 			return render(request, 'manage_management_panel.html', contents)
 	
 	return render(request, 'manage_management_panel.html', contents)
