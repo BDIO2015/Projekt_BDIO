@@ -1439,9 +1439,8 @@ def magazine(request):
 	check = user_check(request)
 	if (check == False):
 		return HttpResponseRedirect('/')
-	elif not check['canManage'] == True or not check['canEdit'] == True :
+	elif not check['canManage'] == True and not check['canEdit'] == True:
 		return HttpResponseRedirect('/manage')
-	
 	ingredients = Ingredient.objects.all()
 	
 	contents = {'ingredients': ingredients, 'title': "Magazyn", 'messageType':'None'}
@@ -1451,7 +1450,7 @@ def magazine_add(request):
 	check = user_check(request)
 	if (check == False):
 		return HttpResponseRedirect('/')
-	elif not check['canManage'] == True or not check['canEdit'] == True :
+	elif not check['canManage'] == True and not check['canEdit'] == True:
 		return HttpResponseRedirect('/manage')	
 		
 	ingredients = Ingredient.objects.all()
@@ -1519,7 +1518,7 @@ def magazine_edit(request, edit_id):
 	check = user_check(request)
 	if (check == False):
 		return HttpResponseRedirect('/')
-	elif not check['canManage'] == True or not check['canEdit'] == True :
+	elif not check['canManage'] == True and not check['canEdit'] == True:
 		return HttpResponseRedirect('/manage')
 	
 	try:
@@ -1607,7 +1606,7 @@ def magazine_delete(request, del_id):
 	check = user_check(request)
 	if (check == False):
 		return HttpResponseRedirect('/')
-	elif not check['canManage'] == True or not check['canEdit'] == True :
+	elif not check['canManage'] == True and not check['canEdit'] == True:
 		return HttpResponseRedirect('/manage')	
 	
 	ingredients = Ingredient.objects.all()	
