@@ -33,7 +33,11 @@
 		<th>Informacje</th>
 		<th>Adres</th>
 		<th>Status</th>
-		<th></th> 
+	{% if type == 'display' %}
+		<th>Weż zamówienie</th> 
+	{% else %} 
+		<th>Zakończ</th>
+	{% endif %}
 	</tr>
 	
 	{% for element in waiting_orders %}
@@ -59,11 +63,11 @@
 			
 		<td>
 		{% if type == 'display' %}
-			<a href="/manage/delivery/takeorder/{{element.order_code}}" class="btn btn-primary change-order-status-button" data-toggle="tooltip"  title="Weż zamówienie"/><span class="glyphicon glyphicon-briefcase"></span> </a>
+			<a href="/manage/delivery/takeorder/{{element.order_code}}" class="btn btn-primary change-order-status-button"> Dowóz </a>
 		{% endif %}
 		
 		{% if type != 'display' %}
-			<a href="/manage/delivery/changestatus/{{element.order_code}}" class="btn btn-primary change-order-status-button" data-toggle="tooltip"  title="Zrealizowane"/><span class="glyphicon glyphicon-briefcase"></span> </a>
+			<a href="/manage/delivery/changestatus/{{element.order_code}}" class="btn btn-primary change-order-status-button"> Zrealizowane </a>
 		{% endif %}
 		</td>
 		</tr>

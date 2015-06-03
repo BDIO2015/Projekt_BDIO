@@ -13,6 +13,7 @@ import platform
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 import base64
+from django.db.models import Max
 
 def schedule_get_packed(schedule_id, affectedUsers, type_ids):
 	usersCount=0;
@@ -3291,34 +3292,45 @@ def delivery_in_progress(request):
 	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
 		return HttpResponseRedirect('/manage')
 	
-	delivery = Delivery.objects.all().order_by('ord')
+	
 	orders = Order.objects.all()
 	users = User.objects.all()
 	
 	check = user_check(request)
 	uid = check['user_id']
 	
+	try:
+		current_user = User.objects.get(user_id=uid)
+	except:
+		messages.error(request,"Wystąpił nieoczekiwany błąd")
+		return HttpResponseRedirect('/manage/delivery/main')
+	
+	delivery = Delivery.objects.filter(user=current_user).order_by('ord')	
 	
 	contents = {'title':'Panel kuriera', 'content':''}
 	waitingOrders = []
-	for order in orders:
+	if(delivery.count() > 0):
 		for deliver in delivery:
-			if( order.status == '4' and uid == deliver.user_id and deliver.delivery_id == order.delivery_id):
-				if order.order_address:
-					if order.order_notes:
-						status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
-						waitingOrders.append(status)
-					else:
-						order.order_notes = order.user.name +" "+ order.user.second_name
-				elif order.order_notes:
-					order.order_address = order.user.address
+			try:
+				order = Order.objects.get(delivery=deliver)
+			except:
+				messages.error(request,"Wystąpił nieoczekiwany błąd")
+				return HttpResponseRedirect('/manage/delivery/main')
+			if order.order_address:
+				if order.order_notes:
 					status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
 					waitingOrders.append(status)
 				else:
 					order.order_notes = order.user.name +" "+ order.user.second_name
-					order.order_address = order.user.address
-					status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
-					waitingOrders.append(status)
+			elif order.order_notes:
+				order.order_address = order.user.address
+				status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
+				waitingOrders.append(status)
+			else:
+				order.order_notes = order.user.name +" "+ order.user.second_name
+				order.order_address = order.user.address
+				status = {'order_code':order.order_code ,'order_status': order.status, 'ord': deliver.ord, 'order_address': order.order_address, 'order_notes': order.order_notes, 'delivery_id': deliver.delivery_id }
+				waitingOrders.append(status)
 					
 					
 	contents['waiting_orders'] = waitingOrders
@@ -3335,72 +3347,47 @@ def delivery_take_order(request, element_id):
 	try:
 		eid = int(element_id)
 	except ValueError:
-		contents = {'title':'Panel kuriera','messageType':'danger', 'message':'Takie zamówienie nie instnieje'}
-		return render(request, 'manage_delivery.html', contents)
-	
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/delivery')
 	
 	check = user_check(request)
 	uid = check['user_id']
 	
 	contents = {'title':'Panel kuriera'}
-	delivery = Delivery.objects.all()
-	orders = Order.objects.all()
+	try:
+		current_user = User.objects.get(user_id=uid)
+	except:
+		messages.error(request, "Wystąpił nieoczekiwany błąd")
+		return HttpResponseRedirect('/manage/delivery')
 	
-	iterator = 1
-	for deliver in delivery:
-		for order in orders:
-			if uid == deliver.user_id :
-				if order.delivery_id == deliver.delivery_id and order.status != '5':
-					iterator += 1
+	delivery = Delivery.objects.filter(user = current_user)
 
+	new_ord = delivery.aggregate(Max("ord"))
+
+	if (new_ord["ord__max"] == None):
+		new_ord = 1
+	else:
+		new_ord = new_ord["ord__max"] + 1
 	
-	toSave = Delivery(ord = iterator, user_id = uid)
+	toSave = Delivery(ord = new_ord, user=current_user)
 	toSave.save()
 	id = toSave.delivery_id
 	
-				
-	toChan = Order.objects.get(order_code=eid)
+	try:		
+		toChan = Order.objects.get(order_code=eid)
+	except:
+		messages.error(request, "Wystąpił nieoczekiwany błąd")
+		return HttpResponseRedirect('/manage/delivery')
+		
 	if(toChan.status == '3'):
 		toChan.status = '4'
 		toChan.delivery_id = id
 		toChan.save()
-		contents = {'title':'Panel kuriera'}
-		contents['messageType'] = 'success'
-		contents['message'] = 'Dodano zamówienie do listy dostarczeń'
+		messages.success(request,"Dodano do listy dostarczeń")
 	else:
-		contents = {'messageType':'danger', 'message':'Nieznany błąd'}
-		
-	
-	waitingOrders = []
-	delivery = Delivery.objects.all().order_by('ord')
-	orders = Order.objects.all()
-	users = User.objects.all()
-	
-	if( orders.count() > 0 ):
-		
-		for order in orders:
-			if( order.status == '3' ):				
-				if order.order_address:
-					if order.order_notes:
-						status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
-						waitingOrders.append(status)
-					else:
-						order.order_notes = order.user.name +" "+ order.user.second_name
-				elif order.order_notes:
-					order.order_address = order.user.address
-					status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
-					waitingOrders.append(status)
-				else:
-					order.order_notes = order.user.name +" "+ order.user.second_name
-					order.order_address = order.user.address
-					status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
-					waitingOrders.append(status)				
-				
-			
-	contents['waiting_orders'] = waitingOrders
-	contents['type'] = 'display'
+		messages.error(request,"Wystąpił nieoczekiwany błąd")
 
-	return render(request, 'manage_delivery.html', contents)
+	return HttpResponseRedirect('/manage/delivery')
 	
 def delivery_change_status(request, element_id):
 	check = user_check(request)
@@ -3411,58 +3398,38 @@ def delivery_change_status(request, element_id):
 	try:
 		eid = int(element_id)
 	except ValueError:
-		contents = {'title':'Panel kuriera','messageType':'danger', 'message':'Takie zamówienie nie instnieje'}
-		return render(request, 'manage_delivery.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/delivery/main')
 	
 	
 	check = user_check(request)
 	uid = check['user_id']
 	
 	contents = {'title':'Panel kuriera'}
-	delivery = Delivery.objects.all()
-	orders = Order.objects.all()
-				
-	toChan = Order.objects.get(order_code=eid)
+
+	try:	
+		toChan = Order.objects.get(order_code=eid)
+	except:
+		messages.error(request, "Wystąpił nieoczekiwany błąd")
+		return HttpResponseRedirect('/manage/delivery/main')
+	
 	if(toChan.status == '4'):
 		toChan.status = '5'
 		toChan.payment_status = 1
 		toChan.save()
-		contents = {'title':'Panel kuriera'}
-		contents['messageType'] = 'success'
-		contents['message'] = 'Zmieniono status zamówienia'
+		messages.success(request,"Zmieniono status zamówienia")
 	else:
-		contents = {'messageType':'danger', 'message':'Nieznany błąd'}
-
+		messages.error(request,"Wystąpił nieoczekiwany błąd")
 	
-	waitingOrders = []
-	delivery = Delivery.objects.all().order_by('ord')
-	orders = Order.objects.all()
-	users = User.objects.all()
+	try:
+		delivery = toChan.delivery
+	except:
+		messages.error(request, "Takie zamówienie nie istnieje")
+		return HttpResponseRedirect('/manage/delivery/main')		
 	
-	if( orders.count() > 0 ):
-		for order in orders:
-			if( order.status == '4' ):		
-				if order.order_address:
-					if order.order_notes:
-						status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
-						waitingOrders.append(status)
-					else:
-						order.order_notes = order.user.name +" "+ order.user.second_name
-				elif order.order_notes:
-					order.order_address = order.user.address
-					status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
-					waitingOrders.append(status)
-				else:
-					order.order_notes = order.user.name +" "+ order.user.second_name
-					order.order_address = order.user.address
-					status = {'order_code':order.order_code ,'order_status': order.status, 'order_address': order.order_address, 'order_notes': order.order_notes }
-					waitingOrders.append(status)					
-				
-				
-	contents['waiting_orders'] = waitingOrders
-	contents['type'] = 'main'
-
-	return render(request, 'manage_delivery.html', contents)
+	delivery.delete()
+	
+	return HttpResponseRedirect('/manage/delivery/main')
 	
 def delivery_change_order_up(request, element_id):
 	check = user_check(request)
@@ -3473,22 +3440,36 @@ def delivery_change_order_up(request, element_id):
 	try:
 		eid = int(element_id)
 	except ValueError:
-		contents = {'title':'Panel kuriera','messageType':'danger', 'message':'Takie zamówienie nie instnieje'}
-		return render(request, 'manage_delivery.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/delivery/main')
 
 		
 	contents = {'title':'Panel kuriera'}
 	
-	toChan = Delivery.objects.get(delivery_id=eid)
+	try: 
+		toChan = Delivery.objects.get(delivery_id=eid)
+	except:
+		messages.error(request, "Takie zamówienie nie istnieje")
+		return HttpResponseRedirect('/manage/delivery/main')
+	try:
+		current_user = User.objects.get(user_id=check["user_id"])
+	except:
+		messages.error(request, "Wystąpił nieoczekiwany błąd")
+		return HttpResponseRedirect('/manage/delivery/main')
 	
-	if toChan.ord != 1 :
-		toChan2 = Delivery.objects.get(ord = toChan.ord-1)
-		toChan.ord = toChan.ord-1
-		toChan2.ord = toChan2.ord+1
+	toChan2 = Delivery.objects.filter(ord__lte=toChan.ord-1, user=current_user).order_by("ord")	
+		
+	if (toChan.ord != 1 and toChan2.count() > 0):
+		toChan2 = toChan2[len(toChan2)-1]
+		temp = toChan.ord
+		toChan.ord = toChan2.ord
+		toChan2.ord = temp
 		toChan.save()	
 		toChan2.save()		
-		
-	return delivery_in_progress(request)
+	
+	messages.success(request,"Poprawnie zmieniono kolejność zamówień")
+	
+	return HttpResponseRedirect('/manage/delivery/main')
 	
 def delivery_change_order_down(request, element_id):
 	check = user_check(request)
@@ -3499,20 +3480,43 @@ def delivery_change_order_down(request, element_id):
 	try:
 		eid = int(element_id)
 	except ValueError:
-		contents = {'title':'Panel kuriera','messageType':'danger', 'message':'Takie zamówienie nie instnieje'}
-		return render(request, 'manage_delivery.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/delivery/main')
 
 		
 	contents = {'title':'Panel kuriera'}
 	
-	toChan = Delivery.objects.get(delivery_id=eid)	
-	toChan2 = Delivery.objects.filter(ord = toChan.ord+1)
-	
-	if toChan2.count() > 0 :
-		toChan2 = Delivery.objects.get(ord = toChan.ord+1)
-		toChan.ord = toChan.ord+1
-		toChan2.ord = toChan2.ord-1
-		toChan.save()	
-		toChan2.save()		
+	try:
+		current_user = User.objects.get(user_id=check["user_id"])
+	except:
+		messages.error(request, "Wystąpił nieoczekiwany błąd")
+		return HttpResponseRedirect('/manage/delivery/main')
 		
-	return delivery_in_progress(request)
+	try:
+		toChan = Delivery.objects.get(delivery_id=eid)	
+	except:
+		messages.error(request, "Takie zamówienie nie istnieje")
+		return HttpResponseRedirect('/manage/delivery/main')
+		
+	toChan2 = Delivery.objects.filter(ord__gte=toChan.ord+1, user=current_user).order_by("ord")
+	
+	delivery = Delivery.objects.filter(user = current_user)
+
+	new_ord = delivery.aggregate(Max("ord"))
+
+	if (new_ord["ord__max"] == None):
+		max_ord = 1
+	else:
+		max_ord = new_ord["ord__max"] + 1
+	
+	if (toChan2.count() > 0 and toChan.ord != max_ord):
+		toChan2 = toChan2[0]
+		tmp = toChan.ord
+		toChan.ord = toChan2.ord+1
+		toChan2.ord = tmp
+		toChan.save()	
+		toChan2.save()	
+	
+	messages.success(request,"Poprawnie zmieniono kolejność zamówień")	
+	
+	return HttpResponseRedirect('/manage/delivery/main')
