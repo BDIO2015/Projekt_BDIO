@@ -12,7 +12,7 @@
 	
 	{% if count > 0 %}
 	<table class="table table-hover table-responsive">
-	<tr><th>Status</th><th>Przejście w</th><th>Produkt</th><th>Ilość produktów</th><th>Dodatki</th><th>Opis</th><th>Zarządzaj</th></tr>
+	<tr><th>Status</th><th>Przejście w</th><th>Produkt</th><th>Ilość produktów</th><th>Kategoria</th><th>Opis</th><th>Zarządzaj</th></tr>
 	{% for element in content %}
 	<td>
 	
@@ -21,7 +21,8 @@
 	</td>
 	<td>
 	{% for product in element.products %}
-	{{product.product_name}}<br/>
+	{{product.product_name}} ( {% for ing in element.ingrad %}{{ing.ing_name}}, {% endfor %})
+	<br/>
 	{% endfor %}
 	</td>
 	
@@ -32,8 +33,9 @@
 	</td>
 	
 	<td>
-	{% for ing in element.ingrad %}
-	{{ing.ing_name}}<br/>
+	<!-- Kategoria -->
+	{% for c in element.categories %}
+	{{c.cat_name}}<br/>
 	{% endfor %}
 	</td>
 	

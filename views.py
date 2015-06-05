@@ -3015,6 +3015,7 @@ def display_order_status():
 	o_i = Order_Ingredients.objects.all()
 	toIng = []
 	toProd = []
+	ordProdCat = []
 	
 	contents = {'title':'Zamówienia', 'content':''}
 	if(orders.count() > 0):	
@@ -3039,8 +3040,12 @@ def display_order_status():
 											ingList = {'ing_id':ing.id, 'ing_quantity':ing.quantity,'ing_name':ing.name}
 											
 											toIng.append(ingList)
-						
-				row = {'code':curRow.order_code, 'status':curRow.get_status_display() ,'si':curRow.status, 'order_note':curRow.order_notes, 'products':toProd, 'ingrad':toIng}
+							ord_prod_cat = Order_Product_Categories.objects.filter(order_product_id=curProd)
+							if(ord_prod_cat.count()>0):
+								for opc in ord_prod_cat:
+									catList = {'cat_name': opc.category_id.name}
+									ordProdCat.append(catList)
+				row = {'code':curRow.order_code, 'status':curRow.get_status_display() ,'si':curRow.status, 'order_note':curRow.order_notes, 'products':toProd, 'ingrad':toIng, 'categories': ordProdCat}
 				toDisp.append(row)
 				contents = {'title':'Zamówienia','count':orders.count(), 'content':toDisp}
 
@@ -3051,9 +3056,9 @@ def display_order_status():
 def order_status(request):
 	check = user_check(request)
 	if (check == False):
-		return render(request, 'user_login.html',{'messageType':'danger','message':'Nie jesteś zalogowany'})
+		return HttpResponseRedirect('/')
 	elif not (check['canManage'] == True or (check['canDelete'] == True and check['canEdit'] == True)):
-		return display_product_front(request)
+		return HttpResponseRedirect('/manage/')
 	return render(request, 'manage_order_status.html', display_order_status())
 	
 def order_status_change(request, chg_id):
