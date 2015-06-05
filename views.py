@@ -3010,7 +3010,7 @@ def user_edit(request):
 					contents = {'title':'Błąd!','messageType':'danger', 'message':'Wprowadź prawidłowe hasło!', 'title':'Edytuj', 'name':str(s_name), 'second_name':str(s_second_name), 'address':str(s_address), 'city':str(s_city),   'phone_number':str(s_phone_number), 'postal_code1':s_postal_code1, 'postal_code2':s_postal_code2, 'user':user}
 	return render(request, 'user_edit.html', contents)
 	
-def display_order_status():
+def display_order_status(deliveryreq=False):
 	
 	orders = Order.objects.all()
 	o_p = Order_Product.objects.all()
@@ -3023,16 +3023,23 @@ def display_order_status():
 	if(orders.count() > 0):	
 		toDisp = []
 		for curRow in orders:
-			if(curRow.status == '1' or curRow.status == '2' or curRow.status == '6'):
+			if(curRow.status == '1' or curRow.status == '2' or curRow.status == '6' or deliveryreq == True ):
 				if(o_p.count()>0):
 					toProd = []
+					ordProdCat = []
 					for curProd in o_p:
 						if(curRow.order_code == curProd.order.order_code):
 							prod = Product.objects.get(product_code=curProd.product.product_code)
 							if(prod):
 								productList = {'product_code':prod.product_code ,'product_quantity': curProd.quantity , 'product_name':prod.product_name}
 								toProd.append(productList)
-							
+								ord_prod_cat = Order_Product_Categories.objects.filter(order_product_id=curProd)
+								print(ord_prod_cat.count())
+								if(ord_prod_cat.count()>0):
+									catList=[]
+									for opc in ord_prod_cat:
+										catList = {'cat_name': opc.category_id.name, 'prod_id': opc.order_product_id.product.product_code, 'order_id': opc.order_product_id.order.order_code}
+										ordProdCat.append(catList)
 							if(o_i.count()>0):
 								toIng = []
 								for curIng in o_i:
@@ -3042,11 +3049,7 @@ def display_order_status():
 											ingList = {'ing_id':ing.id, 'ing_quantity':ing.quantity,'ing_name':ing.name}
 											
 											toIng.append(ingList)
-							ord_prod_cat = Order_Product_Categories.objects.filter(order_product_id=curProd)
-							if(ord_prod_cat.count()>0):
-								for opc in ord_prod_cat:
-									catList = {'cat_name': opc.category_id.name}
-									ordProdCat.append(catList)
+
 				row = {'code':curRow.order_code, 'status':curRow.get_status_display() ,'si':curRow.status, 'order_note':curRow.order_notes, 'products':toProd, 'ingrad':toIng, 'categories': ordProdCat}
 				toDisp.append(row)
 				contents = {'title':'Zamówienia','count':orders.count(), 'content':toDisp}
@@ -3072,8 +3075,8 @@ def order_status_change(request, chg_id):
 	try:
 		id = int(chg_id)
 	except ValueError:
-		contents = {'title':'Zamówienia','messageType':'danger', 'message':'Takie zamówienie nie instnieje!'}
-		return render(request, 'manage_order_status.html', contents)
+		messages.error(request, "Podano niepoprawny numer")
+		return HttpResponseRedirect('/manage/order_status/')
 	try:	
 		toEdit = Order.objects.get(order_code=chg_id)
 	except:
@@ -3289,7 +3292,7 @@ def delivery(request):
 						
 	contents['waiting_orders'] = waitingOrders
 	contents['type'] = 'display'
-	
+	contents['additional_info'] = display_order_status(True)
 	return render(request, 'manage_delivery.html', contents)
 
 def delivery_in_progress(request):
@@ -3342,7 +3345,7 @@ def delivery_in_progress(request):
 					
 	contents['waiting_orders'] = waitingOrders
 	contents['type'] = 'main'
-	
+	contents['additional_info'] = display_order_status(True)
 	return render(request, 'manage_delivery.html', contents)
 	
 def delivery_take_order(request, element_id):

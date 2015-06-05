@@ -3,7 +3,7 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-
+	{{content}}
 	{% if messageType == "danger" or messageType == "success" %}
 
 	<div class="alert alert-{{messageType}}">
@@ -34,7 +34,7 @@
 		<th>Adres</th>
 		<th>Status</th>
 	{% if type == 'display' %}
-		<th>Weż zamówienie</th> 
+		<th>Weź zamówienie</th> 
 	{% else %} 
 		<th>Zakończ</th>
 	{% endif %}
@@ -68,6 +68,47 @@
 		
 		{% if type != 'display' %}
 			<a href="/manage/delivery/changestatus/{{element.order_code}}" class="btn btn-primary change-order-status-button"> Zrealizowane </a>
+		{% endif %}
+		{% if additional_info %}
+			<a class="btn btn-primary" data-toggle="modal" data-target="#orderInfo{{element.order_code}}">Informacje</a>
+			<!-- Modal -->
+			<div id="orderInfo{{element.order_code}}" class="modal fade" role="dialog">
+			  <div class="modal-dialog">
+
+				<!-- Modal content-->
+				<div class="modal-content">
+				  <div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title"><span class="glyphicon glyphicon-pencil"></span> SZCZEGÓŁY ZAMÓWIENIA</h4>
+				  </div>
+				  <div class="modal-body">
+					<table class="table table-responsive table-hover">
+					<tr><th>Produkt</th><th>Ilość</th><th>Rodzaj</th></tr>
+					{% for a in additional_info.content %}
+					{% if a.code == element.order_code %}
+					{% for p in a.products %}
+					<tr>
+						
+						
+						<td>{{p.product_name}}</td><td>{{p.product_quantity}}</td>
+						
+						
+						<td>{% for c in a.categories %}{% if c.order_id == element.order_code and p.product_code == c.prod_id %}{{c.cat_name}}, {% endif %}{% endfor %}</td>
+						
+						
+					</tr>
+					{% endfor %}
+					{% endif %}
+					{% endfor %}
+					</table>
+				  </div>
+				  <div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
+				  </div>
+				</div>
+
+			  </div>
+			</div>
 		{% endif %}
 		</td>
 		</tr>
