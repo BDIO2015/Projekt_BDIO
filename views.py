@@ -1865,6 +1865,8 @@ def basket_order(request):
 						except Product_Category.DoesNotExist:
 							continue
 						prodPrice += checkCat.additional_price
+						uCat = Order_Product_Categories(order_product_id=op, category_id=checkCat)
+						uCat.save()
 					for ing in prodIngs:
 						try:
 							checkIng = Ingredient.objects.get(id=int(ing))
